@@ -1,0 +1,3 @@
+import type { CSSProperties, PropsWithChildren, ReactNode } from 'react'
+type SurfaceCardProps = PropsWithChildren<{ className?: string; tone?: string; eyebrow?: string; title?: string; action?: ReactNode; style?: CSSProperties }>
+export function SurfaceCard({ children, className = '', tone = 'slate', eyebrow, title, action, style }: SurfaceCardProps) { return <section className={`surface-card tone-${tone} ${className}`} style={style}>{(eyebrow || title || action) && <header className="surface-card__header"><div>{eyebrow && <span className="eyebrow">{eyebrow}</span>}{title && <h3>{title}</h3>}</div>{action}</header>}{children}</section> }

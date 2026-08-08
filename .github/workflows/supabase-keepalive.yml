@@ -1,0 +1,35 @@
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # 00:41 in America/Sao_Paulo (03:41 UTC). Daily activity is enough for this lightweight health RPC.
+    - cron: '41 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexus-supabase-keepalive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    name: Keep Nexus-os active
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call lightweight health RPC
+        env:
+          SUPABASE_URL: https://emewxqxmgqybojibpbjt.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_1NzZbLT558ssZxIrjkaz4A_2Fo0Otsy
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error \
+            --retry 2 --retry-delay 5 \
+            -X POST "$SUPABASE_URL/rest/v1/rpc/nexus_keepalive" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: Nexus-OS-GitHub-Keepalive/1.0" \
+            -d '{}'

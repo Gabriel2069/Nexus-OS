@@ -1,0 +1,6 @@
+import type { LucideIcon } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
+import { SurfaceCard } from '../components/SurfaceCard'
+
+type SectionPageProps = { eyebrow: string; title: string; description: string; tone: string; icon: LucideIcon; highlights: { label: string; value: string; detail: string }[]; panels: { title: string; body: string; action?: string }[] }
+export function SectionPage({ eyebrow, title, description, tone, icon: Icon, highlights, panels }: SectionPageProps) { return <div className="page-stack"><section className={`page-hero page-hero--${tone}`}><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="page-hero__badge"><Icon size={18} /> Nexus</div></section><section className="metrics-grid">{highlights.map((item) => <SurfaceCard tone={tone} className="metric-card" key={item.label}><div className="metric-icon"><Icon size={18} /></div><div><span>{item.label}</span><strong>{item.value}</strong><small>{item.detail}</small></div></SurfaceCard>)}</section><section className="project-grid">{panels.map((panel) => <SurfaceCard tone={tone} key={panel.title} title={panel.title} action={panel.action ? <button className="text-button">{panel.action} <ArrowUpRight size={13} /></button> : undefined}><p className="panel-copy">{panel.body}</p></SurfaceCard>)}</section></div> }

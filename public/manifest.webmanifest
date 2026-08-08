@@ -1,0 +1,13 @@
+{
+  "name": "Nexus OS",
+  "short_name": "Nexus",
+  "description": "Personal operating system for routines, focus, projects and growth.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07090d",
+  "theme_color": "#0b0d12",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/nexus-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

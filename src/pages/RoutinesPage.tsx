@@ -1,0 +1,12 @@
+import { Check, Circle, Clock3, Repeat2, Sparkles } from 'lucide-react'
+import { SurfaceCard } from '../components/SurfaceCard'
+import { useNexus } from '../context/NexusContext'
+
+export function RoutinesPage() {
+  const { workspace, setRoutineItem } = useNexus()
+  const completed = new Set(workspace.routineCompletions.map((item) => item.routine_item_id))
+  const total = workspace.routines.flatMap((routine) => routine.routine_items ?? []).length
+  const done = workspace.routines.flatMap((routine) => routine.routine_items ?? []).filter((item) => completed.has(item.id)).length
+  const pct = total ? Math.round(done/total*100) : 0
+  return <div className="page-stack"><section className="page-hero page-hero--green"><div><span className="eyebrow">Rhythm engine</span><h1>Rotinas</h1><p>Sequências pequenas e contextuais. O objetivo é reduzir decisões repetidas e tornar o começo mais fácil.</p></div><div className="page-hero__badge"><Repeat2 size={17}/> {pct}% hoje</div></section><section className="routine-summary"><SurfaceCard tone="green"><div className="routine-progress"><div><span className="eyebrow">Progresso de hoje</span><strong>{done}<em>/ {total}</em></strong><p>etapas concluídas</p></div><div className="big-progress"><span style={{ width:`${pct}%` }}/></div></div></SurfaceCard></section><section className="routine-grid">{workspace.routines.map((routine) => <SurfaceCard key={routine.id} tone={routine.period==='morning'?'amber':routine.period==='evening'?'violet':'green'} eyebrow={routine.period} title={`${routine.icon ?? '◌'} ${routine.name}`}><p className="panel-copy">{routine.description}</p><div className="routine-items">{(routine.routine_items ?? []).sort((a,b)=>a.sort_order-b.sort_order).map((item) => { const isDone=completed.has(item.id); return <button className={`routine-item ${isDone?'done':''}`} key={item.id} onClick={() => void setRoutineItem(item.id,!isDone)}><span className="routine-check">{isDone?<Check size={14}/>:<Circle size={14}/>}</span><div><strong>{item.title}</strong><small>{item.duration_minutes ? <><Clock3 size={11}/> {item.duration_minutes} min</> : null}<span>+{item.xp_reward} XP</span></small></div></button>})}</div></SurfaceCard>)}</section>{!workspace.routines.length && <SurfaceCard><div className="empty-state"><Sparkles size={24}/><h3>Seu motor de rotina está pronto.</h3><p>As rotinas-base serão criadas automaticamente no primeiro carregamento autenticado.</p></div></SurfaceCard>}</div>
+}
