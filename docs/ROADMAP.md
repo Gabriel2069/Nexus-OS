@@ -9,7 +9,7 @@
 - [x] Auth por magic link
 - [x] schema com RLS
 - [x] Cloudflare Worker + SPA routing
-- [x] keep-alive redundante Cloudflare + GitHub
+- [x] keep-alive exclusivamente por GitHub Actions
 
 ## V1 · Rotina como produto — concluída na base
 - [x] Home dinâmica
@@ -47,12 +47,15 @@
 - [ ] animações e celebrações de progressão
 
 ## V3 · Inteligência pessoal
-- [ ] score de capacidade do dia baseado em check-in + histórico
-- [ ] recomendação de missão por energia, prazo, contexto e duração
-- [ ] detecção de sobrecarga e projetos estagnados
-- [ ] previsão semanal de carga
-- [ ] correlações entre sono, foco, energia e execução
-- [ ] revisão semanal guiada por dados
+- [x] score de capacidade do dia baseado em check-in
+- [x] recomendação de missão por energia, prazo, prioridade e duração
+- [x] sinalização de projetos sem próxima ação
+- [x] previsão semanal de carga por minutos com prazo
+- [x] correlação inicial entre energia e execução
+- [x] revisão semanal guiada por dados
+- [ ] previsão de carga baseada em histórico suficiente
+- [ ] melhor horário pessoal de foco
+- [ ] detecção de sobrecarga multi-sinal
 - [ ] widgets personalizáveis na Home
 
 ## V4 · Áreas profundas
