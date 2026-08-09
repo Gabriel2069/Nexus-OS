@@ -1,4 +1,4 @@
-import { CircleDollarSign, Landmark, PiggyBank, ShieldCheck, Sparkles, WalletCards } from 'lucide-react'
+import { CircleDollarSign, Landmark, PiggyBank, ShieldCheck, WalletCards } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { SurfaceCard } from '../components/SurfaceCard'
 import { useNexus } from '../context/NexusContext'
@@ -45,33 +45,30 @@ export function FinancePage() {
 
   return <div className="page-stack finance-page">
     <section className="page-hero page-hero--amber finance-hero">
-      <div><span className="eyebrow">Finance control · Notion importado</span><h1>Finanças</h1><p>Seu resumo financeiro passa a existir como dado privado do Nexus, separado de XP, recompensas e ruído operacional.</p></div>
-      <div className="finance-hero__status"><ShieldCheck size={17}/><div><span>Snapshot privado</span><strong>{updated ?? (loading ? 'Carregando…' : 'Sem registro')}</strong><small>protegido por RLS</small></div></div>
+      <div><span className="eyebrow">Resumo atual</span><h1>Finanças</h1><p>Veja os valores principais cadastrados e mantenha decisões de dinheiro separadas da gamificação do Nexus.</p></div>
+      <div className="finance-hero__status"><ShieldCheck size={17}/><div><span>Atualizado em</span><strong>{updated ?? (loading ? 'Carregando…' : 'Sem registro')}</strong><small>dados privados</small></div></div>
     </section>
 
     <section className="finance-metrics">
       <SurfaceCard tone="blue" className="finance-metric"><span className="finance-metric__icon"><WalletCards size={18}/></span><div><span>Mesada</span><strong>{brl.format(allowance)}</strong><small>valor mensal cadastrado</small></div></SurfaceCard>
-      <SurfaceCard tone="green" className="finance-metric finance-metric--primary"><span className="finance-metric__icon"><PiggyBank size={18}/></span><div><span>Dinheiro guardado</span><strong>{brl.format(saved)}</strong><small>reserva registrada no Notion</small></div></SurfaceCard>
+      <SurfaceCard tone="green" className="finance-metric finance-metric--primary"><span className="finance-metric__icon"><PiggyBank size={18}/></span><div><span>Dinheiro guardado</span><strong>{brl.format(saved)}</strong><small>reserva registrada</small></div></SurfaceCard>
       <SurfaceCard tone="amber" className="finance-metric"><span className="finance-metric__icon"><CircleDollarSign size={18}/></span><div><span>Plano de gastos</span><strong>{brl.format(spending)}</strong><small>{planPct}% da mesada</small></div></SurfaceCard>
     </section>
 
     <section className="finance-layout">
-      <SurfaceCard tone="amber" eyebrow="Distribuição cadastrada" title="Plano mensal">
+      <SurfaceCard tone="amber" eyebrow="Mesada" title="Plano mensal">
         <div className="finance-plan">
-          <div className="finance-plan__header"><div><span>Plano de gastos</span><strong>{brl.format(spending)}</strong></div><div><span>Fora do plano</span><strong>{brl.format(protectedAmount)}</strong></div></div>
+          <div className="finance-plan__header"><div><span>Planejado para gastos</span><strong>{brl.format(spending)}</strong></div><div><span>Não destinado ao plano</span><strong>{brl.format(protectedAmount)}</strong></div></div>
           <div className="finance-plan__bar"><span style={{ width: `${Math.min(100, planPct)}%` }} /></div>
-          <p>O Nexus está apenas refletindo os valores cadastrados no seu Notion; ele não interpreta automaticamente esse restante como dinheiro disponível para gastar.</p>
+          <p>Esse restante não é tratado automaticamente como dinheiro livre para gastar; ele aparece apenas para mostrar a divisão do valor cadastrado.</p>
         </div>
       </SurfaceCard>
 
-      <SurfaceCard tone="green" eyebrow="Reserva" title="Patrimônio guardado">
-        <div className="finance-reserve"><Landmark size={25}/><strong>{brl.format(saved)}</strong><span>registrados como dinheiro guardado</span></div>
+      <SurfaceCard tone="green" eyebrow="Reserva" title="Dinheiro guardado">
+        <div className="finance-reserve"><Landmark size={25}/><strong>{brl.format(saved)}</strong><span>registrados como reserva</span></div>
       </SurfaceCard>
     </section>
 
-    <section className="finance-bottom-grid">
-      <SurfaceCard eyebrow="Princípio" title="Decisão antes da compra"><div className="finance-guidance"><Sparkles size={17}/><p>Compras maiores devem continuar passando por objetivo, custo, impacto e alternativa antes da decisão.</p></div></SurfaceCard>
-      <SurfaceCard tone="slate" eyebrow="Importação" title="Histórico detalhado"><div className="finance-import-state"><ShieldCheck size={17}/><p>O resumo atual já está no Supabase. As linhas antigas de Ganhos, Gastos, Financial record e Expenses ficam separadas até a próxima janela de leitura do Notion, evitando importar histórico incompleto como se fosse o estado de 2026.</p></div></SurfaceCard>
-    </section>
+    <SurfaceCard tone="slate" eyebrow="Histórico" title="Registros detalhados"><div className="finance-import-state"><ShieldCheck size={17}/><p>O resumo atual já está no Nexus. Os lançamentos antigos continuam separados até a importação completa do histórico financeiro.</p></div></SurfaceCard>
   </div>
 }

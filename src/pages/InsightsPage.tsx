@@ -55,7 +55,7 @@ export function InsightsPage() {
 
   return <div className="page-stack insights-page">
     <section className="page-hero page-hero--cyan">
-      <div><span className="eyebrow">Behavior analytics</span><h1>Insights</h1><p>Padrões de energia, foco e execução calculados a partir do que realmente aconteceu.</p></div>
+      <div><span className="eyebrow">Seus dados</span><h1>Insights</h1><p>Gráficos de XP, foco e energia com base no que você registrou. Quanto mais histórico houver, mais úteis eles ficam.</p></div>
       <div className="view-switcher" aria-label="Período dos insights">
         <button className={range === 7 ? 'active' : ''} onClick={() => setRange(7)}>7 dias</button>
         <button className={range === 30 ? 'active' : ''} onClick={() => setRange(30)}>30 dias</button>
@@ -63,27 +63,27 @@ export function InsightsPage() {
     </section>
 
     <section className="metrics-grid">
-      <SurfaceCard tone="violet" className="metric-card"><div className="metric-icon"><Zap size={18} /></div><div><span>XP produzido</span><strong>{totalXp}</strong><small>{range} dias</small></div></SurfaceCard>
-      <SurfaceCard tone="blue" className="metric-card"><div className="metric-icon"><Clock3 size={18} /></div><div><span>Foco profundo</span><strong>{totalFocus}m</strong><small>tempo registrado</small></div></SurfaceCard>
-      <SurfaceCard tone="green" className="metric-card"><div className="metric-icon"><Flame size={18} /></div><div><span>Consistência</span><strong>{consistency}%</strong><small>{activeDays}/{range} dias ativos</small></div></SurfaceCard>
+      <SurfaceCard tone="violet" className="metric-card"><div className="metric-icon"><Zap size={18} /></div><div><span>XP registrado</span><strong>{totalXp}</strong><small>{range} dias</small></div></SurfaceCard>
+      <SurfaceCard tone="blue" className="metric-card"><div className="metric-icon"><Clock3 size={18} /></div><div><span>Tempo em foco</span><strong>{totalFocus}m</strong><small>sessões concluídas</small></div></SurfaceCard>
+      <SurfaceCard tone="green" className="metric-card"><div className="metric-icon"><Flame size={18} /></div><div><span>Dias com atividade</span><strong>{consistency}%</strong><small>{activeDays}/{range} dias</small></div></SurfaceCard>
       <SurfaceCard tone="cyan" className="metric-card"><div className="metric-icon"><Brain size={18} /></div><div><span>Energia média</span><strong>{averageEnergy}</strong><small>check-ins do período</small></div></SurfaceCard>
     </section>
 
     <section className="split-grid split-grid--wide">
-      <SurfaceCard tone="violet" eyebrow="Output" title="Curva de experiência"><Sparkline data={xp} /></SurfaceCard>
-      <SurfaceCard tone="blue" eyebrow="Deep work" title="Minutos de foco"><Sparkline data={focus} suffix="m" /></SurfaceCard>
+      <SurfaceCard tone="violet" eyebrow="XP" title="Ao longo do período"><Sparkline data={xp} /></SurfaceCard>
+      <SurfaceCard tone="blue" eyebrow="Foco" title="Minutos registrados"><Sparkline data={focus} suffix="m" /></SurfaceCard>
     </section>
 
-    <SurfaceCard tone="cyan" eyebrow="Activity map" title="Ritmo do período" action={<span className="page-hero__badge"><CalendarRange size={14} /> {activeDays} dias ativos</span>}>
+    <SurfaceCard tone="cyan" eyebrow="Atividade" title="Dias com registro" action={<span className="page-hero__badge"><CalendarRange size={14} /> <span>{activeDays} dias</span></span>}>
       <div className="activity-heatmap" role="img" aria-label={`Mapa de atividade dos últimos ${range} dias`}>
         {heatmap.map((day) => <div className="heatmap-day" key={day.date} title={`${day.label}: ${day.xp} XP · ${day.focus} min de foco`}><span className={`heatmap-cell heatmap-cell--${day.intensity}`} /><small>{range === 7 ? day.label : new Date(`${day.date}T12:00:00`).getDate()}</small></div>)}
       </div>
-      <div className="heatmap-summary"><span><strong>{averageXp}</strong> XP / dia ativo</span><span><strong>{readiness.score}</strong> readiness hoje</span><span><strong>{workspace.profile?.streak_current ?? 0}</strong> dias de sequência</span></div>
+      <div className="heatmap-summary"><span><strong>{averageXp}</strong> XP por dia ativo</span><span><strong>{readiness.score}</strong> disposição hoje</span><span><strong>{workspace.profile?.streak_current ?? 0}</strong> dias de sequência</span></div>
     </SurfaceCard>
 
     <section className="split-grid">
-      <SurfaceCard tone="green" eyebrow="Readiness" title="Energia registrada">{energy.length ? <MetricBars items={energy} max={10} /> : <div className="empty-compact">Faça check-ins em Hoje para formar sua curva de energia.</div>}</SurfaceCard>
-      <SurfaceCard eyebrow="Leitura" title="O que o Nexus está aprendendo"><div className="insight-list"><div><strong>Energia × execução</strong><span>{energyXp == null ? 'Ainda são necessários pelo menos 3 dias com check-in e atividade.' : `${energyXp > 0.35 ? 'Há uma relação positiva' : energyXp < -0.35 ? 'A execução não está acompanhando a energia' : 'A relação ainda é fraca'} (r = ${energyXp.toFixed(2)}).`}</span></div><div><strong>Consistência operacional</strong><span>{consistency >= 70 ? 'O sistema está sendo alimentado com frequência suficiente para gerar padrões úteis.' : consistency >= 40 ? 'Há sinal suficiente para tendências iniciais, mas ainda existem lacunas no período.' : 'A amostra ainda é esparsa; alguns check-ins e sessões a mais aumentam muito a qualidade dos insights.'}</span></div><div><strong>Carga sustentável</strong><span>{totalFocus > range * 90 ? 'O volume de foco está alto; compare com energia e estresse antes de aumentar a carga.' : 'O volume ainda permite ajustar intensidade conforme sua energia real.'}</span></div></div></SurfaceCard>
+      <SurfaceCard tone="green" eyebrow="Energia" title="Check-ins registrados">{energy.length ? <MetricBars items={energy} max={10} /> : <div className="empty-compact">Faça check-ins em Hoje para começar a formar este gráfico.</div>}</SurfaceCard>
+      <SurfaceCard eyebrow="Leitura" title="O que os dados sugerem"><div className="insight-list"><div><strong>Energia e XP</strong><span>{energyXp == null ? 'Ainda são necessários pelo menos 3 dias com check-in e atividade.' : `${energyXp > 0.35 ? 'Nos dias com mais energia, o XP também tende a subir' : energyXp < -0.35 ? 'Mais energia ainda não está aparecendo como mais XP' : 'Ainda não há uma relação clara'} (r = ${energyXp.toFixed(2)}).`}</span></div><div><strong>Frequência de uso</strong><span>{consistency >= 70 ? 'Há registros suficientes para começar a enxergar padrões.' : consistency >= 40 ? 'Já existem alguns sinais, mas ainda há lacunas no período.' : 'Ainda há poucos registros para tirar conclusões úteis.'}</span></div><div><strong>Tempo em foco</strong><span>{totalFocus > range * 90 ? 'O volume está alto; compare com sua energia antes de aumentar ainda mais.' : 'O volume ainda pode ser ajustado de acordo com sua energia e seus compromissos.'}</span></div></div></SurfaceCard>
     </section>
   </div>
 }
