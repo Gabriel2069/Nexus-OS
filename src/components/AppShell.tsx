@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { CommandPalette } from './CommandPalette'
 import { MobileDock } from './MobileDock'
 import { NotificationCenter } from './NotificationCenter'
+import { ProfileModal } from './ProfileModal'
 import { QuickCaptureModal } from './QuickCaptureModal'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
@@ -10,10 +11,17 @@ import { emitUI } from '../lib/ui-events'
 
 type AppShellProps = PropsWithChildren<{ pathname: string }>
 
+type IOSNavigator = Navigator & { standalone?: boolean }
+
 export function AppShell({ pathname, children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('nexus-sidebar') === 'collapsed')
 
   useEffect(() => { localStorage.setItem('nexus-sidebar', collapsed ? 'collapsed' : 'open') }, [collapsed])
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || Boolean((navigator as IOSNavigator).standalone)
+    document.documentElement.classList.toggle('nexus-standalone', standalone)
+    return () => document.documentElement.classList.remove('nexus-standalone')
+  }, [])
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
@@ -34,6 +42,7 @@ export function AppShell({ pathname, children }: AppShellProps) {
       <MobileDock pathname={pathname} />
       <CommandPalette />
       <QuickCaptureModal />
+      <ProfileModal />
       <NotificationCenter />
     </div>
   )

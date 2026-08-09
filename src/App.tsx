@@ -1,4 +1,4 @@
-import { Activity, Archive, BookOpen, Brain, CalendarDays, CircleDollarSign, Compass, GraduationCap, Mountain } from 'lucide-react'
+import { Activity, Archive, BookOpen, Brain, CalendarDays, CircleDollarSign, Compass, Mountain } from 'lucide-react'
 import { AppShell } from './components/AppShell'
 import { NexusProvider } from './context/NexusContext'
 import { CalendarPage } from './pages/CalendarPage'
@@ -11,6 +11,7 @@ import { MissionsPage } from './pages/MissionsPage'
 import { ProjectsPage } from './pages/ProjectsPage'
 import { RoutinesPage } from './pages/RoutinesPage'
 import { SectionPage } from './pages/SectionPage'
+import { StudiesPage } from './pages/StudiesPage'
 import { TodayPage } from './pages/TodayPage'
 import { WeeklyReviewPage } from './pages/WeeklyReviewPage'
 import { usePathname } from './lib/router'
@@ -28,7 +29,7 @@ function RouteContent({pathname}:{pathname:string}){
     case '/revisao': return <WeeklyReviewPage/>
     case '/inbox': return <InboxPage/>
     case '/metas': return <SectionPage eyebrow="Direção" title="Metas" description="Poucos resultados prioritários, conectados a evidências reais e projetos executáveis." tone="indigo" icon={Mountain} highlights={[{label:'Horizonte',value:'Anual',detail:'identidade e direção'},{label:'Ciclo',value:'90d',detail:'resultado concreto'},{label:'Revisão',value:'7d',detail:'ajuste de rota'},{label:'Limite',value:'03',detail:'prioridades reais'}]} panels={[{title:'Horizonte anual',body:'Identidade, direção e mudanças amplas que organizam o restante do ano.'},{title:'Metas trimestrais',body:'Resultados concretos que cabem em um ciclo e podem ser medidos.'},{title:'Estratégia semanal',body:'Ações e decisões que movem as metas sem criar uma lista infinita.'}]}/>
-    case '/estudos': return <SectionPage eyebrow="Academic Hub" title="Estudos" description="Aulas, revisões, entregas e conhecimento acadêmico em uma visão operacional." tone="blue" icon={GraduationCap} highlights={[{label:'Modo',value:'Ativo',detail:'estudo conectado a missões'},{label:'Foco',value:'Blocos',detail:'sessões registradas'},{label:'Entregas',value:'Agenda',detail:'prazos temporais'},{label:'Base',value:'Vault',detail:'conhecimento conectado'}]} panels={[{title:'Cronograma',body:'Grade semanal e horários fixos organizados por contexto.'},{title:'Entregas',body:'Provas, trabalhos e laboratório convertidos em missões com prazo.'},{title:'Conhecimento',body:'Notas e referências conectadas ao Segundo Cérebro.'}]}/>
+    case '/estudos': return <StudiesPage/>
     case '/saude': return <SectionPage eyebrow="Wellbeing" title="Saúde" description="Treino, nutrição, hábitos, energia e recuperação apoiando uma rotina sustentável." tone="green" icon={Activity} highlights={[{label:'Check-in',value:'Diário',detail:'energia e estresse'},{label:'Rotina',value:'Contextual',detail:'manhã e noite'},{label:'Foco',value:'Protegido',detail:'sem compensação'},{label:'Tendência',value:'Insights',detail:'padrões ao longo do tempo'}]} panels={[{title:'Treinos',body:'Plano, execução real e evolução técnica.'},{title:'Nutrição',body:'Planejamento alimentar e hidratação como apoio à rotina.'},{title:'Hábitos',body:'Ritmos recorrentes com foco em retomada, não perfeição.'}]}/>
     case '/projetos': return <ProjectsPage/>
     case '/financas': return <SectionPage eyebrow="Finance Control" title="Finanças" description="Entradas, gastos, reservas, decisões e projeções sem misturar registro com ruído." tone="amber" icon={CircleDollarSign} highlights={[{label:'Visão',value:'Mensal',detail:'fluxo e decisões'},{label:'Reserva',value:'Protegida',detail:'fora do operacional'},{label:'Compras',value:'Contexto',detail:'custo e alternativa'},{label:'Histórico',value:'Separado',detail:'sem poluir o agora'}]} panels={[{title:'Fluxo do mês',body:'Entradas e saídas consolidadas antes dos detalhes.'},{title:'Planejamento',body:'Decisões maiores passam por custo, impacto e prioridade.'},{title:'Histórico',body:'Registros antigos disponíveis sem poluir o painel.'}]}/>

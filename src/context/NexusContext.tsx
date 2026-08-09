@@ -1,9 +1,9 @@
 import type { PropsWithChildren } from 'react'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { attributes as mockAttributes, missions as mockMissions, projects as mockProjects } from '../data/mock'
-import { bootstrapNexus, completeMissionAtomic, createMission, createProject, ensureTodayJourney, finishFocusSession, getCurrentUser, loadWorkspace, saveDailyCheckin, startFocusSession, toggleRoutineCompletion, redeemReward, saveWeeklyReview, updateMission, updateProject } from '../lib/nexus-api'
+import { bootstrapNexus, completeMissionAtomic, createMission, createProject, ensureTodayJourney, finishFocusSession, getCurrentUser, loadWorkspace, saveDailyCheckin, startFocusSession, toggleRoutineCompletion, redeemReward, saveWeeklyReview, updateMission, updateProfile, updateProject } from '../lib/nexus-api'
 import { isSupabaseConfigured } from '../lib/supabase'
-import type { DailyCheckin, FocusSession, NexusMission, NexusProject, NexusWorkspace, WeeklyReview } from '../types/nexus'
+import type { DailyCheckin, FocusSession, NexusMission, NexusProject, NexusWorkspace, PlayerProfile, WeeklyReview } from '../types/nexus'
 
 type NexusContextValue = {
   userId: string | null
@@ -11,6 +11,7 @@ type NexusContextValue = {
   loading: boolean
   error: string | null
   refresh: () => Promise<void>
+  editProfile: (patch: Partial<Pick<PlayerProfile, 'display_name' | 'avatar_url' | 'class_name' | 'title' | 'motto' | 'timezone' | 'daily_xp_goal'>>) => Promise<void>
   addMission: (title: string, options?: Partial<NexusMission>) => Promise<void>
   completeMission: (id: string) => Promise<{ xp: number; coins: number }>
   processMission: (id: string, patch: Partial<Pick<NexusMission, 'status' | 'priority' | 'rank' | 'context' | 'due_at' | 'project_id' | 'attribute_id'>>) => Promise<void>
@@ -45,6 +46,9 @@ const emptyWorkspace: NexusWorkspace = {
   attributes: [],
   season: null,
   rewards: [],
+  achievements: [],
+  academicSchedule: [],
+  academicEvents: [],
 }
 
 const NexusContext = createContext<NexusContextValue | null>(null)
@@ -73,6 +77,7 @@ export function NexusProvider({ children }: PropsWithChildren) {
 
   const value = useMemo<NexusContextValue>(() => ({
     userId, workspace, loading, error, refresh, mockAttributes,
+    editProfile: async (patch) => { if (!userId) return; await updateProfile(userId, patch); await refresh() },
     addMission: async (title, options = {}) => { if (!userId) return; await createMission(userId, { title, status: 'A fazer', rank: 'C', priority: 'Média', xp_base: 60, coins_base: 10, ...options }); await refresh() },
     completeMission: async (id) => { if (!userId) { setWorkspace((current) => ({ ...current, missions: current.missions.filter((mission) => mission.id !== id) })); return { xp: 0, coins: 0 } } const result = await completeMissionAtomic(id); await refresh(); return { xp: result.xp_awarded, coins: result.coins_awarded } },
     processMission: async (id, patch) => { if (!userId) return; await updateMission(userId, id, patch); await refresh() },
