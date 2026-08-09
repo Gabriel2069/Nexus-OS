@@ -45,7 +45,7 @@ export function MissionsPage() {
 
   return <div className="page-stack missions-page">
     <section className="page-hero page-hero--rose">
-      <div><span className="eyebrow">Mission control</span><h1>Missões</h1><p>A unidade mínima de execução do Nexus. Alterne entre mapa, lista e foco sem perder contexto.</p></div>
+      <div><span className="eyebrow">Tarefas e ações</span><h1>Missões</h1><p>Use missões para coisas que você consegue concluir. Escolha quadro, lista ou foco conforme o momento.</p></div>
       <button className="primary-button" onClick={() => emitUI('quickAdd')}><Sparkles size={15} /> Nova missão</button>
     </section>
 
@@ -57,16 +57,16 @@ export function MissionsPage() {
         <button className={view === 'focus' ? 'active' : ''} onClick={() => setView('focus')}><Crosshair size={14} /><span>Foco</span></button>
       </div>
       <div className="rank-filter"><Filter size={14} />{['Todos', 'D', 'C', 'B', 'A', 'S'].map((item) => <button key={item} className={rank === item ? 'active' : ''} onClick={() => setRank(item)}>{item}</button>)}</div>
-      <div className="mission-potential"><Zap size={14} /><span>{totalXp} XP disponíveis</span></div>
+      <div className="mission-potential"><Zap size={14} /><span>{totalXp} XP em aberto</span></div>
     </section>
 
     {view === 'board' && <section className="kanban-grid kanban-grid--advanced">
       <MissionColumn title="Inbox" icon={Inbox} missions={inbox} complete={completeMission} empty="Tudo processado." />
-      <MissionColumn title="Em campo" icon={ListChecks} missions={active} complete={completeMission} empty="Nenhuma missão ativa." primary />
+      <MissionColumn title="A fazer" icon={ListChecks} missions={active} complete={completeMission} empty="Nenhuma missão ativa." primary />
       <MissionColumn title="Bloqueadas" icon={Circle} missions={blocked} complete={completeMission} empty="Sem bloqueios." />
     </section>}
 
-    {view === 'list' && <SurfaceCard eyebrow="Visão operacional" title={`${filtered.length} missões`}>
+    {view === 'list' && <SurfaceCard eyebrow="Lista" title={`${filtered.length} missões`}>
       <div className="mission-list-view">
         {filtered.map((mission) => <article className="mission-list-row" key={mission.id}>
           <span className={`rank-chip rank-${mission.rank.toLowerCase()}`}>{mission.rank}</span>
@@ -83,12 +83,12 @@ export function MissionsPage() {
     {view === 'focus' && <section className="mission-focus-view">
       <article className="mission-focus-hero">
         {focusTarget ? <>
-          <div><span className="eyebrow">Próximo alvo</span><h2>{focusTarget.title}</h2><p>{focusTarget.notes || `Missão ${focusTarget.priority.toLowerCase()} · Rank ${focusTarget.rank} · ${dueLabel(focusTarget.due_at)}.`}</p></div>
-          <div><div className="mission-meta"><span className={`rank-chip rank-${focusTarget.rank.toLowerCase()}`}>{focusTarget.rank}</span><span>{focusTarget.duration_minutes ?? 45} min</span><span>+{focusTarget.xp_base + focusTarget.xp_bonus} XP</span></div><div className="now-actions"><button className="primary-button" onClick={() => navigate('/foco')}>Abrir Focus Studio</button><button className="completion-button" onClick={() => void completeMission(focusTarget.id)}><CheckCircle2 size={16} /> Concluir</button></div></div>
-        </> : <><div><span className="eyebrow">Campo livre</span><h2>Nenhum alvo ativo.</h2><p>Capture uma missão ou use o tempo para revisar o mapa.</p></div><button className="secondary-button" onClick={() => emitUI('quickAdd')}>Criar missão</button></>}
+          <div><span className="eyebrow">Próxima missão</span><h2>{focusTarget.title}</h2><p>{focusTarget.notes || `${focusTarget.priority} · Rank ${focusTarget.rank} · ${dueLabel(focusTarget.due_at)}.`}</p></div>
+          <div><div className="mission-meta"><span className={`rank-chip rank-${focusTarget.rank.toLowerCase()}`}>{focusTarget.rank}</span><span>{focusTarget.duration_minutes ?? 45} min</span><span>+{focusTarget.xp_base + focusTarget.xp_bonus} XP</span></div><div className="now-actions"><button className="primary-button" onClick={() => navigate('/foco')}>Abrir foco</button><button className="completion-button" onClick={() => void completeMission(focusTarget.id)}><CheckCircle2 size={16} /> Concluir</button></div></div>
+        </> : <><div><span className="eyebrow">Sem missão ativa</span><h2>Nada pendente aqui.</h2><p>Você pode capturar uma nova ação ou revisar a Inbox.</p></div><button className="secondary-button" onClick={() => emitUI('quickAdd')}>Criar missão</button></>}
       </article>
-      <SurfaceCard eyebrow="Fila inteligente" title="Depois deste alvo">
-        <div className="focus-queue">{focusQueue.slice(1, 6).map((mission, index) => <button key={mission.id} onClick={() => navigate('/foco')}><span className={`rank-chip rank-${mission.rank.toLowerCase()}`}>{mission.rank}</span><div><strong>{mission.title}</strong><small>#{index + 2} · {mission.priority} · {mission.duration_minutes ?? 45} min · {dueLabel(mission.due_at)}</small></div><Crosshair size={15} /></button>)}{focusQueue.length <= 1 && <div className="empty-compact">Sem fila adicional.</div>}</div>
+      <SurfaceCard eyebrow="Depois" title="Próximas da fila">
+        <div className="focus-queue">{focusQueue.slice(1, 6).map((mission, index) => <button key={mission.id} onClick={() => navigate('/foco')}><span className={`rank-chip rank-${mission.rank.toLowerCase()}`}>{mission.rank}</span><div><strong>{mission.title}</strong><small>#{index + 2} · {mission.priority} · {mission.duration_minutes ?? 45} min · {dueLabel(mission.due_at)}</small></div><Crosshair size={15} /></button>)}{focusQueue.length <= 1 && <div className="empty-compact">Sem outras missões na fila.</div>}</div>
       </SurfaceCard>
     </section>}
   </div>
