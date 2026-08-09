@@ -1,27 +1,77 @@
-import { BatteryMedium, Check, CheckCircle2, ChevronRight, Clock3, Focus, Moon, Play, Sparkles, Sun, Zap } from 'lucide-react'
-import { useState } from 'react'
+import { BatteryMedium, Check, CheckCircle2, Clock3, Moon, Play, Sparkles, Sun } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { SurfaceCard } from '../components/SurfaceCard'
 import { useNexus } from '../context/NexusContext'
 import { navigate } from '../lib/router'
-import { getReadiness, nextBestMission, rankMissions } from '../lib/decision-engine'
+import { getReadiness, nextBestMission } from '../lib/decision-engine'
+import { formatOccurrenceTime, getRoutineContext } from '../lib/routine-context'
 
 const moods = ['Calmo','Focado','Animado','Neutro','Cansado']
+const clock = (date: Date) => new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}).format(date)
 
 export function TodayPage(){
   const {workspace,saveCheckin,completeMission,setRoutineItem}=useNexus()
+  const [now,setNow]=useState(()=>new Date())
   const [energy,setEnergy]=useState(workspace.checkin?.energy??7)
   const [mood,setMood]=useState(workspace.checkin?.mood??'Neutro')
   const [saved,setSaved]=useState(Boolean(workspace.checkin))
-  const readiness=getReadiness(workspace.checkin); const missions=rankMissions(workspace.missions,workspace.checkin).map(entry=>entry.mission).slice(0,5); const recommended=nextBestMission(workspace.missions,workspace.checkin)
+  useEffect(()=>{const id=window.setInterval(()=>setNow(new Date()),30_000);return()=>window.clearInterval(id)},[])
+  const context=useMemo(()=>getRoutineContext(workspace,now),[workspace,now])
+  const readiness=getReadiness(workspace.checkin)
+  const recommended=nextBestMission(workspace.missions,workspace.checkin)
   const completed=new Set(workspace.routineCompletions.map(c=>c.routine_item_id))
   const morning=workspace.routines.find(r=>r.period==='morning')
   const evening=workspace.routines.find(r=>r.period==='evening')
   const xp=workspace.journey?.xp_earned??0
   async function persistCheckin(){await saveCheckin({energy,mood});setSaved(true)}
-  return <div className="page-stack today-page"><section className="today-header"><div><span className="eyebrow">Seu dia</span><h1>Hoje</h1><p>Registre como você está, escolha o que vale fazer e siga para o próximo bloco sem precisar abrir o sistema inteiro.</p></div><div className="today-score"><span>XP hoje</span><strong>{xp}</strong><small>registrado</small></div></section><section className="today-grid"><SurfaceCard tone="amber" className="checkin-card"><div className="card-title-row"><div><span className="eyebrow">Disposição · {readiness.score}/100</span><h2>Como você está agora?</h2></div><BatteryMedium size={19}/></div><div className="energy-scale"><div className="energy-scale__value"><strong>{energy}</strong><span>/10 energia</span></div><input aria-label="Energia" type="range" min="1" max="10" value={energy} onChange={(e)=>{setEnergy(Number(e.target.value));setSaved(false)}}/></div><div className="mood-row">{moods.map(item=><button key={item} className={mood===item?'active':''} onClick={()=>{setMood(item);setSaved(false)}}>{item}</button>)}</div><button className={saved?'secondary-button':'primary-button'} onClick={()=>void persistCheckin()}>{saved?<><Check size={15}/> Check-in salvo</>:<>Salvar <ChevronRight size={15}/></>}</button></SurfaceCard><SurfaceCard tone="blue" className="daily-focus-card"><div className="card-title-row"><div><span className="eyebrow">Foco</span><h2>Próximo bloco</h2></div><Focus size={19}/></div>{recommended?<><strong className="focus-next-title">{recommended.title}</strong><div className="mission-meta"><span className={`rank-chip rank-${recommended.rank.toLowerCase()}`}>{recommended.rank}</span><span><Clock3 size={11}/>{recommended.duration_minutes??readiness.focusMinutes} min</span><span><Zap size={11}/>+{recommended.xp_base+recommended.xp_bonus} XP</span></div><small className="adaptive-note">Sugestão de bloco: {readiness.focusMinutes} min</small><button className="primary-button" onClick={()=>navigate('/foco')}><Play size={15}/> Começar</button></>:<p className="panel-copy">Sem missão ativa. Vale revisar a Caixa de Entrada antes de criar mais coisas.</p>}</SurfaceCard></section><section className="today-main-grid"><div className="today-main-column"><div className="section-heading"><div><span className="eyebrow">Prioridades</span><h2>O que vale fazer hoje</h2></div><span className="section-count">{missions.length} sugestões</span></div><div className="mission-list-modern">{missions.map((mission,index)=><article className="mission-row-modern" key={mission.id}><span className="mission-index">0{index+1}</span><div className="mission-row-modern__copy"><div><span className={`rank-chip rank-${mission.rank.toLowerCase()}`}>{mission.rank}</span><small>{mission.context||mission.priority}</small></div><strong>{mission.title}</strong><footer><span>{mission.duration_minutes??45} min</span><span>{mission.xp_base+mission.xp_bonus} XP</span><span>{mission.coins_base} coins</span></footer></div><button className="mission-complete-round" onClick={()=>void completeMission(mission.id)} aria-label="Concluir missão"><CheckCircle2 size={19}/></button></article>)}</div></div><aside className="today-side-column"><SurfaceCard tone="amber" eyebrow="Manhã" title={`${morning?.icon??'☀️'} Começo do dia`}><RoutineMini routine={morning} completed={completed} setRoutineItem={setRoutineItem}/></SurfaceCard><SurfaceCard tone="violet" eyebrow="Noite" title={`${evening?.icon??'🌙'} Fechamento`}><RoutineMini routine={evening} completed={completed} setRoutineItem={setRoutineItem}/></SurfaceCard></aside></section><section className="day-close"><div><Moon size={20}/><div><span className="eyebrow">Fim do dia</span><h2>Deixe amanhã um pouco mais fácil.</h2><p>Registre o que deu certo, reagende o que ainda importa e escolha a primeira ação de amanhã.</p></div></div><button className="secondary-button" onClick={()=>navigate('/rotinas')}>Abrir rotina da noite</button></section></div>
+
+  return <div className="page-stack today-page today-page--context">
+    <section className="today-header today-header--compact">
+      <div><span className="eyebrow">Seu dia</span><h1>Hoje</h1><p>A agenda fixa primeiro. O Nexus usa os espaços entre ela para decidir quando vale estudar e quando vale simplesmente parar.</p></div>
+      <div className="today-score"><span>XP hoje</span><strong>{xp}</strong><small>{context.load === 'cheio' ? 'dia cheio' : `${Math.round(context.loadMinutes/60)}h de fixos`}</small></div>
+    </section>
+
+    <section className="today-context-grid">
+      <SurfaceCard tone="blue" className="today-now-card" eyebrow={context.current?'Agora':'Janela atual'} title={context.suggestion.title}>
+        <p className="panel-copy">{context.suggestion.detail}</p>
+        <div className="today-now-meta">
+          {context.current && <span><Clock3 size={13}/>{formatOccurrenceTime(context.current)}</span>}
+          {!context.current && context.freeMinutes>0 && <span><Clock3 size={13}/>{context.freeMinutes} min livres</span>}
+          {context.next && <span>Próximo: <strong>{context.next.title}</strong> às {clock(context.next.start)}</span>}
+        </div>
+        {context.suggestion.actionPath && <button className="primary-button" onClick={()=>navigate(context.suggestion.actionPath!)}><Play size={15}/>{context.suggestion.actionLabel??'Começar'}</button>}
+      </SurfaceCard>
+
+      <SurfaceCard tone="amber" className="checkin-card checkin-card--compact">
+        <div className="card-title-row"><div><span className="eyebrow">Check-in · {readiness.score}/100</span><h2>Como você está?</h2></div><BatteryMedium size={19}/></div>
+        <div className="compact-energy"><strong>{energy}</strong><input aria-label="Energia" type="range" min="1" max="10" value={energy} onChange={(e)=>{setEnergy(Number(e.target.value));setSaved(false)}}/></div>
+        <div className="mood-row mood-row--compact">{moods.map(item=><button key={item} className={mood===item?'active':''} onClick={()=>{setMood(item);setSaved(false)}}>{item}</button>)}</div>
+        <button className={saved?'secondary-button':'primary-button'} onClick={()=>void persistCheckin()}>{saved?<><Check size={15}/> Salvo</>:<>Salvar check-in</>}</button>
+      </SurfaceCard>
+    </section>
+
+    <section className="today-flow-grid">
+      <SurfaceCard eyebrow="Horários" title="O que ainda vem hoje">
+        <div className="today-timeline">
+          {context.today.filter(event=>event.end>now && !['sleep','recovery'].includes(event.category)).slice(0,6).map((event)=><div className={context.current?.id===event.id?'is-current':''} key={event.id}><span>{clock(event.start)}</span><i/><div><strong>{event.title}</strong><small>{clock(event.start)}–{clock(event.end)}</small></div></div>)}
+          {!context.today.some(event=>event.end>now && !['sleep','recovery'].includes(event.category)) && <div className="empty-compact">Sem outros compromissos fixos hoje.</div>}
+        </div>
+      </SurfaceCard>
+
+      <SurfaceCard tone="violet" eyebrow="Se houver espaço" title="Um estudo que vale a pena">
+        {recommended?<div className="single-study-target"><div><span className={`rank-chip rank-${recommended.rank.toLowerCase()}`}>{recommended.rank}</span><strong>{recommended.title}</strong><p>{recommended.notes||'Use o próximo bloco de estudo que realmente caiba no dia.'}</p></div><footer><span>{recommended.duration_minutes??45} min · {recommended.xp_base+recommended.xp_bonus} XP</span><div><button className="secondary-button" onClick={()=>navigate(`/foco?minutes=${recommended.duration_minutes??45}&mission=${recommended.id}`)}>Abrir foco</button><button className="mission-complete-round" onClick={()=>void completeMission(recommended.id)} aria-label="Concluir missão"><CheckCircle2 size={17}/></button></div></footer></div>:<p className="panel-copy">Nenhuma missão aberta pedindo atenção. Não crie uma só para preencher espaço.</p>}
+      </SurfaceCard>
+    </section>
+
+    <section className="today-small-loop">
+      <SurfaceCard tone="amber" eyebrow="Começo" title={`${morning?.icon??'☀️'} Abrir o dia`}><RoutineMini routine={morning} completed={completed} setRoutineItem={setRoutineItem}/></SurfaceCard>
+      <SurfaceCard tone="violet" eyebrow="22h" title={`${evening?.icon??'🌙'} Fechar o dia`}><RoutineMini routine={evening} completed={completed} setRoutineItem={setRoutineItem}/></SurfaceCard>
+      <SurfaceCard tone="green" eyebrow="Depois dos fixos" title="O resto da vida também cabe"><div className="life-space-note"><Sparkles size={17}/><p>{context.later?.detail??'Quando acabar o que é fixo, preserve espaço para amigos, família, cabelo, hobby ou descanso sem transformar tudo em obrigação.'}</p></div></SurfaceCard>
+    </section>
+  </div>
 }
 
 function RoutineMini({routine,completed,setRoutineItem}:{routine:ReturnType<typeof useNexus>['workspace']['routines'][number]|undefined;completed:Set<string>;setRoutineItem:(id:string,completed:boolean)=>Promise<void>}){
   if(!routine)return <div className="empty-compact"><Sparkles size={15}/> Rotina ainda não carregada.</div>
-  return <div className="routine-mini">{(routine.routine_items??[]).sort((a,b)=>a.sort_order-b.sort_order).map(item=>{const done=completed.has(item.id);return <button className={done?'done':''} key={item.id} onClick={()=>void setRoutineItem(item.id,!done)}><span>{done?<Check size={13}/>:routine.period==='morning'?<Sun size={13}/>:<Moon size={13}/>}</span><strong>{item.title}</strong></button>})}</div>
+  return <div className="routine-mini">{(routine.routine_items??[]).sort((a,b)=>a.sort_order-b.sort_order).map(item=>{const done=completed.has(item.id);return <button className={done?'done':''} key={item.id} onClick={()=>void setRoutineItem(item.id,!done)}><span>{done?<Check size={13}/>:routine.period==='morning'?<Sun size={13}/>:<Moon size={13}/>}</span><div><strong>{item.title}</strong><small>{item.duration_minutes??2} min · +{item.xp_reward} XP</small></div></button>})}</div>
 }
