@@ -162,6 +162,31 @@ export type ActivityEvent = {
   created_at: string
 }
 
+export type AcademicScheduleItem = {
+  id: string
+  user_id: string
+  weekday: number
+  start_time: string
+  end_time: string | null
+  subject: string
+  schedule_type: 'class' | 'support' | 'study_block'
+  note: string | null
+  sort_order: number
+}
+
+export type AcademicEvent = {
+  id: string
+  user_id: string
+  title: string
+  category: string | null
+  format: string | null
+  stage: string | null
+  status: string
+  starts_at: string | null
+  event_date: string | null
+  note: string | null
+}
+
 export type NexusWorkspace = DashboardSnapshot & {
   checkin: DailyCheckin | null
   dailyCheckins: DailyCheckin[]
@@ -174,6 +199,8 @@ export type NexusWorkspace = DashboardSnapshot & {
   season: NexusSeason | null
   rewards: NexusReward[]
   achievements: NexusAchievement[]
+  academicSchedule: AcademicScheduleItem[]
+  academicEvents: AcademicEvent[]
 }
 
 export type NexusAttribute = {
