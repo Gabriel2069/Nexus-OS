@@ -46,6 +46,7 @@ const emptyWorkspace: NexusWorkspace = {
   attributes: [],
   season: null,
   rewards: [],
+  achievements: [],
 }
 
 const NexusContext = createContext<NexusContextValue | null>(null)
