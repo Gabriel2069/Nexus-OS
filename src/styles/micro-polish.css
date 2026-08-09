@@ -1,0 +1,118 @@
+/* Final optical pass. Keep this file small and purely presentational. */
+
+/* Scrollbars only where overflow is intentional. */
+.sidebar__nav,.rank-filter,.activity-heatmap,.kanban-grid,.mobile-sheet{scrollbar-color:color-mix(in srgb,var(--muted) 28%,transparent) transparent;scrollbar-width:thin}
+
+/* Optical icon alignment. */
+button>svg,.page-hero__badge>svg,.topbar__status>svg,.mission-meta svg,.agenda-item small svg{flex:0 0 auto}
+.primary-button>svg,.secondary-button>svg,.completion-button>svg,.text-button>svg,.quick-add-top>svg{transform:translateY(-.25px)}
+
+/* Mobile sheet should feel like a real navigation surface at every dock breakpoint. */
+.mobile-sheet__title{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:40px;margin-bottom:10px}
+.mobile-sheet__title>div{display:flex;align-items:center;gap:8px;min-width:0}
+.mobile-sheet__title>div strong{font-size:.88rem;letter-spacing:-.012em}
+.mobile-sheet__title>button{width:36px;height:36px;min-height:36px;padding:0;border:1px solid var(--hairline);border-radius:11px;background:var(--panel2);display:grid;place-items:center;color:var(--muted)}
+.mobile-sheet__grid{display:grid;gap:7px}
+.mobile-sheet__grid button{min-width:0;border:1px solid var(--hairline);background:color-mix(in srgb,var(--panel2) 72%,transparent);color:var(--text);border-radius:13px;padding:10px}
+.mobile-sheet__grid button>span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mobile-sheet__grid button>svg:last-child{color:var(--muted);opacity:.72}
+
+/* Command palette spacing and scan rhythm. */
+.command-palette{padding:18px}
+.command-palette__search{height:48px;padding-inline:13px}
+.command-palette__search input{font-size:.88rem}
+.command-quick{gap:7px;margin-top:11px}
+.command-quick button{min-height:46px;padding:9px 10px}
+.command-results{gap:5px;margin-top:12px}
+.command-section-label{display:block;padding:2px 4px 6px;color:var(--muted);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:750}
+.command-results button{min-height:52px;padding:9px 10px}
+.command-results button div{min-width:0}
+.command-results button strong,.command-results button small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.command-palette__footer{align-items:center}
+
+/* Quick capture should visually read top-to-bottom, not as disconnected controls. */
+.quick-modal{padding:20px}
+.modal-title{align-items:flex-start}
+.modal-title h2{margin-top:5px}
+.segmented-control{margin:16px 0 13px}
+.quick-form{gap:10px}
+.quick-form>label{font-size:.66rem;color:var(--muted);font-weight:650}
+.quick-form>input{min-height:46px;padding:11px 12px}
+.rank-picker{min-height:40px;gap:5px}
+.rank-picker>span{margin-right:auto;font-size:.65rem;color:var(--muted)}
+.rank-picker button{min-width:34px;min-height:32px;padding:5px 8px}
+.modal-submit{margin-top:3px;justify-self:stretch;width:100%}
+
+/* Notification surface and list rhythm. */
+.notification-drawer header{align-items:center;gap:12px}
+.notification-drawer header>div{min-width:0}
+.notification-list{gap:7px}
+.notification-item{min-height:64px;padding:10px 11px}
+.notification-item>div{min-width:0}
+.notification-item strong{display:block;line-height:1.22}
+.notification-item small{line-height:1.35}
+
+/* Lock screen: centered, calm, with a shorter eye path. */
+.nexus-lock-card{padding:29px 30px 27px}
+.nexus-lock-card h1{line-height:.98;max-width:9ch}
+.nexus-lock-card>p{margin-bottom:19px}
+.nexus-lock-icon{margin:27px 0 17px}
+.nexus-pin-field{box-shadow:inset 0 1px 0 #ffffff06}
+.nexus-unlock-button{margin-top:10px}
+
+/* Keep dense content from visually touching card edges. */
+.reward-list,.talent-list,.system-rules,.insight-list,.agenda-list,.routine-items,.mission-stack,.inbox-list{min-width:0}
+.reward-card,.agenda-item,.routine-item,.mission-card-modern,.inbox-item{min-width:0}
+
+/* Light theme contrast needs less shadow and slightly stronger separators. */
+html[data-theme=light] .surface-card,
+html[data-theme=light] .page-hero,
+html[data-theme=light] .home-hero,
+html[data-theme=light] .rpg-hero,
+html[data-theme=light] .today-header{box-shadow:0 1px 0 #ffffff,0 15px 42px #26344a10}
+html[data-theme=light] .calendar-grid{background:#fff}
+html[data-theme=light] .calendar-day{background:#fff}
+html[data-theme=light] .mobile-dock{box-shadow:0 12px 34px #26344a1a}
+
+/* Medium-width desktop keeps control rows from wrapping unpredictably. */
+@media(max-width:1280px) and (min-width:921px){
+  .topbar__actions{gap:5px}
+  .topbar__status{padding-inline:9px}
+  .quick-add-top{padding-inline:11px}
+  .calendar-toolbar>strong{font-size:.93rem}
+  .project-command-card__footer{font-size:.61rem}
+}
+
+@media(max-width:920px){
+  .mobile-sheet__grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mobile-sheet__grid button{min-height:58px;display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px}
+  .command-palette{width:min(660px,calc(100vw - 24px))}
+  .quick-modal{width:min(600px,calc(100vw - 24px))}
+}
+
+@media(max-width:760px){
+  .command-palette,.quick-modal{width:100%;padding:14px}
+  .command-palette__search{height:45px}
+  .command-quick{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .command-quick button{min-width:0;min-height:44px;padding:8px}
+  .command-quick button span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .command-results button{min-height:49px;padding:8px 9px}
+  .segmented-control{margin:13px 0 11px}
+  .quick-form>input{min-height:44px}
+  .rank-picker{overflow-x:auto;scrollbar-width:none}
+  .rank-picker button{flex:0 0 auto}
+  .mobile-sheet__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mobile-sheet__grid button{min-height:51px;grid-template-columns:28px minmax(0,1fr) auto}
+  .nexus-lock-screen{padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))}
+  .nexus-lock-card{padding:22px 18px 20px;border-radius:23px}
+  .nexus-lock-card h1{font-size:2.18rem;max-width:10ch}
+  .nexus-lock-icon{margin:23px 0 15px}
+  .nexus-pin-field{height:54px;border-radius:15px}
+  .nexus-unlock-button{height:49px;border-radius:14px}
+}
+
+@media(max-width:390px){
+  .command-quick{grid-template-columns:1fr}
+  .mobile-sheet__grid{grid-template-columns:1fr}
+  .mobile-sheet__grid button{min-height:48px}
+}

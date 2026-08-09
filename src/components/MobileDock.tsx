@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronUp, Crosshair, Home, ListChecks, MoreHorizontal, Sparkles, X } from 'lucide-react'
+import { CalendarDays, ChevronRight, Crosshair, Home, ListChecks, MoreHorizontal, Sparkles, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { navigation } from '../data/navigation'
@@ -58,10 +58,10 @@ export function MobileDock({ pathname }: Props) {
       <button className={more ? 'active' : ''} onClick={() => { setDragY(0); setMore(true) }}><MoreHorizontal size={20} /><span>Mais</span></button>
     </nav>
     {more && <div className="mobile-sheet-backdrop" style={{ backgroundColor: `rgb(0 0 0 / ${0.62 * backdropOpacity})` }} onClick={closeSheet}>
-      <section className={`mobile-sheet ${dragging ? 'is-dragging' : ''}`} style={{ transform: `translateY(${dragY}px)` }} onClick={(event) => event.stopPropagation()}>
+      <section className={`mobile-sheet ${dragging ? 'is-dragging' : ''}`} style={{ transform: `translateY(${dragY}px)` }} onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="Mais áreas do Nexus">
         <div className="mobile-sheet__handle" aria-label="Arraste para fechar" onPointerDown={onDragStart} onPointerMove={onDragMove} onPointerUp={onDragEnd} onPointerCancel={() => { setDragging(false); setDragY(0) }} />
         <div className="mobile-sheet__title"><div><Sparkles size={17} /><strong>Nexus OS</strong></div><button onClick={closeSheet} aria-label="Fechar navegação"><X size={18} /></button></div>
-        <div className="mobile-sheet__grid">{navigation.flatMap((group) => group.items).filter((item) => !primary.some((p) => p.path === item.path)).map((item) => { const Icon = item.icon; return <button key={item.path} onClick={() => { closeSheet(); navigate(item.path) }}><span className={`nav-item__icon tone-${item.tone}`}><Icon size={18} /></span><span>{item.label}</span><ChevronUp size={12} /></button> })}</div>
+        <div className="mobile-sheet__grid">{navigation.flatMap((group) => group.items).filter((item) => !primary.some((p) => p.path === item.path)).map((item) => { const Icon = item.icon; return <button key={item.path} onClick={() => { closeSheet(); navigate(item.path) }}><span className={`nav-item__icon tone-${item.tone}`}><Icon size={18} /></span><span>{item.label}</span><ChevronRight size={13} /></button> })}</div>
       </section>
     </div>}
   </>
