@@ -1,16 +1,16 @@
-import { BatteryMedium, Check, CheckCircle2, Clock3, Moon, Play, Sparkles, Sun } from 'lucide-react'
+import { BatteryMedium, Check, Clock3, Moon, Play, Sparkles, Sun } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { SurfaceCard } from '../components/SurfaceCard'
 import { useNexus } from '../context/NexusContext'
 import { navigate } from '../lib/router'
-import { getReadiness, nextBestMission } from '../lib/decision-engine'
+import { getReadiness } from '../lib/decision-engine'
 import { formatOccurrenceTime, getRoutineContext } from '../lib/routine-context'
 
 const moods = ['Calmo','Focado','Animado','Neutro','Cansado']
 const clock = (date: Date) => new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}).format(date)
 
 export function TodayPage(){
-  const {workspace,saveCheckin,completeMission,setRoutineItem}=useNexus()
+  const {workspace,saveCheckin,setRoutineItem}=useNexus()
   const [now,setNow]=useState(()=>new Date())
   const [energy,setEnergy]=useState(workspace.checkin?.energy??7)
   const [mood,setMood]=useState(workspace.checkin?.mood??'Neutro')
@@ -18,11 +18,12 @@ export function TodayPage(){
   useEffect(()=>{const id=window.setInterval(()=>setNow(new Date()),30_000);return()=>window.clearInterval(id)},[])
   const context=useMemo(()=>getRoutineContext(workspace,now),[workspace,now])
   const readiness=getReadiness(workspace.checkin)
-  const recommended=nextBestMission(workspace.missions,workspace.checkin)
   const completed=new Set(workspace.routineCompletions.map(c=>c.routine_item_id))
   const morning=workspace.routines.find(r=>r.period==='morning')
   const evening=workspace.routines.find(r=>r.period==='evening')
   const xp=workspace.journey?.xp_earned??0
+  const remainingToday=context.today.filter(event=>!event.isOptional&&event.end>now&&!['sleep','recovery'].includes(event.category)&&event.end.getTime()-event.start.getTime()<20*60*60_000)
+  const studyNow=context.suggestion.kind==='focus'?context.suggestion:null
   async function persistCheckin(){await saveCheckin({energy,mood});setSaved(true)}
 
   return <div className="page-stack today-page today-page--context">
@@ -53,13 +54,13 @@ export function TodayPage(){
     <section className="today-flow-grid">
       <SurfaceCard eyebrow="Horários" title="O que ainda vem hoje">
         <div className="today-timeline">
-          {context.today.filter(event=>event.end>now && !['sleep','recovery'].includes(event.category)).slice(0,6).map((event)=><div className={context.current?.id===event.id?'is-current':''} key={event.id}><span>{clock(event.start)}</span><i/><div><strong>{event.title}</strong><small>{clock(event.start)}–{clock(event.end)}</small></div></div>)}
-          {!context.today.some(event=>event.end>now && !['sleep','recovery'].includes(event.category)) && <div className="empty-compact">Sem outros compromissos fixos hoje.</div>}
+          {remainingToday.slice(0,6).map((event)=><div className={context.current?.id===event.id?'is-current':''} key={event.id}><span>{clock(event.start)}</span><i/><div><strong>{event.title}</strong><small>{clock(event.start)}–{clock(event.end)}</small></div></div>)}
+          {!remainingToday.length&&<div className="empty-compact">Sem outros compromissos fixos hoje.</div>}
         </div>
       </SurfaceCard>
 
-      <SurfaceCard tone="violet" eyebrow="Se houver espaço" title="Um estudo que vale a pena">
-        {recommended?<div className="single-study-target"><div><span className={`rank-chip rank-${recommended.rank.toLowerCase()}`}>{recommended.rank}</span><strong>{recommended.title}</strong><p>{recommended.notes||'Use o próximo bloco de estudo que realmente caiba no dia.'}</p></div><footer><span>{recommended.duration_minutes??45} min · {recommended.xp_base+recommended.xp_bonus} XP</span><div><button className="secondary-button" onClick={()=>navigate(`/foco?minutes=${recommended.duration_minutes??45}&mission=${recommended.id}`)}>Abrir foco</button><button className="mission-complete-round" onClick={()=>void completeMission(recommended.id)} aria-label="Concluir missão"><CheckCircle2 size={17}/></button></div></footer></div>:<p className="panel-copy">Nenhuma missão aberta pedindo atenção. Não crie uma só para preencher espaço.</p>}
+      <SurfaceCard tone="violet" eyebrow="Estudo" title={studyNow?'Este é o bloco que cabe agora':'Não precisa encaixar estudo agora'}>
+        {studyNow?<div className="single-study-target"><div><strong>{studyNow.title}</strong><p>{studyNow.detail}</p></div><footer><span>{studyNow.durationMinutes??45} min</span><button className="secondary-button" onClick={()=>navigate(studyNow.actionPath??'/foco')}>Abrir foco</button></footer></div>:<p className="panel-copy">Quando surgir uma janela planejada — ou uma urgência real — o bloco aparece aqui e no Agora. Até lá, siga o compromisso atual ou preserve o intervalo.</p>}
       </SurfaceCard>
     </section>
 
