@@ -2,11 +2,9 @@ name: Supabase keep-alive
 
 on:
   schedule:
-    # 00:41 in America/Sao_Paulo (03:41 UTC). Daily activity is enough for this lightweight health RPC.
+    # 00:41 in America/Sao_Paulo (03:41 UTC).
     - cron: '41 3 * * *'
   workflow_dispatch:
-  pull_request:
-    branches: [main]
 
 permissions:
   contents: read
