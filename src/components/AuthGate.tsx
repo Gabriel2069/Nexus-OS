@@ -1,4 +1,14 @@
-import { ArrowLeft, ArrowRight, CheckCircle2, LoaderCircle, LockKeyhole, Mail, Sparkles } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  Fingerprint,
+  LoaderCircle,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react'
 import type { FormEvent, PropsWithChildren } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
@@ -6,13 +16,55 @@ import { ensureProfile } from '../lib/nexus-api'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
 type AuthGateProps = PropsWithChildren
+
 const LAST_EMAIL_KEY = 'nexus-last-email'
+const EMAIL_COOLDOWN_KEY = 'nexus-email-cooldown-until'
+const PASSKEY_SKIP_KEY = 'nexus-passkey-skip-until'
+const REQUEST_COOLDOWN_MS = 60_000
+const RATE_LIMIT_COOLDOWN_MS = 15 * 60_000
+const PASSKEY_SKIP_MS = 24 * 60 * 60_000
 
 function maskEmail(value: string) {
   const [name, domain] = value.split('@')
   if (!name || !domain) return value
   const visible = name.slice(0, Math.min(2, name.length))
   return `${visible}${'•'.repeat(Math.min(5, Math.max(2, name.length - visible.length)))}@${domain}`
+}
+
+function getErrorCode(error: unknown) {
+  if (typeof error === 'object' && error && 'code' in error) {
+    return String((error as { code?: unknown }).code ?? '')
+  }
+  return ''
+}
+
+function getErrorMessage(error: unknown) {
+  if (typeof error === 'object' && error && 'message' in error) {
+    return String((error as { message?: unknown }).message ?? '')
+  }
+  return error instanceof Error ? error.message : String(error ?? '')
+}
+
+function friendlyAuthError(error: unknown) {
+  const code = getErrorCode(error)
+  const message = getErrorMessage(error).toLowerCase()
+
+  if (code === 'over_email_send_rate_limit' || message.includes('rate limit')) {
+    return 'O Supabase bloqueou novos e-mails temporariamente por excesso de tentativas. Não reenvie agora; use uma passkey ou tente novamente mais tarde.'
+  }
+  if (code === 'otp_disabled' || message.includes('signups not allowed for otp')) {
+    return 'Esse e-mail não foi reconhecido como uma conta existente do Nexus. Confira o endereço usado no primeiro acesso.'
+  }
+  if (code === 'passkey_disabled') {
+    return 'As passkeys ainda precisam ser habilitadas nas configurações de autenticação do Supabase deste projeto.'
+  }
+  if (code === 'webauthn_credential_not_found' || message.includes('credential') && message.includes('not found')) {
+    return 'Nenhuma passkey do Nexus foi encontrada neste dispositivo. Use o e-mail uma vez e cadastre Face ID, Touch ID ou PIN depois de entrar.'
+  }
+  if (message.includes('notallowederror') || message.includes('the operation either timed out or was not allowed')) {
+    return 'A autenticação biométrica foi cancelada ou não autorizada pelo dispositivo.'
+  }
+  return getErrorMessage(error) || 'Não foi possível entrar no Nexus.'
 }
 
 export function AuthGate({ children }: AuthGateProps) {
@@ -22,10 +74,33 @@ export function AuthGate({ children }: AuthGateProps) {
   const [editingEmail, setEditingEmail] = useState(() => !localStorage.getItem(LAST_EMAIL_KEY))
   const [sent, setSent] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [passkeySubmitting, setPasskeySubmitting] = useState(false)
+  const [passkeySupported, setPasskeySupported] = useState(false)
+  const [passkeyEnrollment, setPasskeyEnrollment] = useState(false)
+  const [passkeyEnrollmentChecking, setPasskeyEnrollmentChecking] = useState(false)
+  const [passkeyEnrollmentSubmitting, setPasskeyEnrollmentSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cooldownUntil, setCooldownUntil] = useState(() => Number(localStorage.getItem(EMAIL_COOLDOWN_KEY) ?? '0'))
+  const [now, setNow] = useState(Date.now())
 
   const remembered = useMemo(() => localStorage.getItem(LAST_EMAIL_KEY) ?? '', [])
   const isGmail = email.trim().toLowerCase().endsWith('@gmail.com')
+  const cooldownSeconds = Math.max(0, Math.ceil((cooldownUntil - now) / 1000))
+  const emailBlocked = cooldownSeconds > 0
+
+  useEffect(() => {
+    setPasskeySupported(
+      typeof window !== 'undefined' &&
+      window.isSecureContext &&
+      'PublicKeyCredential' in window,
+    )
+  }, [])
+
+  useEffect(() => {
+    if (!emailBlocked) return
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [emailBlocked])
 
   useEffect(() => {
     if (!supabase) {
@@ -37,7 +112,7 @@ export function AuthGate({ children }: AuthGateProps) {
 
     supabase.auth.getUser().then(async ({ data, error: authError }) => {
       if (!alive) return
-      if (authError) setError(authError.message)
+      if (authError) setError(friendlyAuthError(authError))
       if (data.user) {
         setUser(data.user)
         if (data.user.email) localStorage.setItem(LAST_EMAIL_KEY, data.user.email)
@@ -62,10 +137,40 @@ export function AuthGate({ children }: AuthGateProps) {
     }
   }, [])
 
+  useEffect(() => {
+    if (!supabase || !user || !passkeySupported) return
+    const skipUntil = Number(localStorage.getItem(PASSKEY_SKIP_KEY) ?? '0')
+    if (skipUntil > Date.now()) return
+
+    let alive = true
+    setPasskeyEnrollmentChecking(true)
+
+    supabase.auth.passkey
+      .list()
+      .then(({ data, error: listError }) => {
+        if (!alive) return
+        if (!listError && (data?.length ?? 0) === 0) setPasskeyEnrollment(true)
+      })
+      .finally(() => {
+        if (alive) setPasskeyEnrollmentChecking(false)
+      })
+
+    return () => {
+      alive = false
+    }
+  }, [user, passkeySupported])
+
+  function startCooldown(duration = REQUEST_COOLDOWN_MS) {
+    const until = Date.now() + duration
+    localStorage.setItem(EMAIL_COOLDOWN_KEY, String(until))
+    setCooldownUntil(until)
+    setNow(Date.now())
+  }
+
   async function requestAccess(event?: FormEvent) {
     event?.preventDefault()
     const cleanEmail = email.trim().toLowerCase()
-    if (!supabase || !cleanEmail) return
+    if (!supabase || !cleanEmail || emailBlocked) return
 
     setSubmitting(true)
     setError(null)
@@ -79,14 +184,59 @@ export function AuthGate({ children }: AuthGateProps) {
     })
 
     if (signInError) {
-      setError(signInError.message)
+      const code = getErrorCode(signInError)
+      if (code === 'over_email_send_rate_limit' || getErrorMessage(signInError).toLowerCase().includes('rate limit')) {
+        startCooldown(RATE_LIMIT_COOLDOWN_MS)
+      }
+      setError(friendlyAuthError(signInError))
     } else {
       localStorage.setItem(LAST_EMAIL_KEY, cleanEmail)
       setEmail(cleanEmail)
       setSent(true)
       setEditingEmail(false)
+      startCooldown()
     }
     setSubmitting(false)
+  }
+
+  async function enterWithPasskey() {
+    if (!supabase || !passkeySupported) return
+    setPasskeySubmitting(true)
+    setError(null)
+
+    try {
+      const { error: passkeyError } = await supabase.auth.signInWithPasskey()
+      if (passkeyError) setError(friendlyAuthError(passkeyError))
+    } catch (passkeyError) {
+      setError(friendlyAuthError(passkeyError))
+    } finally {
+      setPasskeySubmitting(false)
+    }
+  }
+
+  async function registerPasskey() {
+    if (!supabase || !user) return
+    setPasskeyEnrollmentSubmitting(true)
+    setError(null)
+
+    try {
+      const { error: registerError } = await supabase.auth.registerPasskey()
+      if (registerError) {
+        setError(friendlyAuthError(registerError))
+      } else {
+        setPasskeyEnrollment(false)
+        localStorage.removeItem(PASSKEY_SKIP_KEY)
+      }
+    } catch (registerError) {
+      setError(friendlyAuthError(registerError))
+    } finally {
+      setPasskeyEnrollmentSubmitting(false)
+    }
+  }
+
+  function skipPasskeyForNow() {
+    localStorage.setItem(PASSKEY_SKIP_KEY, String(Date.now() + PASSKEY_SKIP_MS))
+    setPasskeyEnrollment(false)
   }
 
   function changeEmail() {
@@ -104,64 +254,95 @@ export function AuthGate({ children }: AuthGateProps) {
     )
   }
 
-  if (!isSupabaseConfigured || user) return children
+  if (!isSupabaseConfigured) return children
+
+  if (user && passkeyEnrollment && !passkeyEnrollmentChecking) {
+    return (
+      <main className="auth-screen auth-screen--simple">
+        <div className="auth-backdrop" />
+        <section className="auth-card auth-card--simple auth-passkey-card">
+          <div className="auth-brand"><Sparkles size={18} /><span>NEXUS OS</span></div>
+          <div className="auth-passkey-hero"><Fingerprint size={34} /></div>
+          <span className="eyebrow">Entrada rápida</span>
+          <h1>Ative a sua passkey.</h1>
+          <p className="auth-intro">Depois disso, este dispositivo pode entrar no Nexus com Face ID, Touch ID, Windows Hello ou o PIN do aparelho — sem depender de e-mail.</p>
+          <button className="primary-button auth-submit" onClick={() => void registerPasskey()} disabled={passkeyEnrollmentSubmitting}>
+            {passkeyEnrollmentSubmitting ? <LoaderCircle className="spin" size={17} /> : <Fingerprint size={17} />}
+            {passkeyEnrollmentSubmitting ? 'Ativando…' : 'Ativar passkey'}
+          </button>
+          <button className="text-button" onClick={skipPasskeyForNow}>Agora não</button>
+          {error && <div className="auth-message auth-message--error">{error}</div>}
+          <small className="auth-footnote"><ShieldCheck size={13} /> A chave privada permanece no seu dispositivo ou gerenciador de senhas.</small>
+        </section>
+      </main>
+    )
+  }
+
+  if (user) return children
 
   return (
     <main className="auth-screen auth-screen--simple">
       <div className="auth-backdrop" />
       <section className="auth-card auth-card--simple">
         <div className="auth-brand"><Sparkles size={18} /><span>NEXUS OS</span></div>
+        <div className="auth-passkey-hero"><Fingerprint size={32} /></div>
+        <span className="eyebrow">Acesso privado</span>
+        <h1>Entrar no Nexus.</h1>
+        <p className="auth-intro">Use a biometria ou o PIN do dispositivo. O e-mail fica apenas como recuperação.</p>
+
+        {passkeySupported && (
+          <button className="primary-button auth-submit auth-passkey-primary" onClick={() => void enterWithPasskey()} disabled={passkeySubmitting}>
+            {passkeySubmitting ? <LoaderCircle className="spin" size={17} /> : <Fingerprint size={18} />}
+            {passkeySubmitting ? 'Verificando…' : 'Entrar com passkey'}
+          </button>
+        )}
+
+        <div className="auth-divider"><span>ou recuperar pelo e-mail</span></div>
 
         {sent ? (
           <div className="auth-sent">
             <div className="auth-sent__icon"><CheckCircle2 size={27} /></div>
-            <span className="eyebrow">Quase lá</span>
-            <h1>Abra o e-mail.</h1>
-            <p>Enviamos um acesso para <strong>{maskEmail(email)}</strong>. Toque no botão do e-mail e você volta direto para o Nexus.</p>
+            <h2>Confira o e-mail.</h2>
+            <p>Enviamos um acesso para <strong>{maskEmail(email)}</strong>. Abra apenas a mensagem mais recente.</p>
             <div className="auth-sent__actions">
-              {isGmail && <a className="primary-button auth-mail-button" href="https://mail.google.com/">Abrir Gmail <ArrowRight size={16} /></a>}
-              <button className="secondary-button" onClick={() => void requestAccess()} disabled={submitting}>{submitting ? <LoaderCircle className="spin" size={16} /> : <Mail size={16} />} Reenviar</button>
+              {isGmail && <a className="secondary-button auth-mail-button" href="https://mail.google.com/">Abrir Gmail <ArrowRight size={16} /></a>}
+              <button className="secondary-button" onClick={() => void requestAccess()} disabled={submitting || emailBlocked}>
+                {submitting ? <LoaderCircle className="spin" size={16} /> : emailBlocked ? <Clock3 size={16} /> : <Mail size={16} />}
+                {emailBlocked ? `Reenviar em ${cooldownSeconds}s` : 'Reenviar'}
+              </button>
             </div>
             <button className="text-button auth-change-email" onClick={changeEmail}><ArrowLeft size={14} /> Usar outro e-mail</button>
           </div>
+        ) : !editingEmail && remembered ? (
+          <div className="auth-return">
+            <div className="auth-return__identity">
+              <div className="auth-return__avatar"><Mail size={18} /></div>
+              <div><small>Recuperar acesso de</small><strong>{maskEmail(remembered)}</strong></div>
+            </div>
+            <button className="secondary-button auth-submit" onClick={() => void requestAccess()} disabled={submitting || emailBlocked}>
+              {submitting ? <LoaderCircle className="spin" size={16} /> : emailBlocked ? <Clock3 size={16} /> : <Mail size={16} />}
+              {emailBlocked ? `Aguarde ${cooldownSeconds}s` : 'Enviar acesso por e-mail'}
+            </button>
+            <button className="text-button" onClick={() => setEditingEmail(true)}>Usar outro e-mail</button>
+          </div>
         ) : (
-          <>
-            <div className="auth-icon"><LockKeyhole size={24} /></div>
-            <span className="eyebrow">Acesso privado</span>
-            <h1>Entrar no Nexus.</h1>
-            <p className="auth-intro">Sem senha para lembrar. O acesso fica salvo neste dispositivo depois que você entrar.</p>
-
-            {!editingEmail && remembered ? (
-              <div className="auth-return">
-                <div className="auth-return__identity">
-                  <div className="auth-return__avatar"><Sparkles size={18} /></div>
-                  <div><small>Continuar como</small><strong>{maskEmail(remembered)}</strong></div>
-                </div>
-                <button className="primary-button auth-submit" onClick={() => void requestAccess()} disabled={submitting}>
-                  {submitting ? <LoaderCircle className="spin" size={16} /> : <ArrowRight size={16} />}
-                  {submitting ? 'Enviando…' : 'Continuar'}
-                </button>
-                <button className="text-button" onClick={() => setEditingEmail(true)}>Usar outro e-mail</button>
-              </div>
-            ) : (
-              <form onSubmit={requestAccess} className="auth-form auth-form--simple">
-                <label htmlFor="email">Seu e-mail</label>
-                <div className="auth-input">
-                  <Mail size={16} />
-                  <input id="email" type="email" autoComplete="email" inputMode="email" placeholder="voce@email.com" value={email} onChange={(event) => setEmail(event.target.value)} autoFocus required />
-                </div>
-                <button className="primary-button auth-submit" disabled={submitting}>
-                  {submitting ? <LoaderCircle className="spin" size={16} /> : <ArrowRight size={16} />}
-                  {submitting ? 'Enviando…' : 'Continuar'}
-                </button>
-                {remembered && <button type="button" className="text-button auth-back-account" onClick={() => { setEmail(remembered); setEditingEmail(false) }}><ArrowLeft size={14} /> Voltar</button>}
-              </form>
-            )}
-          </>
+          <form onSubmit={requestAccess} className="auth-form auth-form--simple">
+            <label htmlFor="email">E-mail da conta</label>
+            <div className="auth-input">
+              <Mail size={16} />
+              <input id="email" type="email" autoComplete="email" inputMode="email" placeholder="voce@email.com" value={email} onChange={(event) => setEmail(event.target.value)} required />
+            </div>
+            <button className="secondary-button auth-submit" disabled={submitting || emailBlocked}>
+              {submitting ? <LoaderCircle className="spin" size={16} /> : emailBlocked ? <Clock3 size={16} /> : <ArrowRight size={16} />}
+              {emailBlocked ? `Aguarde ${cooldownSeconds}s` : 'Enviar acesso'}
+            </button>
+            {remembered && <button type="button" className="text-button auth-back-account" onClick={() => { setEmail(remembered); setEditingEmail(false) }}><ArrowLeft size={14} /> Voltar</button>}
+          </form>
         )}
 
         {error && <div className="auth-message auth-message--error">{error}</div>}
-        <small className="auth-footnote">Conta privada · sessão persistente · acesso protegido pelo Supabase</small>
+        {!passkeySupported && <div className="auth-message">Este navegador não oferece WebAuthn neste contexto. Use HTTPS ou localhost para passkeys.</div>}
+        <small className="auth-footnote"><ShieldCheck size={13} /> Sessão persistente · RLS por usuário · passkey sem senha compartilhada</small>
       </section>
     </main>
   )
