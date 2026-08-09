@@ -1,0 +1,31 @@
+html.nexus-standalone body{min-height:100dvh;background:var(--bg)}
+
+@media(max-width:920px){
+  html.nexus-standalone .topbar{
+    height:calc(58px + env(safe-area-inset-top));
+    min-height:calc(58px + env(safe-area-inset-top));
+    padding-top:env(safe-area-inset-top);
+    padding-left:max(12px,env(safe-area-inset-left));
+    padding-right:max(12px,env(safe-area-inset-right));
+    box-sizing:border-box;
+    align-items:center;
+  }
+
+  html.nexus-standalone .topbar::before{
+    content:"";
+    position:absolute;
+    inset:0 0 auto;
+    height:env(safe-area-inset-top);
+    background:inherit;
+    pointer-events:none;
+  }
+
+  html.nexus-standalone .page-content{
+    padding-bottom:calc(108px + env(safe-area-inset-bottom));
+  }
+
+  html.nexus-standalone .notification-drawer,
+  html.nexus-standalone .mobile-sheet{
+    padding-bottom:calc(20px + env(safe-area-inset-bottom));
+  }
+}
