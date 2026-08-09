@@ -1,4 +1,4 @@
-name: Verify tutorial copy and spacing
+name: Verify Nexus OS
 
 on:
   pull_request:
@@ -18,7 +18,11 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: package.json
-      - run: npm install --no-audit --no-fund
-      - run: npm run typecheck
-      - run: npm run build
-      - run: npx wrangler deploy --dry-run
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Wrangler dry run
+        run: npx wrangler deploy --dry-run
