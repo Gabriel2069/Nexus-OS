@@ -1,30 +1,89 @@
-import { ArrowRight, ArrowUpRight, CalendarDays, CheckCircle2, Coins, Crosshair, Flame, Focus, Sparkles, Target, Zap } from 'lucide-react'
-import { useMemo } from 'react'
+import { ArrowRight, CalendarClock, Check, Clock3, Coins, GraduationCap, Sparkles, Trophy } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { SurfaceCard } from '../components/SurfaceCard'
-import { ProgressRing } from '../components/ProgressRing'
-import { Sparkline } from '../components/charts/Sparkline'
 import { useNexus } from '../context/NexusContext'
 import { navigate } from '../lib/router'
-import { getReadiness, loadForecast, nextBestMission } from '../lib/decision-engine'
-import { emitUI } from '../lib/ui-events'
+import { formatOccurrenceTime, getRoutineContext } from '../lib/routine-context'
 
-function greeting() { const h=new Date().getHours(); return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite' }
-const dayLabel = new Intl.DateTimeFormat('pt-BR',{weekday:'long',day:'2-digit',month:'long'}).format(new Date())
+const dayLabel = (date: Date) => new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', timeZone: 'America/Sao_Paulo' }).format(date)
+const timeLabel = (date: Date) => new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }).format(date)
+const categoryLabel: Record<string, string> = { school:'Escola', class:'Aula', study:'Estudo', exam:'Prova', health:'Saúde', recovery:'Pausa', sleep:'Sono' }
 
-export function HomePage(){
-  const {workspace,loading,error,completeMission}=useNexus(); const profile=workspace.profile
-  const open=workspace.missions.filter(m=>m.status!=='Inbox'); const readiness=getReadiness(workspace.checkin); const target=nextBestMission(open,workspace.checkin); const forecast=loadForecast(open)
-  const completedXp=workspace.journey?.xp_earned??0; const goal=profile?.daily_xp_goal??300; const dailyPct=Math.min(100,Math.round(completedXp/Math.max(goal,1)*100))
-  const todayFocus=workspace.focusSessions.filter(s=>s.status==='completed'&&new Date(s.started_at).toDateString()===new Date().toDateString()).reduce((a,s)=>a+(s.actual_minutes??0),0)
-  const days=useMemo(()=>Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));const k=d.toISOString().slice(0,10);return {label:new Intl.DateTimeFormat('pt-BR',{weekday:'short'}).format(d).replace('.',''),value:workspace.activity.filter(e=>e.created_at.slice(0,10)===k).reduce((s,e)=>s+Math.max(0,e.xp_delta),0)}}),[workspace.activity])
-  const routineTotal=workspace.routines.flatMap(r=>r.routine_items??[]).length; const routineDone=workspace.routineCompletions.length
-  const name=profile?.display_name?.split(' ')[0]||'Gabriel'
-  return <div className="page-stack home-page">
-    <section className="home-hero"><div className="home-hero__ambient"/><div className="home-hero__copy"><span className="eyebrow">{dayLabel}</span><h1>{greeting()}, {name}.</h1><p>Veja o que importa agora, faça o próximo passo e deixe o restante guardado no sistema.</p><div className="hero-actions"><button className="primary-button" onClick={()=>navigate('/hoje')}>Ver meu dia <ArrowUpRight size={16}/></button><button className="secondary-button" onClick={()=>emitUI('quickAdd')}>Captura rápida</button></div>{error&&<small className="system-error">{error}</small>}</div><div className="player-compact"><div className="player-orb"><Sparkles size={22}/></div><div><span>{profile?.class_name??'Tecelão'}</span><strong>Nível {profile?.level??1}</strong><small>{profile?.title??'Iniciado da Trama'}</small></div><div className="player-coins"><Coins size={14}/><span>{profile?.nexus_coins??0}</span></div></div></section>
-    <section className="home-status-grid"><div><Zap size={16}/><span>XP hoje</span><strong>{completedXp}<small> / {goal}</small></strong></div><div><Flame size={16}/><span>Disposição</span><strong>{readiness.score}<small> / 100</small></strong></div><div><Focus size={16}/><span>Foco</span><strong>{todayFocus}<small> min</small></strong></div><div><CheckCircle2 size={16}/><span>Rotina</span><strong>{routineDone}<small> / {routineTotal}</small></strong></div></section>
-    <section className="home-command-grid"><SurfaceCard tone="blue" className="now-card"><div className="now-card__header"><div><span className="eyebrow">Próxima ação sugerida</span><h2>{target?target.title:'Sem missão pendente'}</h2></div><Crosshair size={19}/></div>{target?<><div className="mission-meta"><span className={`rank-chip rank-${target.rank.toLowerCase()}`}>{target.rank}</span><span>{target.duration_minutes??45} min</span><span>+{target.xp_base+target.xp_bonus} XP</span></div><p>{target.notes||readiness.note}</p><div className="now-actions"><button className="primary-button" onClick={()=>navigate('/foco')}>Começar foco <ArrowRight size={15}/></button><button className="completion-button" onClick={()=>void completeMission(target.id)}><CheckCircle2 size={16}/> Concluir</button></div></>:<><p>Não há uma missão ativa agora. Você pode revisar a Inbox ou criar a próxima ação.</p><button className="secondary-button" onClick={()=>emitUI('quickAdd')}>Criar missão</button></>}</SurfaceCard><SurfaceCard tone="violet" eyebrow="Hoje" title="Progresso da meta diária"><div className="momentum-card"><ProgressRing value={dailyPct} label="meta diária" detail={`${completedXp} XP`} size="lg"/><div className="momentum-copy"><strong>{dailyPct>=100?'Meta alcançada':dailyPct>=60?'Bom andamento':'Ainda começando'}</strong><p>{open.length} missões abertas · {todayFocus} min de foco registrado</p><button className="text-button" onClick={()=>navigate('/insights')}>Ver detalhes <ArrowUpRight size={13}/></button></div></div></SurfaceCard></section>
-    <section className="split-grid split-grid--wide"><SurfaceCard eyebrow="Últimos 7 dias" title="XP registrado" tone="cyan"><Sparkline data={days}/></SurfaceCard><SurfaceCard eyebrow="Próximos pontos" title="O que merece atenção"><div className="radar-list"><button onClick={()=>navigate('/calendario')}><span className="radar-icon tone-blue"><CalendarDays size={16}/></span><div><strong>{forecast.label}</strong><small>{forecast.minutes} min com prazo nos próximos 7 dias</small></div><ArrowUpRight size={14}/></button><button onClick={()=>navigate('/rotinas')}><span className="radar-icon tone-green"><CheckCircle2 size={16}/></span><div><strong>Rotinas</strong><small>{routineDone}/{routineTotal} etapas concluídas hoje</small></div><ArrowUpRight size={14}/></button><button onClick={()=>navigate('/projetos')}><span className="radar-icon tone-violet"><Target size={16}/></span><div><strong>Projetos</strong><small>{workspace.projects.length} projetos ativos</small></div><ArrowUpRight size={14}/></button></div></SurfaceCard></section>
-    <section><div className="section-heading"><div><span className="eyebrow">Projetos</span><h2>Em andamento</h2></div><button className="text-button" onClick={()=>navigate('/projetos')}>Ver todos <ArrowUpRight size={13}/></button></div><div className="project-grid">{workspace.projects.slice(0,3).map((project)=><SurfaceCard key={project.id} tone={project.progress>70?'green':project.progress>40?'blue':'violet'}><div className="project-card-modern"><div><span>{project.status}</span><strong>{project.name}</strong><p>{project.next_action||'Defina a próxima ação'}</p></div><div className="project-progress"><span style={{width:`${project.progress}%`}}/></div><footer><span>Nv. {project.level}</span><span>{project.progress}%</span><span>{project.xp} XP</span></footer></div></SurfaceCard>)}</div></section>
-    {loading&&<div className="loading-line"/>}
+export function HomePage() {
+  const { workspace, loading, error } = useNexus()
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => { const id = window.setInterval(() => setNow(new Date()), 30_000); return () => window.clearInterval(id) }, [])
+
+  const context = useMemo(() => getRoutineContext(workspace, now), [workspace, now])
+  const todayKey = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Sao_Paulo', year:'numeric', month:'2-digit', day:'2-digit' }).format(now)
+  const todayFocus = workspace.focusSessions.filter((session) => session.status === 'completed' && session.started_at.slice(0, 10) === todayKey).reduce((sum, session) => sum + (session.actual_minutes ?? 0), 0)
+  const checkinDone = Boolean(workspace.checkin)
+  const routineItems = workspace.routines.flatMap((routine) => routine.routine_items ?? [])
+  const completedIds = new Set(workspace.routineCompletions.map((item) => item.routine_item_id))
+  const eveningDone = routineItems.filter((item) => /fechar|vitória|amanhã/i.test(item.title)).some((item) => completedIds.has(item.id))
+  const xp = workspace.journey?.xp_earned ?? 0
+  const focusPath = context.suggestion.actionPath?.startsWith('/foco') ? context.suggestion.actionPath : '/foco'
+  const timedToday = context.today.filter((event) => !['sleep','recovery'].includes(event.category) && event.end.getTime() - event.start.getTime() < 20 * 60 * 60_000)
+
+  return <div className="page-stack now-page">
+    <section className={`now-stage now-stage--${context.suggestion.kind}`}>
+      <div className="now-stage__top">
+        <div><span className="eyebrow">{dayLabel(now)}</span><strong className="now-clock">{timeLabel(now)}</strong></div>
+        <div className="now-stage__status"><span>{context.load === 'cheio' ? 'dia cheio' : context.load === 'leve' ? 'dia leve' : 'dia normal'}</span><b>{xp} XP</b></div>
+      </div>
+      <div className="now-stage__main">
+        <div className="now-stage__icon"><Sparkles size={24}/></div>
+        <div className="now-stage__copy">
+          <span>{context.current ? 'Agora' : context.suggestion.optional ? 'Janela atual' : 'Próximo passo'}</span>
+          <h1>{context.suggestion.title}</h1>
+          <p>{context.suggestion.detail}</p>
+          <div className="now-stage__meta">
+            {!context.current && context.freeMinutes > 0 && <span><Clock3 size={13}/>{context.freeMinutes} min até o próximo limite</span>}
+            {context.current && <span><Clock3 size={13}/>{formatOccurrenceTime(context.current)}</span>}
+            {context.next && <span><CalendarClock size={13}/>depois: {context.next.title} · {timeLabel(context.next.start)}</span>}
+          </div>
+          {context.suggestion.actionPath && <button className="primary-button now-stage__action" onClick={() => navigate(context.suggestion.actionPath!)}>{context.suggestion.actionLabel ?? 'Abrir'}<ArrowRight size={15}/></button>}
+        </div>
+      </div>
+      {error && <small className="system-error">{error}</small>}
+    </section>
+
+    <section className="now-support-grid">
+      <SurfaceCard tone="blue" eyebrow="Hoje" title="O dia em ordem">
+        <div className="day-route">
+          {timedToday.map((event) => {
+            const current = event.start <= now && event.end > now
+            const past = event.end <= now
+            return <div className={`day-route__item ${current ? 'is-current' : ''} ${past ? 'is-past' : ''}`} key={event.id}>
+              <div className="day-route__time"><strong>{timeLabel(event.start)}</strong><small>{timeLabel(event.end)}</small></div>
+              <span className="day-route__dot" />
+              <div><span>{categoryLabel[event.category] ?? event.category}</span><strong>{event.title}</strong></div>
+            </div>
+          })}
+          {!timedToday.length && <div className="empty-compact">Nenhum compromisso fixo hoje.</div>}
+        </div>
+      </SurfaceCard>
+
+      <div className="now-side-stack">
+        <SurfaceCard tone="violet" eyebrow="Rotina gamificada" title="Só o essencial">
+          <div className="essential-loop">
+            <button className={checkinDone ? 'done' : ''} onClick={() => navigate('/hoje')}><span>{checkinDone ? <Check size={14}/> : '1'}</span><div><strong>Check-in rápido</strong><small>{checkinDone ? 'feito hoje' : 'energia + humor'}</small></div></button>
+            <button className={todayFocus > 0 ? 'done' : ''} onClick={() => navigate(focusPath)}><span>{todayFocus > 0 ? <Check size={14}/> : '2'}</span><div><strong>Um bloco que importa</strong><small>{todayFocus > 0 ? `${todayFocus} min registrados` : 'quando o calendário abrir espaço'}</small></div></button>
+            <button className={eveningDone ? 'done' : ''} onClick={() => navigate('/rotinas')}><span>{eveningDone ? <Check size={14}/> : '3'}</span><div><strong>Fechar o dia</strong><small>2 minutos antes de desacelerar</small></div></button>
+          </div>
+        </SurfaceCard>
+
+        <SurfaceCard tone="amber" eyebrow="Próxima pressão" title={context.nextExam?.title ?? 'Sem prova próxima'}>
+          <div className="exam-glance"><GraduationCap size={20}/><div>{context.nextExam ? <><strong>{context.daysToExam === 0 ? 'Hoje' : context.daysToExam === 1 ? 'Amanhã' : `em ${context.daysToExam} dias`}</strong><span>{new Intl.DateTimeFormat('pt-BR', { weekday:'short', day:'2-digit', month:'short', timeZone:'America/Sao_Paulo' }).format(context.nextExam.start).replace('.', '')}</span></> : <><strong>Calendário respirando</strong><span>não invente urgência</span></>}</div></div>
+        </SurfaceCard>
+      </div>
+    </section>
+
+    <section className="now-bottom-grid">
+      <SurfaceCard eyebrow="Depois" title={context.later?.title ?? 'O resto pode esperar'}><p className="panel-copy">{context.later?.detail ?? 'Quando este bloco terminar, volte ao Agora e o Nexus recalcula o próximo passo.'}</p></SurfaceCard>
+      <SurfaceCard tone="green" eyebrow="Vida fora da lista" title="Tempo livre continua sendo tempo livre"><p className="panel-copy">Amigos, família, cabelo, hobby e descanso entram quando o calendário abre espaço. Eles não precisam virar uma fila diária de tarefas para contar.</p></SurfaceCard>
+      <SurfaceCard tone="violet" eyebrow="Progressão" title={`Nível ${workspace.profile?.level ?? 1}`}><div className="now-progress"><Trophy size={18}/><div><strong>{workspace.profile?.xp_total ?? 0} XP</strong><span><Coins size={12}/>{workspace.profile?.nexus_coins ?? 0} coins</span></div></div></SurfaceCard>
+    </section>
+    {loading && <div className="loading-line" />}
   </div>
 }

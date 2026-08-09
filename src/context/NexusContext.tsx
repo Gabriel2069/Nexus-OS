@@ -29,26 +29,12 @@ type NexusContextValue = {
 const emptyWorkspace: NexusWorkspace = {
   profile: null,
   missions: mockMissions.map((mission) => ({
-    id: mission.id,
-    user_id: 'mock', project_id: null, area_id: null, attribute_id: null, season_id: null, journey_id: null,
+    id: mission.id, user_id: 'mock', project_id: null, area_id: null, attribute_id: null, season_id: null, journey_id: null,
     title: mission.title, notes: null, mission_type: 'Missão', rank: mission.rank, status: mission.done ? 'Feita' : 'A fazer', priority: 'Média', context: mission.area,
     duration_minutes: Number.parseInt(mission.duration), energy: null, xp_base: mission.xp, xp_bonus: 0, coins_base: mission.coins, special_reward: null, due_at: null, completed_at: mission.done ? new Date().toISOString() : null,
   })),
   projects: mockProjects.map((project) => ({ id: project.id, user_id: 'mock', area_id: null, name: project.name, description: null, status: 'Ativo', priority: 'Média', level: project.level, xp: project.level * 450, progress: project.progress, next_action: project.nextAction, reward: null, due_at: null })),
-  journey: null,
-  checkin: null,
-  dailyCheckins: [],
-  focusSessions: [],
-  routines: [],
-  routineCompletions: [],
-  activity: [],
-  weeklyReviews: [],
-  attributes: [],
-  season: null,
-  rewards: [],
-  achievements: [],
-  academicSchedule: [],
-  academicEvents: [],
+  journey: null, checkin: null, dailyCheckins: [], focusSessions: [], routines: [], routineCompletions: [], activity: [], weeklyReviews: [], attributes: [], season: null, rewards: [], achievements: [], academicSchedule: [], academicEvents: [], calendarCommitments: [],
 }
 
 const NexusContext = createContext<NexusContextValue | null>(null)
