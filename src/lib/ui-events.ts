@@ -5,6 +5,12 @@ export const UI_EVENTS = {
   profile: 'nexus:profile',
 } as const
 
-export function emitUI(event: keyof typeof UI_EVENTS) {
-  window.dispatchEvent(new CustomEvent(UI_EVENTS[event]))
+export type QuickAddDetail = {
+  dueDate?: string
+  title?: string
+  type?: 'mission' | 'inbox'
+}
+
+export function emitUI(event: keyof typeof UI_EVENTS, detail?: unknown) {
+  window.dispatchEvent(new CustomEvent(UI_EVENTS[event], { detail }))
 }
