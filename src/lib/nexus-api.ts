@@ -11,13 +11,7 @@ export async function ensureProfile(user: User): Promise<PlayerProfile> {
   const { data: existing, error: existingError } = await client.from('profiles').select('*').eq('id', user.id).maybeSingle()
   if (existingError) throw existingError
   if (existing) return existing as PlayerProfile
-
-  const displayName =
-    (typeof user.user_metadata?.display_name === 'string' && user.user_metadata.display_name) ||
-    (typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name) ||
-    user.email?.split('@')[0] ||
-    'Jogador'
-
+  const displayName = (typeof user.user_metadata?.display_name === 'string' && user.user_metadata.display_name) || (typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name) || user.email?.split('@')[0] || 'Jogador'
   const { data, error } = await client.from('profiles').insert({ id: user.id, display_name: displayName, updated_at: new Date().toISOString() }).select('*').single()
   if (error) throw error
   return data as PlayerProfile
@@ -39,8 +33,6 @@ export async function loadWorkspace(userId: string): Promise<NexusWorkspace> {
   const today = localDate()
   const start = new Date(); start.setDate(start.getDate() - 59)
   const startIso = start.toISOString()
-  const calendarStart = new Date(); calendarStart.setDate(calendarStart.getDate() - 2)
-  const calendarEnd = new Date(); calendarEnd.setDate(calendarEnd.getDate() + 150)
   const [profile, missions, projects, journey, checkin, dailyCheckins, focus, routines, completions, activity, attributes, season, rewards, achievements, academicSchedule, academicEvents, calendarCommitments, weeklyReviews] = await Promise.all([
     client.from('profiles').select('*').eq('id', userId).maybeSingle(),
     client.from('missions').select('*').eq('user_id', userId).not('status', 'in', '(Feita,Cancelada)').order('due_at', { ascending: true, nullsFirst: false }).limit(40),
@@ -58,7 +50,7 @@ export async function loadWorkspace(userId: string): Promise<NexusWorkspace> {
     client.from('achievements').select('*').eq('user_id', userId).order('unlocked_at', { ascending: false, nullsFirst: false }).order('rarity'),
     client.from('academic_schedule').select('*').eq('user_id', userId).order('weekday').order('start_time'),
     client.from('academic_events').select('*').eq('user_id', userId).order('starts_at', { ascending: true, nullsFirst: false }).order('event_date', { ascending: true, nullsFirst: false }),
-    client.from('calendar_commitments').select('*').eq('user_id', userId).or(`starts_at.is.null,and(starts_at.gte.${calendarStart.toISOString()},starts_at.lte.${calendarEnd.toISOString()})`).order('starts_at', { ascending: true, nullsFirst: false }),
+    client.from('calendar_commitments').select('*').eq('user_id', userId).limit(300),
     client.from('weekly_reviews').select('*').eq('user_id', userId).order('week_start', { ascending: false }).limit(8),
   ])
   const results = [profile, missions, projects, journey, checkin, dailyCheckins, focus, routines, completions, activity, attributes, season, rewards, achievements, academicSchedule, academicEvents, calendarCommitments, weeklyReviews]
@@ -67,11 +59,7 @@ export async function loadWorkspace(userId: string): Promise<NexusWorkspace> {
   return {
     profile: profile.data as PlayerProfile | null,
     missions: (missions.data ?? []) as NexusMission[], projects: (projects.data ?? []) as NexusProject[], journey: journey.data as NexusWorkspace['journey'],
-    checkin: checkin.data as DailyCheckin | null, dailyCheckins: (dailyCheckins.data ?? []) as DailyCheckin[], focusSessions: (focus.data ?? []) as FocusSession[],
-    routines: (routines.data ?? []) as Routine[], routineCompletions: (completions.data ?? []) as RoutineCompletion[], activity: (activity.data ?? []) as NexusWorkspace['activity'],
-    weeklyReviews: (weeklyReviews.data ?? []) as WeeklyReview[], attributes: (attributes.data ?? []) as NexusWorkspace['attributes'], season: season.data as NexusWorkspace['season'],
-    rewards: (rewards.data ?? []) as NexusWorkspace['rewards'], achievements: (achievements.data ?? []) as NexusWorkspace['achievements'], academicSchedule: (academicSchedule.data ?? []) as NexusWorkspace['academicSchedule'],
-    academicEvents: (academicEvents.data ?? []) as NexusWorkspace['academicEvents'], calendarCommitments: (calendarCommitments.data ?? []) as CalendarCommitment[],
+    checkin: checkin.data as DailyCheckin | null, dailyCheckins: (dailyCheckins.data ?? []) as DailyCheckin[], focusSessions: (focus.data ?? []) as FocusSession[], routines: (routines.data ?? []) as Routine[], routineCompletions: (completions.data ?? []) as RoutineCompletion[], activity: (activity.data ?? []) as NexusWorkspace['activity'], weeklyReviews: (weeklyReviews.data ?? []) as WeeklyReview[], attributes: (attributes.data ?? []) as NexusWorkspace['attributes'], season: season.data as NexusWorkspace['season'], rewards: (rewards.data ?? []) as NexusWorkspace['rewards'], achievements: (achievements.data ?? []) as NexusWorkspace['achievements'], academicSchedule: (academicSchedule.data ?? []) as NexusWorkspace['academicSchedule'], academicEvents: (academicEvents.data ?? []) as NexusWorkspace['academicEvents'], calendarCommitments: (calendarCommitments.data ?? []) as CalendarCommitment[],
   }
 }
 
