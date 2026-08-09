@@ -173,6 +173,7 @@ export type NexusWorkspace = DashboardSnapshot & {
   attributes: NexusAttribute[]
   season: NexusSeason | null
   rewards: NexusReward[]
+  achievements: NexusAchievement[]
 }
 
 export type NexusAttribute = {
@@ -207,4 +208,16 @@ export type NexusReward = {
   cost: number
   minimum_level: number
   is_active: boolean
+}
+
+export type NexusAchievement = {
+  id: string
+  name: string
+  description: string | null
+  category: string | null
+  rarity: 'Comum' | 'Rara' | 'Épica' | 'Lendária'
+  criteria: string | null
+  xp_reward: number
+  coin_reward: number
+  unlocked_at: string | null
 }
