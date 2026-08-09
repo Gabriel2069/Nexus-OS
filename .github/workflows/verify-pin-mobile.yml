@@ -1,0 +1,55 @@
+name: Verify PIN auth and mobile build
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      SUPABASE_URL: https://emewxqxmgqybojibpbjt.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_1NzZbLT558ssZxIrjkaz4A_2Fo0Otsy
+      NEXUS_PIN: '2040'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package.json
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Wrangler dry run
+        run: npx wrangler deploy --dry-run
+      - name: Verify PIN creates a real Supabase session
+        run: |
+          node --input-type=module <<'NODE'
+          import { createClient } from '@supabase/supabase-js'
+          const url = process.env.SUPABASE_URL
+          const key = process.env.SUPABASE_PUBLISHABLE_KEY
+          const response = await fetch(`${url}/functions/v1/nexus-login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: key,
+              Origin: 'https://nexus-os.gtadeusz.workers.dev',
+            },
+            body: JSON.stringify({ password: process.env.NEXUS_PIN }),
+          })
+          const payload = await response.json()
+          if (!response.ok || !payload.token_hash) throw new Error(`PIN gateway failed: ${response.status} ${JSON.stringify(payload)}`)
+          const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
+          const { data, error } = await supabase.auth.verifyOtp({ token_hash: payload.token_hash, type: 'email' })
+          if (error || !data.session || !data.user) throw error ?? new Error('Supabase session was not created')
+          console.log(`PIN auth verified for user ${data.user.id.slice(0, 8)}…`)
+          await supabase.auth.signOut()
+          NODE
