@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { CommandPalette } from './CommandPalette'
 import { MobileDock } from './MobileDock'
 import { NotificationCenter } from './NotificationCenter'
+import { ProfileModal } from './ProfileModal'
 import { QuickCaptureModal } from './QuickCaptureModal'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
@@ -34,6 +35,7 @@ export function AppShell({ pathname, children }: AppShellProps) {
       <MobileDock pathname={pathname} />
       <CommandPalette />
       <QuickCaptureModal />
+      <ProfileModal />
       <NotificationCenter />
     </div>
   )
