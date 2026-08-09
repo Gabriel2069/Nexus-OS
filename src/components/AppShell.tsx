@@ -11,10 +11,17 @@ import { emitUI } from '../lib/ui-events'
 
 type AppShellProps = PropsWithChildren<{ pathname: string }>
 
+type IOSNavigator = Navigator & { standalone?: boolean }
+
 export function AppShell({ pathname, children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('nexus-sidebar') === 'collapsed')
 
   useEffect(() => { localStorage.setItem('nexus-sidebar', collapsed ? 'collapsed' : 'open') }, [collapsed])
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || Boolean((navigator as IOSNavigator).standalone)
+    document.documentElement.classList.toggle('nexus-standalone', standalone)
+    return () => document.documentElement.classList.remove('nexus-standalone')
+  }, [])
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
