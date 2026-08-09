@@ -71,7 +71,7 @@ export function Topbar({ pathname }: TopbarProps) {
         </div>
         <button className="quick-add-top" onClick={() => emitUI('quickAdd')}><Plus size={15} /><span>Novo</span></button>
         {installPrompt && <button className="icon-button install-button" onClick={install} aria-label="Instalar Nexus"><Download size={17} /></button>}
-        <button className="icon-button" onClick={() => setDark((value) => !value)} aria-label="Alternar tema">{dark ? <Sun size={17} /> : <Moon size={17} />}</button>
+        <button className="icon-button theme-button" onClick={() => setDark((value) => !value)} aria-label="Alternar tema">{dark ? <Sun size={17} /> : <Moon size={17} />}</button>
         <button className="icon-button notification-button" onClick={() => emitUI('notifications')} aria-label="Notificações"><Bell size={17} /><span /></button>
         <div className="avatar" title={name}>{initials}</div>
       </div>
