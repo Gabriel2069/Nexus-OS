@@ -25,7 +25,7 @@ export function MissionsPage() {
   const { workspace, completeMission } = useNexus()
   const [query, setQuery] = useState('')
   const [rank, setRank] = useState('Todos')
-  const [view, setView] = useState<MissionView>('board')
+  const [view, setView] = useState<MissionView>(() => window.matchMedia('(max-width: 760px)').matches ? 'list' : 'board')
 
   const filtered = useMemo(() => workspace.missions.filter((mission) =>
     (!query || `${mission.title} ${mission.notes ?? ''}`.toLowerCase().includes(query.toLowerCase())) &&
