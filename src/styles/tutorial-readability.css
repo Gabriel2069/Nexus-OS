@@ -1,0 +1,53 @@
+/* Readability and icon/text spacing */
+.eyebrow{display:inline-flex;align-items:center;gap:6px;margin-bottom:6px}
+.eyebrow+h1,.eyebrow+h2,.eyebrow+h3{margin-top:2px}
+.primary-button,.secondary-button,.completion-button,.quick-add-top,.text-button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.page-hero__badge,.surface-chip,.column-count,.player-coins,.reward-cost,.mission-potential,.academic-cutoff{display:inline-flex;align-items:center;gap:6px}
+.mission-meta{display:flex;align-items:center;flex-wrap:wrap;gap:7px 10px}
+.mission-meta>span{display:inline-flex;align-items:center;gap:5px}
+.metric-card{display:flex;align-items:center;gap:12px}
+.metric-card>div:last-child{display:grid;gap:2px;min-width:0}
+.project-command-card__footer>span,.project-next-action,.agenda-item small,.routine-item small,.heatmap-summary>span,.review-questions>div,.review-exit,.finance-guidance,.finance-import-state,.empty-compact,.empty-state-modern{gap:7px}
+.project-command-card__footer>span,.agenda-item small,.routine-item small{display:inline-flex;align-items:center}
+.card-title-row{gap:14px}
+.card-title-row>div,.now-card__header>div{min-width:0}
+.now-card__header{gap:14px}
+.home-status-grid>div{display:grid;grid-template-columns:auto 1fr;column-gap:9px;row-gap:3px;align-items:center}
+.home-status-grid>div>strong{grid-column:1/-1;margin-top:2px}
+.radar-list button{gap:11px}
+.radar-list button>div{min-width:0}
+.routine-item{gap:10px}
+.routine-item>div{min-width:0}
+.inbox-item{gap:12px}
+.inbox-item__actions{gap:7px}
+.page-hero>div:first-child{display:block}
+.page-hero h1{margin-bottom:0}
+.page-hero p{margin-top:12px}
+
+/* Tutorial */
+.tutorial-hero{min-height:220px}
+.tutorial-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tutorial-step{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;padding:14px;border:1px solid var(--hairline);border-radius:15px;background:var(--panel2)}
+.tutorial-step__icon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:color-mix(in srgb,var(--green) 10%,var(--panel));color:var(--green)}
+.tutorial-step>div{min-width:0}
+.tutorial-step strong{font-size:.82rem;line-height:1.25}
+.tutorial-step p{margin:5px 0 8px;color:var(--muted);font-size:.69rem;line-height:1.5}
+.tutorial-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.tutorial-rules,.tutorial-rpg{display:grid;gap:8px}
+.tutorial-rules>div,.tutorial-rpg>div{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;align-items:start;padding:10px 11px;border-radius:11px;background:var(--panel2)}
+.tutorial-rules svg,.tutorial-rpg svg{margin-top:1px;color:var(--muted)}
+.tutorial-rules span,.tutorial-rpg p{font-size:.7rem;line-height:1.45}
+.tutorial-rpg p{margin:0;color:var(--muted)}
+.tutorial-rpg strong,.tutorial-rules strong{color:var(--text)}
+.tutorial-shortcuts{display:grid;gap:8px}
+.tutorial-shortcuts>button{display:grid;grid-template-columns:58px minmax(0,1fr);gap:11px;align-items:center;text-align:left;padding:11px;border:1px solid var(--hairline);border-radius:12px;background:var(--panel2);color:var(--text)}
+.tutorial-shortcuts>button>span{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:34px;border-radius:9px;background:var(--panel);font-size:.67rem;font-weight:800}
+.tutorial-shortcuts>button>div{display:grid;gap:2px}
+.tutorial-shortcuts strong{font-size:.73rem}.tutorial-shortcuts small{color:var(--muted);font-size:.61rem;line-height:1.4}
+.tutorial-destinations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.tutorial-destinations>button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;padding:11px 12px;border:1px solid var(--hairline);border-radius:12px;background:var(--panel2);color:var(--text)}
+.tutorial-destinations>button>div{display:grid;gap:3px;min-width:0}.tutorial-destinations strong{font-size:.75rem}.tutorial-destinations span{color:var(--muted);font-size:.62rem;line-height:1.4}.tutorial-destinations svg{color:var(--muted)}
+.tutorial-ignore{display:grid;grid-template-columns:28px minmax(0,1fr);gap:9px;align-items:start}.tutorial-ignore svg{color:var(--muted)}.tutorial-ignore p{margin:0;color:var(--muted);font-size:.7rem;line-height:1.55}
+
+@media(max-width:1050px){.tutorial-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.tutorial-flow,.tutorial-grid,.tutorial-destinations{grid-template-columns:1fr}.tutorial-step{padding:12px}.tutorial-hero>.primary-button{width:100%}.home-status-grid>div{grid-template-columns:auto minmax(0,1fr)}}
