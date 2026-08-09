@@ -23,7 +23,7 @@ export function HomePage() {
   const eveningDone = routineItems.filter((item) => /fechar|vitória|amanhã/i.test(item.title)).some((item) => completedIds.has(item.id))
   const xp = workspace.journey?.xp_earned ?? 0
   const focusPath = context.suggestion.actionPath?.startsWith('/foco') ? context.suggestion.actionPath : '/foco'
-  const timedToday = context.today.filter((event) => !['sleep','recovery'].includes(event.category) && event.end.getTime() - event.start.getTime() < 20 * 60 * 60_000)
+  const timedToday = context.today.filter((event) => !event.isOptional && !['sleep','recovery'].includes(event.category) && event.end.getTime() - event.start.getTime() < 20 * 60 * 60_000)
 
   return <div className="page-stack now-page">
     <section className={`now-stage now-stage--${context.suggestion.kind}`}>
