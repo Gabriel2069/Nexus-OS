@@ -9,6 +9,7 @@ export type QuickAddDetail = {
   dueDate?: string
   title?: string
   type?: 'mission' | 'inbox'
+  projectId?: string
 }
 
 export function emitUI(event: keyof typeof UI_EVENTS, detail?: unknown) {
