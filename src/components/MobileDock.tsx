@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronRight, Crosshair, Home, ListChecks, MoreHorizontal, Sparkles, X } from 'lucide-react'
+import { CalendarDays, ChevronRight, Crosshair, ListChecks, MoreHorizontal, Sparkles, SunMedium, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { navigation } from '../data/navigation'
@@ -6,8 +6,8 @@ import { navigate } from '../lib/router'
 
 type Props = { pathname: string }
 const primary = [
-  { path: '/', label: 'Início', icon: Home },
-  { path: '/hoje', label: 'Hoje', icon: Crosshair },
+  { path: '/', label: 'Agora', icon: Crosshair },
+  { path: '/hoje', label: 'Hoje', icon: SunMedium },
   { path: '/missoes', label: 'Missões', icon: ListChecks },
   { path: '/calendario', label: 'Agenda', icon: CalendarDays },
 ]
@@ -18,38 +18,15 @@ export function MobileDock({ pathname }: Props) {
   const [dragging, setDragging] = useState(false)
   const dragStart = useRef({ y: 0, time: 0 })
 
-  function closeSheet() {
-    setDragY(0)
-    setDragging(false)
-    setMore(false)
-  }
-
-  function onDragStart(event: ReactPointerEvent<HTMLDivElement>) {
-    dragStart.current = { y: event.clientY, time: performance.now() }
-    setDragging(true)
-    event.currentTarget.setPointerCapture(event.pointerId)
-  }
-
-  function onDragMove(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!dragging) return
-    const distance = Math.max(0, event.clientY - dragStart.current.y)
-    setDragY(distance)
-  }
-
+  function closeSheet() { setDragY(0); setDragging(false); setMore(false) }
+  function onDragStart(event: ReactPointerEvent<HTMLDivElement>) { dragStart.current = { y: event.clientY, time: performance.now() }; setDragging(true); event.currentTarget.setPointerCapture(event.pointerId) }
+  function onDragMove(event: ReactPointerEvent<HTMLDivElement>) { if (!dragging) return; setDragY(Math.max(0, event.clientY - dragStart.current.y)) }
   function onDragEnd(event: ReactPointerEvent<HTMLDivElement>) {
     if (!dragging) return
-    const elapsed = Math.max(1, performance.now() - dragStart.current.time)
-    const velocity = dragY / elapsed
-    setDragging(false)
-    if (dragY > 105 || velocity > 0.55) {
-      setDragY(440)
-      window.setTimeout(closeSheet, 180)
-      return
-    }
-    setDragY(0)
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+    const elapsed = Math.max(1, performance.now() - dragStart.current.time); const velocity = dragY / elapsed; setDragging(false)
+    if (dragY > 105 || velocity > 0.55) { setDragY(440); window.setTimeout(closeSheet, 180); return }
+    setDragY(0); if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
   }
-
   const backdropOpacity = Math.max(0.18, 1 - dragY / 420)
 
   return <>
