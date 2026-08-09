@@ -2,24 +2,27 @@
 .eyebrow{display:inline-flex;align-items:center;gap:6px;margin-bottom:6px}
 .eyebrow+h1,.eyebrow+h2,.eyebrow+h3{margin-top:2px}
 .primary-button,.secondary-button,.completion-button,.quick-add-top,.text-button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
-.page-hero__badge,.surface-chip,.column-count,.player-coins,.reward-cost,.mission-potential,.academic-cutoff{display:inline-flex;align-items:center;gap:6px}
+.page-hero__badge,.surface-chip,.column-count,.player-coins,.reward-cost,.mission-potential,.academic-cutoff,.rpg-hero__level>div{display:inline-flex;align-items:center;gap:6px}
 .mission-meta{display:flex;align-items:center;flex-wrap:wrap;gap:7px 10px}
 .mission-meta>span{display:inline-flex;align-items:center;gap:5px}
-.metric-card{display:flex;align-items:center;gap:12px}
 .metric-card>div:last-child{display:grid;gap:2px;min-width:0}
-.project-command-card__footer>span,.project-next-action,.agenda-item small,.routine-item small,.heatmap-summary>span,.review-questions>div,.review-exit,.finance-guidance,.finance-import-state,.empty-compact,.empty-state-modern{gap:7px}
-.project-command-card__footer>span,.agenda-item small,.routine-item small{display:inline-flex;align-items:center}
+.project-command-card__footer>span,.agenda-item small,.routine-item small{display:inline-flex;align-items:center;gap:6px}
+.review-questions>div,.review-exit,.finance-guidance,.finance-import-state,.empty-compact,.empty-state-modern{gap:7px}
+.empty-compact{display:flex;align-items:center}
 .card-title-row{gap:14px}
 .card-title-row>div,.now-card__header>div{min-width:0}
 .now-card__header{gap:14px}
-.home-status-grid>div{display:grid;grid-template-columns:auto 1fr;column-gap:9px;row-gap:3px;align-items:center}
-.home-status-grid>div>strong{grid-column:1/-1;margin-top:2px}
 .radar-list button{gap:11px}
 .radar-list button>div{min-width:0}
 .routine-item{gap:10px}
 .routine-item>div{min-width:0}
 .inbox-item{gap:12px}
 .inbox-item__actions{gap:7px}
+.view-switcher button,.mobile-sheet__title>div,.mobile-sheet__grid button,.command-quick button,.command-results button{gap:7px}
+.view-switcher button{display:inline-flex;align-items:center;justify-content:center}
+.day-close>div,.journey-notes>div{gap:12px}
+.journey-notes>div{display:flex;align-items:flex-start}
+.journey-notes>div>span{display:grid;gap:3px}
 .page-hero>div:first-child{display:block}
 .page-hero h1{margin-bottom:0}
 .page-hero p{margin-top:12px}
@@ -50,4 +53,4 @@
 .tutorial-ignore{display:grid;grid-template-columns:28px minmax(0,1fr);gap:9px;align-items:start}.tutorial-ignore svg{color:var(--muted)}.tutorial-ignore p{margin:0;color:var(--muted);font-size:.7rem;line-height:1.55}
 
 @media(max-width:1050px){.tutorial-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:760px){.tutorial-flow,.tutorial-grid,.tutorial-destinations{grid-template-columns:1fr}.tutorial-step{padding:12px}.tutorial-hero>.primary-button{width:100%}.home-status-grid>div{grid-template-columns:auto minmax(0,1fr)}}
+@media(max-width:760px){.tutorial-flow,.tutorial-grid,.tutorial-destinations{grid-template-columns:1fr}.tutorial-step{padding:12px}.tutorial-hero>.primary-button{width:100%}}
