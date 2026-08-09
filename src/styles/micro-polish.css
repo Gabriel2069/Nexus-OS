@@ -7,12 +7,13 @@
 button>svg,.page-hero__badge>svg,.topbar__status>svg,.mission-meta svg,.agenda-item small svg{flex:0 0 auto}
 .primary-button>svg,.secondary-button>svg,.completion-button>svg,.text-button>svg,.quick-add-top>svg{transform:translateY(-.25px)}
 
-/* Mobile sheet should feel like a real navigation surface. */
-.mobile-sheet__title{align-items:center;min-height:40px}
+/* Mobile sheet should feel like a real navigation surface at every dock breakpoint. */
+.mobile-sheet__title{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:40px;margin-bottom:10px}
 .mobile-sheet__title>div{display:flex;align-items:center;gap:8px;min-width:0}
 .mobile-sheet__title>div strong{font-size:.88rem;letter-spacing:-.012em}
 .mobile-sheet__title>button{width:36px;height:36px;min-height:36px;padding:0;border:1px solid var(--hairline);border-radius:11px;background:var(--panel2);display:grid;place-items:center;color:var(--muted)}
-.mobile-sheet__grid button{min-width:0}
+.mobile-sheet__grid{display:grid;gap:7px}
+.mobile-sheet__grid button{min-width:0;border:1px solid var(--hairline);background:color-mix(in srgb,var(--panel2) 72%,transparent);color:var(--text);border-radius:13px;padding:10px}
 .mobile-sheet__grid button>span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mobile-sheet__grid button>svg:last-child{color:var(--muted);opacity:.72}
 
