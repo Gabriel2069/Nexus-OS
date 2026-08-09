@@ -21,7 +21,7 @@ const LAST_EMAIL_KEY = 'nexus-last-email'
 const EMAIL_COOLDOWN_KEY = 'nexus-email-cooldown-until'
 const PASSKEY_SKIP_KEY = 'nexus-passkey-skip-until'
 const REQUEST_COOLDOWN_MS = 60_000
-const RATE_LIMIT_COOLDOWN_MS = 15 * 60_000
+const RATE_LIMIT_COOLDOWN_MS = 60 * 60_000
 const PASSKEY_SKIP_MS = 24 * 60 * 60_000
 
 function maskEmail(value: string) {
@@ -50,7 +50,7 @@ function friendlyAuthError(error: unknown) {
   const message = getErrorMessage(error).toLowerCase()
 
   if (code === 'over_email_send_rate_limit' || message.includes('rate limit')) {
-    return 'O Supabase bloqueou novos e-mails temporariamente por excesso de tentativas. Não reenvie agora; use uma passkey ou tente novamente mais tarde.'
+    return 'O Supabase bloqueou novos e-mails por excesso de tentativas. O Nexus pausou novos envios por uma hora para não prolongar o bloqueio; prefira uma passkey.'
   }
   if (code === 'otp_disabled' || message.includes('signups not allowed for otp')) {
     return 'Esse e-mail não foi reconhecido como uma conta existente do Nexus. Confira o endereço usado no primeiro acesso.'
