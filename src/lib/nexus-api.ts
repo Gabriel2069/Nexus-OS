@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
-import type { DailyCheckin, FocusSession, NexusMission, NexusProject, NexusWorkspace, PlayerProfile, Routine, RoutineCompletion, WeeklyReview } from '../types/nexus'
+import type { CalendarCommitment, DailyCheckin, FocusSession, NexusMission, NexusProject, NexusWorkspace, PlayerProfile, Routine, RoutineCompletion, WeeklyReview } from '../types/nexus'
 
 function requireClient() { if (!supabase) throw new Error('Supabase ainda não foi configurado.'); return supabase }
 export function localDate(date = new Date()) { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date) }
@@ -18,26 +18,14 @@ export async function ensureProfile(user: User): Promise<PlayerProfile> {
     user.email?.split('@')[0] ||
     'Jogador'
 
-  const { data, error } = await client.from('profiles').insert({
-    id: user.id,
-    display_name: displayName,
-    updated_at: new Date().toISOString(),
-  }).select('*').single()
+  const { data, error } = await client.from('profiles').insert({ id: user.id, display_name: displayName, updated_at: new Date().toISOString() }).select('*').single()
   if (error) throw error
   return data as PlayerProfile
 }
 
 export async function updateProfile(userId: string, patch: Partial<Pick<PlayerProfile, 'display_name' | 'avatar_url' | 'class_name' | 'title' | 'motto' | 'timezone' | 'daily_xp_goal'>>) {
   const client = requireClient()
-  const clean = {
-    ...patch,
-    display_name: patch.display_name?.trim(),
-    class_name: patch.class_name?.trim(),
-    title: patch.title?.trim(),
-    motto: patch.motto?.trim() || null,
-    avatar_url: patch.avatar_url?.trim() || null,
-    updated_at: new Date().toISOString(),
-  }
+  const clean = { ...patch, display_name: patch.display_name?.trim(), class_name: patch.class_name?.trim(), title: patch.title?.trim(), motto: patch.motto?.trim() || null, avatar_url: patch.avatar_url?.trim() || null, updated_at: new Date().toISOString() }
   const { data, error } = await client.from('profiles').update(clean).eq('id', userId).select('*').single()
   if (error) throw error
   return data as PlayerProfile
@@ -45,12 +33,15 @@ export async function updateProfile(userId: string, patch: Partial<Pick<PlayerPr
 
 export async function bootstrapNexus() { const client = requireClient(); const { error } = await client.rpc('bootstrap_nexus'); if (error) throw error }
 export async function ensureTodayJourney(userId: string) { const client = requireClient(); const today = localDate(); const { data, error } = await client.from('journeys').upsert({ user_id: userId, journey_date: today, title: 'Jornada do dia' }, { onConflict: 'user_id,journey_date' }).select('*').single(); if (error) throw error; return data }
+
 export async function loadWorkspace(userId: string): Promise<NexusWorkspace> {
   const client = requireClient()
   const today = localDate()
   const start = new Date(); start.setDate(start.getDate() - 59)
   const startIso = start.toISOString()
-  const [profile, missions, projects, journey, checkin, dailyCheckins, focus, routines, completions, activity, attributes, season, rewards, achievements, academicSchedule, academicEvents, weeklyReviews] = await Promise.all([
+  const calendarStart = new Date(); calendarStart.setDate(calendarStart.getDate() - 2)
+  const calendarEnd = new Date(); calendarEnd.setDate(calendarEnd.getDate() + 150)
+  const [profile, missions, projects, journey, checkin, dailyCheckins, focus, routines, completions, activity, attributes, season, rewards, achievements, academicSchedule, academicEvents, calendarCommitments, weeklyReviews] = await Promise.all([
     client.from('profiles').select('*').eq('id', userId).maybeSingle(),
     client.from('missions').select('*').eq('user_id', userId).not('status', 'in', '(Feita,Cancelada)').order('due_at', { ascending: true, nullsFirst: false }).limit(40),
     client.from('projects').select('*').eq('user_id', userId).not('status', 'in', '(Arquivado,Concluído)').order('updated_at', { ascending: false }).limit(20),
@@ -67,31 +58,23 @@ export async function loadWorkspace(userId: string): Promise<NexusWorkspace> {
     client.from('achievements').select('*').eq('user_id', userId).order('unlocked_at', { ascending: false, nullsFirst: false }).order('rarity'),
     client.from('academic_schedule').select('*').eq('user_id', userId).order('weekday').order('start_time'),
     client.from('academic_events').select('*').eq('user_id', userId).order('starts_at', { ascending: true, nullsFirst: false }).order('event_date', { ascending: true, nullsFirst: false }),
+    client.from('calendar_commitments').select('*').eq('user_id', userId).or(`starts_at.is.null,and(starts_at.gte.${calendarStart.toISOString()},starts_at.lte.${calendarEnd.toISOString()})`).order('starts_at', { ascending: true, nullsFirst: false }),
     client.from('weekly_reviews').select('*').eq('user_id', userId).order('week_start', { ascending: false }).limit(8),
   ])
-  const results = [profile, missions, projects, journey, checkin, dailyCheckins, focus, routines, completions, activity, attributes, season, rewards, achievements, academicSchedule, academicEvents, weeklyReviews]
+  const results = [profile, missions, projects, journey, checkin, dailyCheckins, focus, routines, completions, activity, attributes, season, rewards, achievements, academicSchedule, academicEvents, calendarCommitments, weeklyReviews]
   const firstError = results.find((result) => result.error)?.error
   if (firstError) throw firstError
   return {
     profile: profile.data as PlayerProfile | null,
-    missions: (missions.data ?? []) as NexusMission[],
-    projects: (projects.data ?? []) as NexusProject[],
-    journey: journey.data as NexusWorkspace['journey'],
-    checkin: checkin.data as DailyCheckin | null,
-    dailyCheckins: (dailyCheckins.data ?? []) as DailyCheckin[],
-    focusSessions: (focus.data ?? []) as FocusSession[],
-    routines: (routines.data ?? []) as Routine[],
-    routineCompletions: (completions.data ?? []) as RoutineCompletion[],
-    activity: (activity.data ?? []) as NexusWorkspace['activity'],
-    weeklyReviews: (weeklyReviews.data ?? []) as WeeklyReview[],
-    attributes: (attributes.data ?? []) as NexusWorkspace['attributes'],
-    season: season.data as NexusWorkspace['season'],
-    rewards: (rewards.data ?? []) as NexusWorkspace['rewards'],
-    achievements: (achievements.data ?? []) as NexusWorkspace['achievements'],
-    academicSchedule: (academicSchedule.data ?? []) as NexusWorkspace['academicSchedule'],
-    academicEvents: (academicEvents.data ?? []) as NexusWorkspace['academicEvents'],
+    missions: (missions.data ?? []) as NexusMission[], projects: (projects.data ?? []) as NexusProject[], journey: journey.data as NexusWorkspace['journey'],
+    checkin: checkin.data as DailyCheckin | null, dailyCheckins: (dailyCheckins.data ?? []) as DailyCheckin[], focusSessions: (focus.data ?? []) as FocusSession[],
+    routines: (routines.data ?? []) as Routine[], routineCompletions: (completions.data ?? []) as RoutineCompletion[], activity: (activity.data ?? []) as NexusWorkspace['activity'],
+    weeklyReviews: (weeklyReviews.data ?? []) as WeeklyReview[], attributes: (attributes.data ?? []) as NexusWorkspace['attributes'], season: season.data as NexusWorkspace['season'],
+    rewards: (rewards.data ?? []) as NexusWorkspace['rewards'], achievements: (achievements.data ?? []) as NexusWorkspace['achievements'], academicSchedule: (academicSchedule.data ?? []) as NexusWorkspace['academicSchedule'],
+    academicEvents: (academicEvents.data ?? []) as NexusWorkspace['academicEvents'], calendarCommitments: (calendarCommitments.data ?? []) as CalendarCommitment[],
   }
 }
+
 export async function createMission(userId: string, input: Pick<NexusMission, 'title'> & Partial<NexusMission>) { const client = requireClient(); const { data, error } = await client.from('missions').insert({ ...input, user_id: userId, title: input.title.trim() }).select('*').single(); if (error) throw error; return data as NexusMission }
 export async function updateMission(userId: string, missionId: string, patch: Partial<Pick<NexusMission, 'status' | 'priority' | 'rank' | 'context' | 'due_at' | 'project_id' | 'attribute_id'>>) { const client = requireClient(); const { data, error } = await client.from('missions').update({ ...patch, updated_at: new Date().toISOString() }).eq('user_id', userId).eq('id', missionId).select('*').single(); if (error) throw error; return data as NexusMission }
 export async function createProject(userId: string, input: Pick<NexusProject, 'name'> & Partial<NexusProject>) { const client = requireClient(); const { data, error } = await client.from('projects').insert({ user_id: userId, status: 'Ativo', priority: 'Média', progress: 0, ...input, name: input.name.trim() }).select('*').single(); if (error) throw error; return data as NexusProject }
