@@ -49,6 +49,7 @@ export function Topbar({ pathname }: TopbarProps) {
   const initials = name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
   const level = workspace.profile?.level ?? 1
   const streak = workspace.profile?.streak_current ?? 0
+  const avatarUrl = workspace.profile?.avatar_url
 
   return (
     <header className="topbar">
@@ -73,7 +74,9 @@ export function Topbar({ pathname }: TopbarProps) {
         {installPrompt && <button className="icon-button install-button" onClick={install} aria-label="Instalar Nexus"><Download size={17} /></button>}
         <button className="icon-button theme-button" onClick={() => setDark((value) => !value)} aria-label="Alternar tema">{dark ? <Sun size={17} /> : <Moon size={17} />}</button>
         <button className="icon-button notification-button" onClick={() => emitUI('notifications')} aria-label="Notificações"><Bell size={17} /><span /></button>
-        <div className="avatar" title={name}>{initials}</div>
+        <button className="avatar avatar--button" title={`${name} · editar perfil`} onClick={() => emitUI('profile')} aria-label="Editar perfil">
+          {avatarUrl ? <img src={avatarUrl} alt="" /> : initials}
+        </button>
       </div>
     </header>
   )
