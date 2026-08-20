@@ -1,0 +1,60 @@
+:root{--n4-fast:140ms;--n4-control:180ms;--n4-slide:240ms;--n4-orbit:12s;--n4-ease:cubic-bezier(.22,1,.36,1);--n4-soft:cubic-bezier(.16,1,.3,1)}
+
+/* Universal interaction physics: every icon, control and surface gets a quiet response. */
+svg{transition:transform var(--n4-control) var(--n4-ease),filter var(--n4-control) var(--n4-ease),opacity var(--n4-control) var(--n4-ease),color var(--n4-control) var(--n4-ease)}
+button svg,[role=button] svg,[role=tab] svg,[role=menuitem] svg,a svg,.nav-item svg,.mobile-dock svg,.toolbar-button svg,.icon-button svg,.chip svg,.badge svg,.view-switcher svg{transform-origin:center;will-change:transform}
+@media(hover:hover){
+ button:hover svg,[role=button]:hover svg,[role=tab]:hover svg,[role=menuitem]:hover svg,a:hover svg,.toolbar-button:hover svg,.chip:hover svg,.badge:hover svg{transform:translateY(-1px) scale(1.035)}
+ .icon-button:hover svg,.close-button:hover svg{transform:rotate(5deg) scale(1.06)}
+ .nav-item:hover svg,.mobile-dock button:hover svg{transform:translateY(-2px) scale(1.045);filter:drop-shadow(0 0 7px currentColor)}
+ .toolbar-button:hover svg{transform:translateY(-1px) rotate(2deg) scale(1.04)}
+ .view-switcher button:hover svg{transform:translateY(-1px) scale(1.06)}
+ .primary-button:hover svg{transform:translateX(3px) scale(1.025)}
+ .secondary-button:hover svg{transform:translateY(-1px) scale(1.025)}
+}
+button:active svg,[role=button]:active svg,[role=tab]:active svg,[role=menuitem]:active svg,a:active svg,.mobile-dock button:active svg{transform:scale(.9)}
+[aria-current=true] svg,[aria-selected=true] svg,.active>svg,.is-active>svg,.selected>svg,.is-selected>svg{animation:n4-icon-settle 260ms var(--n4-ease) both;filter:drop-shadow(0 0 7px currentColor)}
+@keyframes n4-icon-settle{0%{transform:scale(.92);opacity:.7}60%{transform:scale(1.075)}100%{transform:scale(1);opacity:1}}
+
+/* Dock/nav sliding language. The frame stays fixed; the active signal travels. */
+.sidebar .nav-item,.mobile-dock button,.topbar button,.dock-item{position:relative;overflow:hidden}
+.sidebar .nav-item:before,.mobile-dock button:before,.dock-item:before{content:"";position:absolute;left:8px;right:8px;bottom:4px;height:2px;border-radius:999px;background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:0;transform:translateX(-70%) scaleX(.45);transition:transform var(--n4-slide) var(--n4-ease),opacity var(--n4-control) var(--n4-ease)}
+.sidebar .nav-item:hover:before,.sidebar .nav-item.active:before,.mobile-dock button:hover:before,.mobile-dock button.active:before,.dock-item:hover:before,.dock-item.active:before{opacity:.9;transform:translateX(0) scaleX(1)}
+.mobile-dock{will-change:transform}.mobile-dock button{transition:transform var(--n4-fast) var(--n4-ease),background-color var(--n4-control) var(--n4-ease),box-shadow var(--n4-control) var(--n4-ease)}
+@media(hover:hover){.mobile-dock button:hover{transform:translateY(-3px)}.sidebar .nav-item:hover{transform:translateX(2px)}}
+
+/* Menus and horizontal controls: reveal the content from the direction it came from. */
+.menu,.dropdown-menu,.popover,.context-menu,.command-menu,[role=menu],[role=listbox]{transform-origin:var(--origin-x,50%) var(--origin-y,0);animation:n4-menu-in var(--n4-slide) var(--n4-soft) both}
+@keyframes n4-menu-in{from{opacity:0;transform:translateY(-6px) scale(.985)}to{opacity:1;transform:none}}
+.menu-item,.dropdown-item,[role=menuitem],[role=option]{transition:transform var(--n4-fast) var(--n4-ease),background-color var(--n4-control) var(--n4-ease),color var(--n4-control) var(--n4-ease),box-shadow var(--n4-control) var(--n4-ease)}
+@media(hover:hover){.menu-item:hover,.dropdown-item:hover,[role=menuitem]:hover,[role=option]:hover{transform:translateX(3px)}}
+.mobile-tabs,.horizontal-tabs,.menu-tabs,.segmented-control{scroll-behavior:smooth}
+
+/* Glass surfaces get a moving light only during interaction, never as a permanent loop. */
+.glass,.glass-card,.surface-card,.panel,.card,.modal,.drawer-panel,.page-hero,.home-hero,.today-header,.rpg-hero{position:relative;isolation:isolate}
+.glass:after,.glass-card:after,.surface-card:after,.panel:after,.card:after,.modal:after,.drawer-panel:after{content:"";position:absolute;inset:1px;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,transparent 0%,transparent 42%,rgba(255,255,255,.055) 50%,transparent 58%,transparent 100%);background-size:230% 100%;background-position:130% 0;opacity:0;transition:opacity var(--n4-control) var(--n4-ease);z-index:-1}
+@media(hover:hover){.glass:hover:after,.glass-card:hover:after,.surface-card:hover:after,.panel:hover:after,.card:hover:after,.modal:hover:after,.drawer-panel:hover:after{opacity:1;animation:n4-sheen 700ms var(--n4-soft) both}}
+@keyframes n4-sheen{from{background-position:130% 0}to{background-position:-30% 0}}
+
+/* Ambient background: slow, low-contrast glass orbits that stop competing with content. */
+.app-shell:after,.page-content:after{content:"";position:fixed;width:clamp(260px,38vw,620px);height:clamp(260px,38vw,620px);right:-14vw;top:12vh;border:1px solid color-mix(in srgb,var(--primary) 7%,transparent);border-radius:50%;box-shadow:0 0 0 34px color-mix(in srgb,var(--primary) 2%,transparent),0 0 80px color-mix(in srgb,var(--primary) 3%,transparent);pointer-events:none;z-index:-2;animation:n4-orbit 16s ease-in-out infinite alternate}
+.app-shell:after{left:auto}.page-content:after{right:auto;left:-20vw;top:auto;bottom:-20vh;width:clamp(300px,42vw,680px);height:clamp(300px,42vw,680px);animation-duration:20s;animation-direction:alternate-reverse}
+@keyframes n4-orbit{0%{transform:translate3d(0,0,0) rotate(0deg);opacity:.5}50%{transform:translate3d(-12px,10px,0) rotate(3deg);opacity:.72}100%{transform:translate3d(8px,-8px,0) rotate(-3deg);opacity:.52}}
+.page-content:before{animation:n4-glow-drift 14s ease-in-out infinite alternate}
+@keyframes n4-glow-drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-12px,10px,0) scale(1.035)}}
+
+/* Hero details: rings and halos breathe slowly while interaction adds the stronger response. */
+.page-hero:before,.home-hero:before,.today-header:before,.rpg-hero:before{animation:n4-hero-ring 18s ease-in-out infinite alternate}
+@keyframes n4-hero-ring{from{transform:rotate(-2deg) scale(.99);opacity:.42}to{transform:rotate(3deg) scale(1.025);opacity:.62}}
+.hero-icon,.hero-medallion{position:relative}.hero-icon:after,.hero-medallion:after{content:"";position:absolute;inset:-7px;border:1px solid currentColor;border-radius:inherit;opacity:.12;transform:scale(.94);pointer-events:none;animation:n4-medallion-breathe 4.8s ease-in-out infinite}
+@keyframes n4-medallion-breathe{0%,100%{transform:scale(.94);opacity:.08}50%{transform:scale(1.035);opacity:.2}}
+
+/* Tiny responses for data-heavy surfaces. */
+.stat-card,.metric-card,.kpi-card,.mission-card-modern,.reward-card,.project-command-card,.agenda-item,.mission-list-row{transition:transform var(--n4-control) var(--n4-ease),box-shadow var(--n4-control) var(--n4-ease),border-color var(--n4-control) var(--n4-ease),background-color var(--n4-control) var(--n4-ease)}
+@media(hover:hover){.stat-card:hover,.metric-card:hover,.kpi-card:hover{transform:translateY(-2px)}.agenda-item:hover,.mission-list-row:hover{transform:translateX(3px)}}
+
+/* Focus has the same physical language as hover, but remains accessibility-first. */
+:focus-visible{outline:2px solid color-mix(in srgb,currentColor 62%,white);outline-offset:3px;transition:outline-offset var(--n4-fast) var(--n4-ease)}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-transparency:reduce){.glass,.glass-card,.surface-card,.panel,.card,.modal,.drawer-panel{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}}
