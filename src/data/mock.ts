@@ -7,7 +7,7 @@ export const missions: Mission[] = [
 ]
 export const projects: Project[] = [
   { id: 'project-1', name: 'Tessitura do Vazio', area: 'Criação', status: 'Em foco', progress: 74, level: 7, nextAction: 'Fechar estrutura do próximo arco', tone: 'violet' },
-  { id: 'project-2', name: 'NexOS', area: 'Sistema', status: 'Em construção', progress: 41, level: 4, nextAction: 'Conectar Supabase e persistir missões', tone: 'blue' },
+  { id: 'project-2', name: 'NexOS', area: 'Sistema', status: 'Em construção', progress: 41, level: 4, nextAction: 'Consolidar o núcleo de execução e persistência', tone: 'blue' },
   { id: 'project-3', name: 'Acadêmico 2026', area: 'Estudos', status: 'Ativo', progress: 62, level: 6, nextAction: 'Preparar próxima bateria de revisão', tone: 'cyan' },
 ]
 export const attributes = [
