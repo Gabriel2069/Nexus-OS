@@ -36,7 +36,7 @@ export function AppShell({ pathname, children }: AppShellProps) {
       <Sidebar pathname={pathname} collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
       <div className="app-shell__content">
         <Topbar pathname={pathname} />
-        <main className="page-content">{children}</main>
+        <main className="page-content" key={pathname}>{children}</main>
       </div>
       <button className="floating-add" onClick={() => emitUI('quickAdd')} aria-label="Captura rápida"><span>＋</span></button>
       <MobileDock pathname={pathname} />
