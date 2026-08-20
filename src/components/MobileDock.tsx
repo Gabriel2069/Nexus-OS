@@ -20,9 +20,9 @@ export function MobileDock({ pathname }: Props) {
       <button className={more ? 'active' : ''} onClick={() => { setDragY(0); setMore(true) }} data-motion="dock-item"><MoreHorizontal size={20} /><span>Mais</span><i aria-hidden="true" /></button>
     </nav>
     {more && <div className="mobile-sheet-backdrop" style={{ backgroundColor: `rgb(0 0 0 / ${0.62 * backdropOpacity})` }} onClick={closeSheet}>
-      <section className={`mobile-sheet ${dragging ? 'is-dragging' : ''}`} style={{ transform: `translateY(${dragY}px)` }} onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="Mais áreas do Nexus" data-motion-surface="sheet">
+      <section className={`mobile-sheet ${dragging ? 'is-dragging' : ''}`} style={{ transform: `translateY(${dragY}px)` }} onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="Mais áreas do NexOS" data-motion-surface="sheet">
         <div className="mobile-sheet__handle" aria-label="Arraste para fechar" onPointerDown={onDragStart} onPointerMove={onDragMove} onPointerUp={onDragEnd} onPointerCancel={() => { setDragging(false); setDragY(0) }} />
-        <div className="mobile-sheet__title"><div><Sparkles size={17} /><strong>Nexus OS</strong></div><button onClick={closeSheet} aria-label="Fechar navegação"><X size={18} /></button></div>
+        <div className="mobile-sheet__title"><div><Sparkles size={17} /><strong>NexOS</strong></div><button onClick={closeSheet} aria-label="Fechar navegação"><X size={18} /></button></div>
         <div className="mobile-sheet__grid">{navigation.flatMap((group) => group.items).filter((item) => !primary.some((p) => p.path === item.path)).map((item) => { const Icon = item.icon; return <button key={item.path} onClick={() => { closeSheet(); navigate(item.path) }} data-motion="sheet-item"><span className={`nav-item__icon tone-${item.tone}`}><Icon size={18} /></span><span>{item.label}</span><ChevronRight size={13} /></button> })}</div>
       </section>
     </div>}
