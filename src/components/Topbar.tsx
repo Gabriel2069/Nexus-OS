@@ -11,7 +11,7 @@ export function Topbar({ pathname }: TopbarProps) {
   const { workspace } = useNexus()
   const [dark, setDark] = useState(() => (localStorage.getItem('nexus-theme') || document.documentElement.dataset.theme) !== 'light')
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null)
-  const route = useMemo(() => { for (const group of navigation) { const item = group.items.find((candidate) => candidate.path === pathname); if (item) return { group: group.label, label: item.label } } return { group: 'Nexus OS', label: 'Sistema' } }, [pathname])
+  const route = useMemo(() => { for (const group of navigation) { const item = group.items.find((candidate) => candidate.path === pathname); if (item) return { group: group.label, label: item.label } } return { group: 'NexOS', label: 'Sistema' } }, [pathname])
   useEffect(() => { document.documentElement.dataset.theme = dark ? 'dark' : 'light'; localStorage.setItem('nexus-theme', dark ? 'dark' : 'light') }, [dark])
   useEffect(() => { const handler = (event: Event) => { event.preventDefault(); setInstallPrompt(event as InstallPromptEvent) }; window.addEventListener('beforeinstallprompt', handler); return () => window.removeEventListener('beforeinstallprompt', handler) }, [])
   async function install() { if (!installPrompt) return; await installPrompt.prompt(); await installPrompt.userChoice; setInstallPrompt(null) }
@@ -29,7 +29,7 @@ export function Topbar({ pathname }: TopbarProps) {
       <div className="topbar__actions">
         <div className="topbar__status" title="Progressão atual" data-motion="status"><Flame size={13} /><b>Nv. {level}</b><span>{streak}d</span></div>
         <button className="quick-add-top" onClick={() => emitUI('quickAdd')} data-motion="primary-action"><Plus size={15} /><span>Novo</span></button>
-        {installPrompt && <button className="icon-button install-button" onClick={install} aria-label="Instalar Nexus" data-motion="icon-action"><Download size={17} /></button>}
+        {installPrompt && <button className="icon-button install-button" onClick={install} aria-label="Instalar NexOS" data-motion="icon-action"><Download size={17} /></button>}
         <button className="icon-button theme-button" onClick={() => setDark((value) => !value)} aria-label="Alternar tema" data-motion="icon-action">{dark ? <Sun size={17} /> : <Moon size={17} />}</button>
         <button className="icon-button notification-button" onClick={() => emitUI('notifications')} aria-label="Notificações" data-motion="icon-action"><Bell size={17} /><span /></button>
         <button className="avatar avatar--button" title={`${name} · editar perfil`} onClick={() => emitUI('profile')} aria-label="Editar perfil" data-motion="avatar">{avatarUrl ? <img src={avatarUrl} alt="" /> : initials}</button>
