@@ -1,0 +1,119 @@
+:root{
+  --nexus-motion-micro:140ms;
+  --nexus-motion-control:180ms;
+  --nexus-motion-panel:240ms;
+  --nexus-motion-layout:320ms;
+  --nexus-motion-ease:cubic-bezier(.22,1,.36,1);
+  --nexus-motion-soft:cubic-bezier(.16,1,.3,1);
+}
+
+/* One motion contract for every interactive surface. */
+a,button,[role="button"],summary,input,select,textarea,.clickable,.interactive{
+  -webkit-tap-highlight-color:transparent;
+}
+a,button,[role="button"],summary,.clickable,.interactive{
+  transition:
+    color var(--nexus-motion-control) var(--nexus-motion-ease),
+    background-color var(--nexus-motion-control) var(--nexus-motion-ease),
+    border-color var(--nexus-motion-control) var(--nexus-motion-ease),
+    box-shadow var(--nexus-motion-control) var(--nexus-motion-ease),
+    opacity var(--nexus-motion-control) var(--nexus-motion-ease),
+    transform var(--nexus-motion-micro) var(--nexus-motion-ease),
+    filter var(--nexus-motion-control) var(--nexus-motion-ease);
+}
+
+/* Buttons: pressure, release and semantic hover. */
+button:hover:not(:disabled),[role="button"]:hover:not([aria-disabled="true"]),summary:hover{
+  transform:translateY(-1px);
+}
+button:active:not(:disabled),[role="button"]:active:not([aria-disabled="true"]),summary:active{
+  transform:scale(.982) translateY(0);
+  transition-duration:90ms;
+}
+button:focus-visible,[role="button"]:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid color-mix(in srgb,currentColor 72%,white 10%);
+  outline-offset:3px;
+}
+
+/* All Lucide/icon SVGs get a restrained optical response. */
+button svg,[role="button"] svg,a svg,summary svg,.nav-item svg,.mobile-dock svg,.tab svg,.tabs svg,.menu-item svg,.context-menu-item svg{
+  transform-origin:center;
+  transition:transform var(--nexus-motion-micro) var(--nexus-motion-ease),color var(--nexus-motion-control) var(--nexus-motion-ease),filter var(--nexus-motion-control) var(--nexus-motion-ease),opacity var(--nexus-motion-control) var(--nexus-motion-ease);
+}
+@media(hover:hover){
+  button:hover:not(:disabled) svg,[role="button"]:hover svg,a:hover svg,summary:hover svg,.nav-item:hover svg,.mobile-dock button:hover svg,.tab:hover svg,.tabs button:hover svg,.menu-item:hover svg,.context-menu-item:hover svg{
+    transform:translateY(-1px) scale(1.035);
+    filter:drop-shadow(0 0 6px color-mix(in srgb,currentColor 28%,transparent));
+  }
+}
+button:active:not(:disabled) svg,[role="button"]:active svg,.mobile-dock button:active svg{transform:scale(.91)}
+
+/* Tabs: the rail stays fixed; the active state travels. */
+.tabs,.tab-list,.segmented-control,.view-switcher,.filter-tabs,.page-tabs,.mobile-tabs{position:relative}
+.tabs button,.tab-list button,.segmented-control button,.view-switcher button,.filter-tabs button,.page-tabs button,.mobile-tabs button{position:relative;isolation:isolate}
+.tabs button:after,.tab-list button:after,.segmented-control button:after,.view-switcher button:after,.filter-tabs button:after,.page-tabs button:after,.mobile-tabs button:after{
+  content:"";position:absolute;left:12%;right:12%;bottom:1px;height:2px;border-radius:99px;background:currentColor;opacity:0;transform:scaleX(.35);transform-origin:center;transition:opacity var(--nexus-motion-control) var(--nexus-motion-ease),transform var(--nexus-motion-panel) var(--nexus-motion-ease),box-shadow var(--nexus-motion-control) var(--nexus-motion-ease);
+}
+.tabs button:hover:after,.tab-list button:hover:after,.segmented-control button:hover:after,.view-switcher button:hover:after,.filter-tabs button:hover:after,.page-tabs button:hover:after,.mobile-tabs button:hover:after,.tabs button.active:after,.tab-list button.active:after,.segmented-control button.active:after,.view-switcher button.active:after,.filter-tabs button.active:after,.page-tabs button.active:after,.mobile-tabs button.active:after{opacity:.75;transform:scaleX(1);box-shadow:0 0 10px currentColor}
+
+/* Navigation feels like one object changing section. */
+.nav-item,.mobile-dock button{position:relative;overflow:hidden}
+.nav-item:before,.mobile-dock button:before{content:"";position:absolute;inset:5px;border-radius:inherit;background:radial-gradient(circle at 50% 45%,currentColor,transparent 68%);opacity:0;transform:scale(.65);transition:opacity var(--nexus-motion-control) var(--nexus-motion-ease),transform var(--nexus-motion-panel) var(--nexus-motion-ease);pointer-events:none}
+.nav-item:hover:before,.nav-item.active:before,.mobile-dock button:hover:before,.mobile-dock button.active:before{opacity:.055;transform:scale(1)}
+.nav-item>*,.mobile-dock button>*{position:relative;z-index:1}
+
+/* Menus and contextual popups enter from their origin rather than appearing. */
+.dropdown-menu,.popover,.context-menu,.menu-popover,.tooltip,.command-menu,.command-palette,.quick-menu,[data-radix-popper-content-wrapper],.select-content{
+  transform-origin:var(--radix-popover-content-transform-origin,center top);
+  animation:nexus-popover-in var(--nexus-motion-panel) var(--nexus-motion-soft) both;
+}
+@keyframes nexus-popover-in{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}
+
+/* Dialogs/drawers: solid objects with a small causal travel. */
+.dialog,.modal,.modal-content,.dialog-content,.sheet,.drawer,.drawer-panel,.notification-drawer,.quick-modal,.mobile-sheet,.inspector-panel,.context-inspector,.consultable-inspector{
+  animation:nexus-surface-in var(--nexus-motion-panel) var(--nexus-motion-soft) both;
+}
+@keyframes nexus-surface-in{from{opacity:0;transform:translateY(8px) scale(.992)}to{opacity:1;transform:none}}
+.backdrop,.modal-backdrop,.dialog-backdrop{animation:nexus-backdrop-in var(--nexus-motion-panel) ease-out both}
+@keyframes nexus-backdrop-in{from{opacity:0}to{opacity:1}}
+
+/* Expandable groups retain their spatial relationship. */
+details[open] > :not(summary),.accordion-content,.collapsible-content,.expandable-content,[data-state="open"] .content{
+  animation:nexus-expand-in var(--nexus-motion-panel) var(--nexus-motion-soft) both;
+  transform-origin:top center;
+}
+@keyframes nexus-expand-in{from{opacity:0;transform:translateY(-4px);clip-path:inset(0 0 100% 0)}to{opacity:1;transform:none;clip-path:inset(0 0 0 0)}}
+
+/* Page changes: the content arrives as a continuation, not a hard swap. */
+.page-content > .page-stack,.page-content > main,.page-content > section{animation:nexus-page-in var(--nexus-motion-layout) var(--nexus-motion-soft) both}
+@keyframes nexus-page-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* Cards and rows: only interactive surfaces lift; informational cards stay quiet. */
+[data-interactive="true"],.interactive-card,.mission-card-modern,.project-command-card,.reward-card,.agenda-item,.mission-list-row,.calendar-day,.radar-list button{
+  will-change:transform;
+}
+@media(hover:hover){
+  [data-interactive="true"]:hover,.interactive-card:hover,.mission-card-modern:hover,.project-command-card:hover,.reward-card:hover,.agenda-item:hover,.mission-list-row:hover,.calendar-day:hover,.radar-list button:hover{transform:translateY(-2px)}
+}
+
+/* Inputs: focus is a living state, not a color swap. */
+input,select,textarea{transition:border-color var(--nexus-motion-control) var(--nexus-motion-ease),box-shadow var(--nexus-motion-control) var(--nexus-motion-ease),background-color var(--nexus-motion-control) var(--nexus-motion-ease),transform var(--nexus-motion-micro) var(--nexus-motion-ease)}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,currentColor 8%,transparent),inset 0 1px 0 #ffffff0a}
+
+/* Loading/progress states: subtle, finite, event-driven. */
+.progress-bar,.progress-fill{transition:width 360ms var(--nexus-motion-ease),transform 360ms var(--nexus-motion-ease),filter 180ms var(--nexus-motion-ease)}
+.badge,.chip,.status-pill{transition:transform var(--nexus-motion-micro) var(--nexus-motion-ease),background-color var(--nexus-motion-control) var(--nexus-motion-ease),border-color var(--nexus-motion-control) var(--nexus-motion-ease),color var(--nexus-motion-control) var(--nexus-motion-ease)}
+@media(hover:hover){.badge:hover,.chip:hover,.status-pill:hover{transform:translateY(-1px)}}
+
+/* Keep decorative motion sparse and semantic. */
+.live-dot.is-live,.presence-dot.is-live{animation:nexus-live-pulse 2.8s ease-in-out infinite}
+@keyframes nexus-live-pulse{0%,100%{opacity:.78}50%{opacity:1}}
+
+@media(max-width:760px){
+  .page-content > .page-stack,.page-content > main,.page-content > section{animation-duration:260ms}
+  .dropdown-menu,.popover,.context-menu,.menu-popover,.command-menu,.command-palette,.quick-menu{max-width:calc(100vw - 24px)}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  button:hover:not(:disabled),[role="button"]:hover:not([aria-disabled="true"]),summary:hover,[data-interactive="true"]:hover,.interactive-card:hover,.mission-card-modern:hover,.project-command-card:hover,.reward-card:hover,.agenda-item:hover,.mission-list-row:hover,.calendar-day:hover,.radar-list button:hover{transform:none!important}
+}
