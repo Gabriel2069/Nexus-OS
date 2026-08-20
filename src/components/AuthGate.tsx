@@ -91,9 +91,21 @@ export function AuthGate({ children }: AuthGateProps) {
 
   if (loading) {
     return (
-      <div className="auth-screen auth-screen--center">
-        <LoaderCircle className="spin" size={25} />
-        <span>Abrindo Nexus…</span>
+      <div className="nexos-boot-screen" role="status" aria-live="polite" aria-label="Abrindo NexOS">
+        <div className="nexos-boot-stars" aria-hidden="true" />
+        <div className="nexos-boot-glow" aria-hidden="true" />
+        <div className="nexos-boot-core">
+          <div className="nexos-boot-mark" aria-hidden="true">
+            <Sparkles />
+          </div>
+          <div className="nexos-boot-wordmark">NexOS</div>
+          <div className="nexos-boot-status">
+            <i aria-hidden="true" />
+            <span>Abrindo NexOS…</span>
+          </div>
+          <div className="nexos-boot-progress" aria-hidden="true"><span /></div>
+          <div className="nexos-boot-caption"><strong>Sessão</strong> · preparando seu espaço</div>
+        </div>
       </div>
     )
   }
