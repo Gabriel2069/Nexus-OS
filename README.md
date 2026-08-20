@@ -1,6 +1,6 @@
-# Nexus OS
+# NexOS
 
-Um sistema operacional pessoal web para rotina, execução, foco, projetos, conhecimento e progressão gamificada. O Nexus nasceu no Notion; esta versão deixa de imitar páginas e passa a operar como um app próprio.
+Um sistema operacional pessoal web para rotina, execução, foco, projetos, conhecimento e progressão gamificada. O NexOS nasceu no Notion; esta versão deixa de imitar páginas e passa a operar como um app próprio.
 
 ## O que já funciona
 
@@ -19,7 +19,8 @@ Um sistema operacional pessoal web para rotina, execução, foco, projetos, conh
 - Life RPG com atributos, temporada, moedas e recompensas;
 - Command Palette, Quick Capture e central de notificações;
 - tema claro/escuro persistente;
-- PWA instalável, service worker e navegação mobile própria.
+- PWA instalável, service worker e navegação mobile própria;
+- identidade visual NexOS com Liquid Glass e ambiente cósmico responsivo.
 
 ### Backend
 - Supabase Auth + Postgres;
@@ -82,10 +83,10 @@ As migrações versionadas estão em `supabase/migrations/`:
 
 ```text
 .github/workflows/   automações de infraestrutura
-public/              PWA / service worker / identidade
+public/              PWA / service worker / identidade NexOS
 src/
   components/        shell, navegação e UI reutilizável
-  context/           estado e ações do Nexus
+  context/           estado e ações do NexOS
   data/              mocks temporários
   lib/               Supabase, API de domínio e eventos
   pages/             superfícies do produto
@@ -97,6 +98,6 @@ docs/                 decisões e evolução do produto
 
 ## Princípio
 
-> O Notion é a origem da arquitetura mental, não o limite técnico do produto.
+> O Notion é a origem da arquitetura mental, não o limite técnico do NexOS.
 
-No site, dados passam a ser relacionais, ações podem ser transacionais, gráficos são calculados a partir de eventos reais e a interface pode responder ao dispositivo, contexto, tempo e estado do usuário.
+No NexOS, dados passam a ser relacionais, ações podem ser transacionais, gráficos são calculados a partir de eventos reais e a interface pode responder ao dispositivo, contexto, tempo e estado do usuário.
