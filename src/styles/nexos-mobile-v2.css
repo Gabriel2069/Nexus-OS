@@ -1,0 +1,55 @@
+@media(max-width:760px){
+  /* NexOS mobile fit pass: preserve gutters, safe areas and one clear stacking axis. */
+  .topbar{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));}
+  .topbar__context,.topbar__route,.topbar__actions,.page-content,.page-stack,.surface-card,.page-hero,.home-hero,.today-header,.rpg-hero,.now-card,.project-card-modern,.mission-card-modern,.mission-focus-hero,.calendar-card,.focus-console,.inbox-item,.day-close,.notification-drawer,.quick-modal,.command-palette,.mobile-sheet{min-width:0;box-sizing:border-box}
+  .page-content{padding-bottom:calc(112px + env(safe-area-inset-bottom));}
+  .page-stack>*{max-width:100%;}
+  .surface-card,.page-hero,.home-hero,.today-header,.rpg-hero,.now-card,.calendar-card,.focus-console,.mission-focus-hero,.project-command-card,.day-close{overflow:hidden;}
+  .surface-card__header,.section-heading,.card-title-row,.calendar-toolbar,.modal-title,.project-command-card__top,.project-command-card__footer,.project-progress-line>div{min-width:0;}
+  .surface-card__header>*:not(svg),.section-heading>*:not(svg),.card-title-row>*:not(svg){min-width:0;}
+  .surface-card__header h3,.section-heading h2,.card-title-row strong,.project-command-card strong{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .page-hero p,.home-hero p,.today-header p,.surface-card p,.project-card-modern p,.momentum-copy p{overflow-wrap:anywhere;}
+  .hero-actions,.now-actions,.focus-controls{width:100%;}
+  .hero-actions>button,.now-actions>button,.focus-controls>button{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .project-create__form{grid-template-columns:minmax(0,1fr) auto;}
+  .project-create__form input{min-width:0;width:100%;}
+  .notification-drawer{inset-block:0;overflow-y:auto;overscroll-behavior:contain;}
+  .quick-modal,.command-palette{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;}
+  .mobile-sheet{width:100%;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;}
+  .mobile-sheet__grid{width:100%;min-width:0;}
+  .mobile-sheet__grid button{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto;}
+  .mobile-sheet__grid button span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .mobile-dock{max-width:calc(100vw - 18px);}
+  .mobile-dock button{min-width:0;flex:1 1 0;overflow:hidden;}
+  .mobile-dock button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;}
+  .floating-add{z-index:20;}
+  .toast-message{z-index:30;max-width:calc(100vw - 20px);}
+  .calendar-layout,.focus-layout,.review-layout,.today-grid,.split-grid,.split-grid--wide,.inbox-command-grid,.today-main-grid,.mission-focus-view{min-width:0;}
+}
+@media(max-width:430px){
+  .topbar{gap:5px;}
+  .topbar__route{max-width:clamp(92px,34vw,145px);}
+  .topbar .icon-button{width:38px;height:38px;min-height:38px;}
+  .topbar .avatar{width:34px;height:34px;}
+  .command-search{width:38px;min-width:38px;height:38px;}
+  .home-status-grid,.metrics-grid,.review-pulse-grid,.projects-metrics{gap:6px;}
+  .home-status-grid>div,.metric-card,.review-pulse-grid>.surface-card,.projects-metrics>.surface-card{min-height:72px;padding:9px;}
+  .mission-list-row{grid-template-columns:32px minmax(0,1fr) 34px;gap:6px;}
+  .focus-clock__ring{width:min(210px,66vw);}
+}
+@media(max-width:360px){
+  .page-content{padding-inline:8px;}
+  .page-hero,.home-hero,.today-header,.rpg-hero{padding:14px;}
+  .surface-card{padding:12px;}
+  .topbar__route{max-width:96px;}
+  .topbar .icon-button,.command-search{width:36px;min-width:36px;height:36px;}
+  .topbar .avatar{width:32px;height:32px;}
+  .mobile-dock{left:7px;right:7px;height:60px;bottom:calc(6px + env(safe-area-inset-bottom));}
+  .mobile-dock button{min-height:50px;}
+  .mobile-dock button span{font-size:.46rem;}
+  .floating-add{right:12px;bottom:calc(72px + env(safe-area-inset-bottom));width:44px;height:44px;}
+  .page-content{padding-bottom:calc(106px + env(safe-area-inset-bottom));}
+  .focus-clock__ring{width:min(190px,62vw);}
+  .focus-clock__ring span{font-size:2.8rem;}
+}
+@media(prefers-reduced-motion:reduce){.mobile-sheet,.mobile-dock,.floating-add{transition:none!important;}}
