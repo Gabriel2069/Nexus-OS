@@ -1,4 +1,4 @@
-import { ChevronsLeft, ChevronsRight, Sparkles } from 'lucide-react'
+import { ChevronsLeft, ChevronsRight } from 'lucide-react'
 import { navigation } from '../data/navigation'
 import { navigate } from '../lib/router'
 
@@ -8,7 +8,7 @@ export function Sidebar({ pathname, collapsed, onToggle }: SidebarProps) {
   return (
     <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`} data-motion-shell="sidebar">
       <div className="sidebar__brand" data-motion="brand">
-        <button className="brand-mark" onClick={() => navigate('/')} aria-label="Ir para o início" data-motion="magnetic"><Sparkles size={18} /></button>
+        <button className="brand-mark" onClick={() => navigate('/')} aria-label="Ir para o início" data-motion="magnetic"><img src="/nexos-mark.svg" alt="" /></button>
         {!collapsed && <div className="sidebar__brand-copy"><strong>NexOS</strong><span>Sistema pessoal</span></div>}
       </div>
       <nav className="sidebar__nav" aria-label="Navegação principal">
