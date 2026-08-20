@@ -1,4 +1,4 @@
-import { KeyRound, LoaderCircle, LockKeyhole, ShieldCheck, Sparkles } from 'lucide-react'
+import { KeyRound, LoaderCircle, LockKeyhole, ShieldCheck } from 'lucide-react'
 import type { FormEvent, PropsWithChildren } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
@@ -126,7 +126,7 @@ export function AuthGate({ children }: AuthGateProps) {
         <div className="nexos-boot-stars" aria-hidden="true" />
         <div className="nexos-boot-glow" aria-hidden="true" />
         <div className="nexos-boot-core">
-          <div className="nexos-boot-mark" aria-hidden="true"><Sparkles /></div>
+          <div className="nexos-boot-mark" aria-hidden="true"><img src="/nexos-mark.svg" alt="" /></div>
           <div className="nexos-boot-wordmark">NexOS</div>
           <div className="nexos-boot-status"><i aria-hidden="true" /><span>{copy.status}</span></div>
           <div className="nexos-boot-progress" aria-hidden="true"><span style={{ width: `${copy.progress}%` }} /></div>
@@ -142,7 +142,7 @@ export function AuthGate({ children }: AuthGateProps) {
     <main className="auth-screen nexus-lock-screen">
       <div className="auth-backdrop" />
       <form className="auth-card nexus-lock-card" onSubmit={unlock}>
-        <div className="auth-brand"><Sparkles size={17} /><span>NEXUS OS</span></div>
+        <div className="auth-brand"><img src="/nexos-mark.svg" alt="" /><span>NEXOS</span></div>
         <div className="nexus-lock-icon"><LockKeyhole size={27} /></div>
         <span className="eyebrow">Acesso pessoal</span>
         <h1>Bem-vindo de volta.</h1>
