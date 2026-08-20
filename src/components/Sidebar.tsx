@@ -9,7 +9,7 @@ export function Sidebar({ pathname, collapsed, onToggle }: SidebarProps) {
     <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`} data-motion-shell="sidebar">
       <div className="sidebar__brand" data-motion="brand">
         <button className="brand-mark" onClick={() => navigate('/')} aria-label="Ir para o início" data-motion="magnetic"><Sparkles size={18} /></button>
-        {!collapsed && <div className="sidebar__brand-copy"><strong>Nexus OS</strong><span>Rotina e organização</span></div>}
+        {!collapsed && <div className="sidebar__brand-copy"><strong>NexOS</strong><span>Sistema pessoal</span></div>}
       </div>
       <nav className="sidebar__nav" aria-label="Navegação principal">
         {navigation.map((group) => <div className="nav-group" key={group.label} data-motion="nav-group">
