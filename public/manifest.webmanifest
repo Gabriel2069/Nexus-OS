@@ -1,11 +1,11 @@
 {
-  "name": "Nexus OS",
-  "short_name": "Nexus",
-  "description": "Personal operating system for routines, focus, projects and growth.",
+  "name": "NexOS",
+  "short_name": "NexOS",
+  "description": "Sistema operacional pessoal para rotina, foco, projetos, conhecimento e evolução.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#07090d",
-  "theme_color": "#0b0d12",
+  "background_color": "#050711",
+  "theme_color": "#050711",
   "orientation": "portrait-primary",
   "icons": [
     { "src": "/nexus-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
