@@ -8,6 +8,6 @@
   "theme_color": "#050711",
   "orientation": "portrait-primary",
   "icons": [
-    { "src": "/nexus-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/nexos-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
