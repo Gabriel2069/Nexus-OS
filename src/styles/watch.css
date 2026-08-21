@@ -1,25 +1,56 @@
-/* NexOS Watch fallback ~ ultra-narrow web layout */
-@media (max-width: 280px) {
-  html, body, #root { min-width: 0 !important; width: 100% !important; overflow-x: hidden !important; }
-  .app-shell { min-height: 100dvh !important; display: block !important; overflow: hidden !important; }
-  .nexos-environment { opacity: .42 !important; }
-  .nexos-environment__orbit, .nexos-environment__constellation { opacity: .28 !important; }
-  .nexos-environment__nebula { opacity: .35 !important; }
-  .app-shell__content { width: 100% !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; }
-  .sidebar, .mobile-dock, .floating-add { display: none !important; }
-  .topbar { min-height: 52px !important; height: 52px !important; padding: max(7px, env(safe-area-inset-top)) 10px 7px !important; }
-  .topbar__left, .topbar__right { min-width: 0 !important; gap: 5px !important; }
-  .topbar__breadcrumbs, .topbar__actions, .topbar__search, .topbar__subtitle { display: none !important; }
-  .page-content { width: 100% !important; min-width: 0 !important; padding: 8px 8px calc(12px + env(safe-area-inset-bottom)) !important; margin: 0 !important; }
-  .page-content > *, .page-content section, .page-content article, .page-content .card, .page-content .panel, .page-content [class*="grid"] { min-width: 0 !important; max-width: 100% !important; }
-  .page-content [class*="grid"] { grid-template-columns: 1fr !important; }
-  .page-content h1 { font-size: 21px !important; line-height: 1.12 !important; }
-  .page-content h2 { font-size: 16px !important; line-height: 1.18 !important; }
-  .page-content h3 { font-size: 13px !important; }
-  .page-content p, .page-content span, .page-content label { overflow-wrap: anywhere !important; }
-  button, input, select, textarea { max-width: 100% !important; }
-  .auth-shell, .auth-page, .auth-card, [class*="auth"] { min-width: 0 !important; max-width: 100vw !important; }
-  .auth-card { margin: 8px !important; padding: 16px !important; }
-  .auth-card h1 { font-size: 22px !important; }
-  table { display: block !important; max-width: 100% !important; overflow-x: auto !important; }
+/* NexOS Watch ~ ultra-compact Apple Watch web fallback.
+   Isolated from the normal responsive system. Activates only on watch-sized
+   viewports and prioritises readable, tappable, single-column surfaces.
+*/
+@media (max-width: 280px), (max-height: 260px) and (max-width: 320px) {
+  :root {
+    --watch-edge: max(6px, env(safe-area-inset-left));
+    --watch-edge-right: max(6px, env(safe-area-inset-right));
+    --watch-top: max(6px, env(safe-area-inset-top));
+    --watch-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  html, body, #root { width:100% !important; min-width:0 !important; max-width:100vw !important; min-height:100% !important; overflow-x:hidden !important; overscroll-behavior-x:none !important; }
+  body { font-size:12px !important; }
+  *, *::before, *::after { box-sizing:border-box !important; }
+  .app-shell { width:100% !important; min-width:0 !important; min-height:100dvh !important; display:block !important; overflow:hidden !important; }
+  .nexos-environment { opacity:.34 !important; pointer-events:none !important; }
+  .nexos-environment__orbit, .nexos-environment__constellation { opacity:.18 !important; }
+  .nexos-environment__nebula { opacity:.24 !important; }
+  .sidebar, .mobile-dock, .floating-add, .topbar__breadcrumbs, .topbar__actions, .topbar__search, .topbar__subtitle, .desktop-only { display:none !important; }
+  .app-shell__content, .page-content, main { width:100% !important; min-width:0 !important; max-width:100% !important; margin:0 !important; }
+  .topbar { width:100% !important; min-width:0 !important; min-height:44px !important; height:auto !important; padding:var(--watch-top) 8px 6px !important; gap:5px !important; }
+  .topbar__left, .topbar__right { min-width:0 !important; max-width:100% !important; gap:4px !important; }
+  .topbar h1, .topbar__title { max-width:100% !important; overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important; font-size:14px !important; line-height:1.15 !important; }
+  .page-content { padding:5px var(--watch-edge-right) var(--watch-bottom) var(--watch-edge) !important; }
+  .page-content > *, .page-content section, .page-content article, .page-content .card, .page-content .panel, .page-content [class*="card"], .page-content [class*="panel"], .page-content [class*="grid"], .page-content [class*="column"] { min-width:0 !important; width:100% !important; max-width:100% !important; }
+  .page-content [class*="grid"], .page-content [class*="columns"] { display:grid !important; grid-template-columns:minmax(0,1fr) !important; gap:6px !important; }
+  .page-content h1 { font-size:18px !important; line-height:1.08 !important; margin-block:4px 6px !important; }
+  .page-content h2 { font-size:14px !important; line-height:1.12 !important; margin-block:4px !important; }
+  .page-content h3 { font-size:12px !important; line-height:1.15 !important; }
+  .page-content p, .page-content span, .page-content label, .page-content small { overflow-wrap:anywhere !important; }
+  button, [role="button"] { min-width:0 !important; max-width:100% !important; min-height:34px !important; padding:7px 9px !important; font-size:11px !important; }
+  input, select, textarea { width:100% !important; max-width:100% !important; min-width:0 !important; min-height:34px !important; font-size:12px !important; }
+  .page-content [class*="card"], .page-content [class*="panel"] { padding:8px !important; border-radius:14px !important; }
+  table { display:block !important; width:100% !important; max-width:100% !important; overflow-x:auto !important; -webkit-overflow-scrolling:touch !important; }
+  .auth-shell, .auth-page, .auth-card, [class*="auth"] { width:auto !important; min-width:0 !important; max-width:calc(100vw - 12px) !important; }
+  .auth-card { margin:6px !important; padding:12px !important; border-radius:16px !important; }
+  .auth-card h1 { font-size:18px !important; }
+  .auth-card p { font-size:11px !important; }
+  .nexos-boot__nebula { opacity:.32 !important; }
+  .nexos-boot__orbit:nth-child(n+3) { opacity:.28 !important; }
+  [style*="width"], [style*="min-width"] { max-width:100% !important; }
+}
+@media (max-width: 190px), (max-height: 210px) and (max-width: 220px) {
+  body { font-size:10px !important; }
+  .topbar { min-height:38px !important; padding:max(4px, env(safe-area-inset-top)) 6px 4px !important; }
+  .topbar h1, .topbar__title { font-size:12px !important; }
+  .page-content { padding:4px 6px var(--watch-bottom) !important; }
+  .page-content h1 { font-size:15px !important; }
+  .page-content h2 { font-size:12px !important; }
+  .page-content [class*="card"], .page-content [class*="panel"] { padding:6px !important; border-radius:12px !important; }
+  button, [role="button"] { min-height:30px !important; padding:5px 7px !important; font-size:10px !important; }
+  input, select, textarea { min-height:30px !important; font-size:10px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nexos-environment *, .nexos-boot * { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
 }
