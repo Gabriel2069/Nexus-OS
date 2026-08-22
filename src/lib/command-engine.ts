@@ -1,4 +1,5 @@
 import type { NexusProject, NexusWorkspace } from '../types/nexus'
+import { createMission, updateProject } from './nexus-api'
 
 export type ParsedCommand =
   | { kind: 'show-today' }
@@ -52,4 +53,31 @@ export function commandPreview(command: ParsedCommand, workspace: NexusWorkspace
     return project ? `Definir “${project.name}” como prioridade?` : `Não encontrei um projeto correspondente a “${command.query}”.`
   }
   return null
+}
+
+/** Executa somente comandos previamente confirmados pelo usuário. */
+export async function executeConfirmedCommand(userId: string, command: ParsedCommand, workspace: NexusWorkspace) {
+  if (command.kind === 'create-mission') {
+    const dueAt = command.dateHint
+      ? new Date(Date.now() + (command.dateHint === 'tomorrow' ? 86400000 : 0)).toISOString()
+      : undefined
+    return createMission(userId, {
+      title: command.title,
+      status: 'A fazer',
+      priority: 'Média',
+      rank: 'C',
+      due_at: dueAt,
+      context: 'Comando NexOS',
+      xp_base: 60,
+      coins_base: 10,
+    })
+  }
+
+  if (command.kind === 'prioritize-project') {
+    const project = resolveProjectQuery(workspace, command.query)
+    if (!project) throw new Error(`Não encontrei um projeto correspondente a “${command.query}”.`)
+    return updateProject(userId, project.id, { priority: 'Alta' })
+  }
+
+  throw new Error('Este comando não possui uma ação confirmável.')
 }
