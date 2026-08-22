@@ -26,32 +26,63 @@ export function AuthGate({ children }: AuthGateProps) {
 
   useEffect(() => {
     let alive = true
+    let settled = false
+
+    const finishBoot = (nextUser: User | null) => {
+      if (!alive || settled) return
+      settled = true
+      setUser(nextUser)
+      setBootStage(nextUser ? 'session' : 'ready')
+      setLoading(false)
+    }
+
+    const timeout = window.setTimeout(() => {
+      // watchOS/WebKit can leave Supabase's initial storage/network lookup pending.
+      // Never keep the user trapped on the boot screen: fall back to the normal login.
+      finishBoot(null)
+    }, 4500)
 
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!alive) return
+      if (!alive || settled) return
       if (data.user) {
         setUser(data.user)
         setBootStage('session')
         try {
           await ensureProfile(data.user)
         } catch (profileError) {
-          console.error('Could not ensure Nexus profile', profileError)
+          console.error('Could not ensure NexOS profile', profileError)
         }
       }
-      setBootStage('ready')
-      setLoading(false)
+      if (alive) {
+        settled = true
+        window.clearTimeout(timeout)
+        setBootStage('ready')
+        setLoading(false)
+      }
+    }).catch((authError) => {
+      console.warn('Initial NexOS auth lookup failed; showing login', authError)
+      finishBoot(null)
+      window.clearTimeout(timeout)
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!alive) return
       setUser(session?.user ?? null)
       if (session?.user) {
         setBootStage('session')
-        void ensureProfile(session.user)
+        void ensureProfile(session.user).catch((profileError) => console.error('Could not ensure NexOS profile', profileError))
+      }
+      if (loading) {
+        settled = true
+        window.clearTimeout(timeout)
+        setBootStage('ready')
+        setLoading(false)
       }
     })
 
     return () => {
       alive = false
+      window.clearTimeout(timeout)
       listener.subscription.unsubscribe()
     }
   }, [])
@@ -82,10 +113,7 @@ export function AuthGate({ children }: AuthGateProps) {
     try {
       const response = await fetch(`${supabaseUrl}/functions/v1/nexus-login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: supabasePublishableKey,
-        },
+        headers: { 'Content-Type': 'application/json', apikey: supabasePublishableKey },
         body: JSON.stringify({ password: pin }),
       })
 
@@ -95,24 +123,19 @@ export function AuthGate({ children }: AuthGateProps) {
         window.setTimeout(() => inputRef.current?.focus(), 40)
         return
       }
-
       if (!response.ok) throw new Error('login_unavailable')
 
       const payload = await response.json() as { token_hash?: string }
       if (!payload.token_hash) throw new Error('missing_token')
 
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        token_hash: payload.token_hash,
-        type: 'email',
-      })
-
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({ token_hash: payload.token_hash, type: 'email' })
       if (verifyError || !data.user) throw verifyError ?? new Error('missing_user')
       setUser(data.user)
       await ensureProfile(data.user)
     } catch (loginError) {
-      console.error('Nexus unlock failed', loginError)
+      console.error('NexOS unlock failed', loginError)
       setPin('')
-      setError('Não foi possível abrir o Nexus. Tente novamente.')
+      setError('Não foi possível abrir o NexOS. Tente novamente.')
       window.setTimeout(() => inputRef.current?.focus(), 40)
     } finally {
       setSubmitting(false)
@@ -146,10 +169,10 @@ export function AuthGate({ children }: AuthGateProps) {
         <div className="nexus-lock-icon"><LockKeyhole size={27} /></div>
         <span className="eyebrow">Acesso pessoal</span>
         <h1>Bem-vindo de volta.</h1>
-        <p>Digite a senha do Nexus.</p>
+        <p>Digite a senha do NexOS.</p>
         <label className="nexus-pin-field" htmlFor="nexus-pin">
           <KeyRound size={18} />
-          <input ref={inputRef} id="nexus-pin" type="password" inputMode="numeric" autoComplete="current-password" pattern="[0-9]*" maxLength={4} value={pin} onChange={(event) => { setError(null); setPin(event.target.value.replace(/\D/g, '').slice(0, 4)) }} aria-label="Senha do Nexus" />
+          <input ref={inputRef} id="nexus-pin" type="password" inputMode="numeric" autoComplete="current-password" pattern="[0-9]*" maxLength={4} value={pin} onChange={(event) => { setError(null); setPin(event.target.value.replace(/\D/g, '').slice(0, 4)) }} aria-label="Senha do NexOS" />
           <span className="nexus-pin-dots" aria-hidden="true">{[0, 1, 2, 3].map((index) => <i key={index} className={pin.length > index ? 'filled' : ''} />)}</span>
         </label>
         <button className="primary-button nexus-unlock-button" disabled={submitting || pin.length !== 4}>
