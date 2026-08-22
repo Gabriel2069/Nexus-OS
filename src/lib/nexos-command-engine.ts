@@ -1,4 +1,5 @@
 import type { NexusWorkspace } from '../types/nexus'
+import { createMission } from './nexus-api'
 
 export type NexosCommand =
   | { type: 'agenda'; dateOffset: number; label: string }
@@ -41,4 +42,26 @@ export function buildCommandPreview(command: NexosCommand, workspace: NexusWorks
   if (command.type === 'summary') return { kind: 'answer' as const, text: command.period === 'week' ? 'Vou consolidar sua semana a partir dos registros disponíveis.' : 'Vou consolidar o seu dia a partir dos registros disponíveis.' }
   if (command.type === 'finance') return { kind: 'answer' as const, text: 'Vou consultar o período financeiro disponível no NexOS.' }
   return { kind: 'unknown' as const, text: `Ainda não reconheci esse comando: “${command.raw}”.` }
+}
+
+/** Executa apenas comandos que já foram confirmados explicitamente pelo usuário. */
+export async function executeConfirmedNexosCommand(userId: string, command: NexosCommand) {
+  if (command.type !== 'create_mission') {
+    throw new Error('Este comando não possui uma ação de escrita confirmável.')
+  }
+
+  const due = new Date()
+  due.setDate(due.getDate() + command.dateOffset)
+  due.setHours(12, 0, 0, 0)
+
+  return createMission(userId, {
+    title: command.title,
+    status: 'A fazer',
+    priority: 'Média',
+    rank: 'C',
+    due_at: due.toISOString(),
+    context: 'Comando NexOS',
+    xp_base: 60,
+    coins_base: 10,
+  })
 }
