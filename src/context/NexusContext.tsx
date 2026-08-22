@@ -2,6 +2,8 @@ import type { PropsWithChildren } from 'react'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { attributes as mockAttributes, missions as mockMissions, projects as mockProjects } from '../data/mock'
 import { bootstrapNexus, completeMissionAtomic, createMission, createProject, ensureTodayJourney, finishFocusSession, getCurrentUser, loadWorkspace, saveDailyCheckin, startFocusSession, toggleRoutineCompletion, redeemReward, saveWeeklyReview, updateMission, updateProfile, updateProject } from '../lib/nexus-api'
+import { buildDailySummary, buildNotifications, buildWeeklySummary, type NexusNotification } from '../lib/notification-engine'
+import { getDailyOrientation, type ContextSuggestion } from '../lib/context-engine'
 import { isSupabaseConfigured } from '../lib/supabase'
 import type { DailyCheckin, FocusSession, NexusMission, NexusProject, NexusWorkspace, PlayerProfile, WeeklyReview } from '../types/nexus'
 
@@ -10,6 +12,11 @@ type NexusContextValue = {
   workspace: NexusWorkspace
   loading: boolean
   error: string | null
+  notifications: NexusNotification[]
+  dailySummary: NexusNotification
+  weeklySummary: NexusNotification
+  orientation: ReturnType<typeof getDailyOrientation>
+  suggestions: ContextSuggestion[]
   refresh: () => Promise<void>
   editProfile: (patch: Partial<Pick<PlayerProfile, 'display_name' | 'avatar_url' | 'class_name' | 'title' | 'motto' | 'timezone' | 'daily_xp_goal'>>) => Promise<void>
   addMission: (title: string, options?: Partial<NexusMission>) => Promise<void>
@@ -55,14 +62,26 @@ export function NexusProvider({ children }: PropsWithChildren) {
       await ensureTodayJourney(user.id)
       setWorkspace(await loadWorkspace(user.id))
       setError(null)
-    } catch (err) { setError(err instanceof Error ? err.message : 'Falha ao carregar o Nexus') }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Falha ao carregar o NexOS') }
     finally { setLoading(false) }
   }, [])
 
   useEffect(() => { void refresh() }, [refresh])
 
+  const adaptive = useMemo(() => {
+    const now = new Date()
+    return {
+      notifications: buildNotifications(workspace, now),
+      dailySummary: buildDailySummary(workspace, now),
+      weeklySummary: buildWeeklySummary(workspace, now),
+      orientation: getDailyOrientation(workspace, now),
+    }
+  }, [workspace])
+
   const value = useMemo<NexusContextValue>(() => ({
     userId, workspace, loading, error, refresh, mockAttributes,
+    ...adaptive,
+    suggestions: adaptive.orientation.suggestions,
     editProfile: async (patch) => { if (!userId) return; await updateProfile(userId, patch); await refresh() },
     addMission: async (title, options = {}) => { if (!userId) return; await createMission(userId, { title, status: 'A fazer', rank: 'C', priority: 'Média', xp_base: 60, coins_base: 10, ...options }); await refresh() },
     completeMission: async (id) => { if (!userId) { setWorkspace((current) => ({ ...current, missions: current.missions.filter((mission) => mission.id !== id) })); return { xp: 0, coins: 0 } } const result = await completeMissionAtomic(id); await refresh(); return { xp: result.xp_awarded, coins: result.coins_awarded } },
@@ -75,7 +94,7 @@ export function NexusProvider({ children }: PropsWithChildren) {
     claimReward: async (rewardId) => { if (!userId) return 'Recompensa simulada'; const result = await redeemReward(rewardId); await refresh(); return result.reward },
     saveReview: async (review) => { if (!userId) return; await saveWeeklyReview(userId, review); await refresh() },
     setRoutineItem: async (itemId, completed) => { if (!userId) return; await toggleRoutineCompletion(userId, itemId, completed); await refresh() },
-  }), [userId, workspace, loading, error, refresh])
+  }), [userId, workspace, loading, error, refresh, adaptive])
 
   return <NexusContext.Provider value={value}>{children}</NexusContext.Provider>
 }
