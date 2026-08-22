@@ -1,4 +1,4 @@
-import type { NexusMission, NexusProject, NexusWorkspace, CalendarCommitment, FocusSession, DailyCheckin } from '../types/nexus'
+import type { NexusMission, NexusWorkspace, DailyCheckin } from '../types/nexus'
 
 export type NexusSuggestionKind = 'priority' | 'schedule' | 'study' | 'deadline' | 'routine' | 'finance'
 
@@ -66,7 +66,8 @@ export function buildNotifications(workspace: NexusWorkspace, now = new Date()):
     }
   }
 
-  return notifications.sort((a, b) => ({ high: 0, normal: 1, low: 2 }[a.priority] - { high: 0, normal: 1, low: 2 }[b.priority]))
+  const rank = { high: 0, normal: 1, low: 2 }
+  return notifications.sort((a, b) => rank[a.priority] - rank[b.priority])
 }
 
 export function buildSuggestions(workspace: NexusWorkspace, now = new Date()): NexusSuggestion[] {
@@ -95,9 +96,9 @@ export function buildSuggestions(workspace: NexusWorkspace, now = new Date()): N
   const academicSubjects = workspace.academicSchedule.map(item => item.subject.toLowerCase())
   const recentFocus = workspace.focusSessions.filter(s => s.started_at && new Date(s.started_at).getTime() >= today.getTime() - 7 * DAY)
   const focusSubjects = new Set(recentFocus.map(s => s.label ? subjectFrom(s.label) : null).filter(Boolean) as string[])
-  const weakScheduled = academicSubjects.find(subject => subject.includes('física') && !focusSubjects.has('física'))
+  const physicsGap = academicSubjects.some(subject => subject.includes('física')) && !focusSubjects.has('física')
 
-  if (weakScheduled) {
+  if (physicsGap) {
     suggestions.push({
       id: 'study:physics-gap',
       kind: 'study',
@@ -144,7 +145,7 @@ export function buildDailySummary(workspace: NexusWorkspace, now = new Date()) {
 export function buildWeeklySummary(workspace: NexusWorkspace) {
   const completed = workspace.activity.filter(event => event.event_type.toLowerCase().includes('complete')).length
   const focusMinutes = workspace.focusSessions.reduce((total, session) => total + (session.actual_minutes ?? 0), 0)
-  const checkins = workspace.dailyCheckins.filter(Boolean) as DailyCheckin[]
+  const checkins = workspace.dailyCheckins as DailyCheckin[]
   const averageFocus = checkins.length ? checkins.reduce((sum, c) => sum + (c.focus ?? 0), 0) / checkins.length : null
   const openProjects = workspace.projects.filter(project => project.status === 'Ativo').length
 
