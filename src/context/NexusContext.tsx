@@ -4,6 +4,7 @@ import { attributes as mockAttributes, missions as mockMissions, projects as moc
 import { bootstrapNexus, completeMissionAtomic, createMission, createProject, ensureTodayJourney, finishFocusSession, getCurrentUser, loadWorkspace, saveDailyCheckin, startFocusSession, toggleRoutineCompletion, redeemReward, saveWeeklyReview, updateMission, updateProfile, updateProject } from '../lib/nexus-api'
 import { buildDailySummary, buildNotifications, buildWeeklySummary, type NexusNotification } from '../lib/notification-engine'
 import { getDailyOrientation, type ContextSuggestion } from '../lib/context-engine'
+import { buildCommandPreview, parseNexosCommand, type NexosCommand } from '../lib/nexos-command-engine'
 import { isSupabaseConfigured } from '../lib/supabase'
 import type { DailyCheckin, FocusSession, NexusMission, NexusProject, NexusWorkspace, PlayerProfile, WeeklyReview } from '../types/nexus'
 
@@ -18,6 +19,7 @@ type NexusContextValue = {
   orientation: ReturnType<typeof getDailyOrientation>
   suggestions: ContextSuggestion[]
   refresh: () => Promise<void>
+  interpretCommand: (input: string) => { command: NexosCommand; preview: ReturnType<typeof buildCommandPreview> }
   editProfile: (patch: Partial<Pick<PlayerProfile, 'display_name' | 'avatar_url' | 'class_name' | 'title' | 'motto' | 'timezone' | 'daily_xp_goal'>>) => Promise<void>
   addMission: (title: string, options?: Partial<NexusMission>) => Promise<void>
   completeMission: (id: string) => Promise<{ xp: number; coins: number }>
@@ -78,8 +80,13 @@ export function NexusProvider({ children }: PropsWithChildren) {
     }
   }, [workspace])
 
+  const interpretCommand = useCallback((input: string) => {
+    const command = parseNexosCommand(input)
+    return { command, preview: buildCommandPreview(command, workspace) }
+  }, [workspace])
+
   const value = useMemo<NexusContextValue>(() => ({
-    userId, workspace, loading, error, refresh, mockAttributes,
+    userId, workspace, loading, error, refresh, interpretCommand, mockAttributes,
     ...adaptive,
     suggestions: adaptive.orientation.suggestions,
     editProfile: async (patch) => { if (!userId) return; await updateProfile(userId, patch); await refresh() },
@@ -94,7 +101,7 @@ export function NexusProvider({ children }: PropsWithChildren) {
     claimReward: async (rewardId) => { if (!userId) return 'Recompensa simulada'; const result = await redeemReward(rewardId); await refresh(); return result.reward },
     saveReview: async (review) => { if (!userId) return; await saveWeeklyReview(userId, review); await refresh() },
     setRoutineItem: async (itemId, completed) => { if (!userId) return; await toggleRoutineCompletion(userId, itemId, completed); await refresh() },
-  }), [userId, workspace, loading, error, refresh, adaptive])
+  }), [userId, workspace, loading, error, refresh, adaptive, interpretCommand])
 
   return <NexusContext.Provider value={value}>{children}</NexusContext.Provider>
 }
