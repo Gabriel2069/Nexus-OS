@@ -1,0 +1,1648 @@
+<!doctype html>
+<html lang="pt-BR">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>NexOS — Observatório pessoal / Prancheta D01</title
+  ><style>
+    * {
+      box-sizing: border-box;
+    }
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 100px;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font:
+        16px/1.6 Inter,
+        system-ui,
+        sans-serif;
+      --bg: #050816;
+      --panel: #101a2b;
+      --text: #eef3ff;
+      --muted: #a8b5d1;
+      --cyan: #75e1ff;
+      --violet: #ad9fff;
+      --amber: #f3c982;
+      --line: #ffffff26;
+      --glass: #101a2be8;
+      --shadow: #0008;
+    }
+    body.light {
+      --bg: #eef3fb;
+      --panel: #fff;
+      --text: #17243c;
+      --muted: #51627b;
+      --cyan: #126a8a;
+      --violet: #664bc1;
+      --amber: #8a5c0b;
+      --line: #17243c29;
+      --glass: #ffffffef;
+      --shadow: #23375520;
+    }
+    a {
+      color: var(--cyan);
+      text-underline-offset: 4px;
+    }
+    button {
+      font: inherit;
+      cursor: pointer;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 10px 16px;
+      transition:
+        background 0.18s,
+        box-shadow 0.18s;
+    }
+    button:hover {
+      box-shadow: 0 0 0 1px var(--cyan);
+    }
+    button:active {
+      background: var(--glass);
+    }
+    :focus-visible {
+      outline: 3px solid var(--cyan);
+      outline-offset: 4px;
+    }
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    h1,
+    h2,
+    h3 {
+      font-family: "Space Grotesk", Inter, system-ui, sans-serif;
+      line-height: 1.12;
+      letter-spacing: -0.045em;
+      margin: 0 0 20px;
+    }
+    h1 {
+      font-size: clamp(48px, 7vw, 96px);
+      max-width: 760px;
+    }
+    h2 {
+      font-size: clamp(32px, 4vw, 52px);
+    }
+    h3 {
+      font-size: 24px;
+    }
+    p {
+      margin: 0 0 20px;
+      max-width: 70ch;
+      color: var(--muted);
+    }
+    small,
+    .meta {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 20px;
+      display: block;
+    }
+    .wrap {
+      width: min(1240px, calc(100% - 64px));
+      margin: auto;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--line);
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 0;
+      flex-wrap: wrap;
+    }
+    .brand {
+      font-size: 20px;
+      font-weight: 650;
+      letter-spacing: -0.05em;
+    }
+    .toolbar nav {
+      display: flex;
+      gap: 18px;
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+    .toolbar a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    .tools {
+      display: flex;
+      gap: 8px;
+    }
+    .tools button {
+      font-size: 12px;
+    }
+    .hero {
+      padding: 100px 0 84px;
+      position: relative;
+      overflow: hidden;
+      min-height: 720px;
+    }
+    .hero .wrap {
+      position: relative;
+      z-index: 2;
+    }
+    .hero p {
+      max-width: 470px;
+      font-size: 18px;
+    }
+    .hero-copy {
+      max-width: 66%;
+    }
+    .cosmos {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 80% 25%, #7443c92b, transparent 42%),
+        radial-gradient(ellipse at 78% 70%, #0097c927, transparent 45%);
+    }
+    .stars {
+      position: absolute;
+      inset: 0;
+      opacity: 0.6;
+      background-image:
+        radial-gradient(1px 1px at 24px 38px, var(--text) 70%, transparent),
+        radial-gradient(1px 1px at 92px 120px, var(--cyan) 70%, transparent),
+        radial-gradient(1px 1px at 177px 200px, var(--text) 70%, transparent);
+      background-size:
+        239px 271px,
+        307px 313px,
+        401px 389px;
+    }
+    .nebula {
+      position: absolute;
+      width: 600px;
+      height: 350px;
+      right: -50px;
+      top: 170px;
+      background: radial-gradient(ellipse, #814fe252, transparent 65%);
+      filter: blur(30px);
+      animation: drift 45s ease-in-out infinite alternate;
+    }
+    .lens {
+      position: absolute;
+      width: 380px;
+      height: 380px;
+      right: 9%;
+      top: 135px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 32% 24%, #ffffff60, transparent 21%),
+        radial-gradient(
+          circle at 60% 58%,
+          #040815 3%,
+          #191b42 25%,
+          #a6eaff20 60%,
+          #c6b9ff77 88%,
+          #ebfaffc9 100%
+        );
+      box-shadow:
+        inset -20px -25px 50px #0009,
+        inset 3px 5px 7px #d8f4ff82,
+        0 40px 90px #0006;
+      border: 1px solid #b7d8ff6b;
+      transform: rotate(-24deg);
+    }
+    .lens:before,
+    .lens:after {
+      content: "";
+      position: absolute;
+      inset: 38%;
+      border-radius: 50%;
+      background: #eefaff;
+      box-shadow:
+        0 0 35px #6fdbff,
+        0 0 90px #8d67ff;
+      transform: scale(0.2);
+    }
+    .lens:after {
+      inset: -25% -20%;
+      background: none;
+      border: 1px solid #b7d8ff80;
+      box-shadow: 0 0 16px #75e1ff25;
+      transform: rotateX(65deg);
+      animation: orbit 60s linear infinite;
+    }
+    .ship {
+      position: absolute;
+      right: 5%;
+      bottom: 20%;
+      width: 70px;
+      opacity: 0.6;
+      transform: rotate(-30deg);
+    }
+    section {
+      padding: 72px 0;
+      border-top: 1px solid var(--line);
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 28px;
+      align-items: start;
+      margin-bottom: 32px;
+    }
+    .section-head p {
+      max-width: 440px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 28px;
+    }
+    .card .num {
+      font-size: 13px;
+      color: var(--cyan);
+      display: block;
+      margin-bottom: 28px;
+    }
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--line);
+      box-shadow:
+        inset 0 1px #ffffff40,
+        0 18px 50px var(--shadow);
+    }
+    .primary {
+      background: var(--cyan);
+      color: var(--bg);
+      border-color: transparent;
+      font-weight: 650;
+    }
+    .tag {
+      display: inline-block;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .swatch {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .swatch i {
+      height: 76px;
+      display: block;
+    }
+    .swatch span {
+      display: block;
+      padding: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .sample-bg {
+      background:
+        radial-gradient(ellipse at 70% 10%, #5d408688, transparent 60%),
+        radial-gradient(ellipse at 15% 80%, #14658466, transparent 60%),
+        var(--bg);
+      padding: 32px;
+      border-radius: 28px;
+    }
+    .material {
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .void {
+      background: var(--bg);
+    }
+    .control-glass {
+      background: color-mix(in srgb, var(--panel) 85%, transparent);
+      backdrop-filter: blur(24px);
+      box-shadow:
+        inset 0 1px #ffffff55,
+        0 16px 40px var(--shadow);
+    }
+    .app {
+      display: grid;
+      grid-template-columns: 185px 1fr;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 30px 90px var(--shadow);
+      background: var(--bg);
+      position: relative;
+    }
+    .side {
+      padding: 24px 16px;
+      border-right: 1px solid var(--line);
+      background: var(--glass);
+    }
+    .side .brand {
+      margin-bottom: 36px;
+    }
+    .side span {
+      display: block;
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .side .active {
+      color: var(--cyan);
+      background: color-mix(in srgb, var(--cyan) 10%, transparent);
+      border: 1px solid var(--line);
+    }
+    .workspace {
+      padding: 28px;
+      min-width: 0;
+      background: radial-gradient(
+        ellipse at 100% 0%,
+        #7050a52a,
+        transparent 50%
+      );
+    }
+    .appbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 32px;
+    }
+    .app h3 {
+      font-size: 32px;
+    }
+    .app p {
+      font-size: 14px;
+    }
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 18px;
+    }
+    .mission {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(
+        120deg,
+        var(--panel),
+        color-mix(in srgb, var(--panel) 88%, var(--violet))
+      );
+      min-height: 270px;
+    }
+    .mission h3 {
+      font-size: 28px;
+      max-width: 320px;
+      margin-top: 24px;
+    }
+    .mission p {
+      max-width: 300px;
+    }
+    .orb-mini {
+      position: absolute;
+      right: -55px;
+      top: 28px;
+      width: 160px;
+      height: 160px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      box-shadow: inset 15px 12px 45px #75e1ff15;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+    }
+    .row b {
+      font-weight: 500;
+    }
+    .row time {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .support {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .support .card {
+      padding: 20px;
+    }
+    .support h3 {
+      font-size: 20px;
+    }
+    .mobile-layout {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .phone {
+      border: 1px solid var(--line);
+      border-radius: 40px;
+      padding: 16px;
+      background: var(--bg);
+      box-shadow: 0 25px 80px var(--shadow);
+      max-width: 100%;
+    }
+    .phone-body {
+      padding: 10px 8px;
+    }
+    .phone .mission {
+      padding: 24px;
+    }
+    .phone h3 {
+      font-size: 26px;
+    }
+    .phone .row {
+      font-size: 14px;
+    }
+    .dock {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      padding: 10px 4px;
+      border-radius: 22px;
+      margin: 16px 0 4px;
+    }
+    .dock span {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .dock b {
+      display: block;
+      font-size: 18px;
+      font-weight: 400;
+    }
+    .dock .active {
+      color: var(--cyan);
+    }
+    .list-note {
+      padding: 24px 0;
+      border-top: 1px solid var(--line);
+    }
+    .list-note h3 {
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+    .components {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 24px 0;
+    }
+    .tabs button[aria-selected="true"] {
+      color: var(--cyan);
+      border-color: var(--cyan);
+    }
+    .demo-stage {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .focus-orbit {
+      width: 160px;
+      height: 160px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      margin: 20px auto;
+      position: relative;
+    }
+    .focus-orbit:before {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border: 2px solid transparent;
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: orbit 12s linear infinite;
+    }
+    .focus-orbit strong {
+      font-size: 34px;
+      font-variant-numeric: tabular-nums;
+    }
+    .state {
+      min-height: 150px;
+    }
+    .state h3 {
+      font-size: 20px;
+    }
+    .state.error {
+      border-color: var(--amber);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th,
+    td {
+      text-align: left;
+      vertical-align: top;
+      padding: 16px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    th {
+      color: var(--cyan);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    td:first-child {
+      font-weight: 600;
+    }
+    caption {
+      text-align: left;
+      margin-bottom: 18px;
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow: auto;
+    }
+    .login {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 40px;
+      background: radial-gradient(
+        ellipse at 25% 40%,
+        #654aa32b,
+        transparent 60%
+      );
+      padding: 48px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+    }
+    .login-card {
+      max-width: 380px;
+      padding: 32px;
+    }
+    .login-card svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 24px;
+    }
+    .login-card button {
+      width: 100%;
+      margin-top: 12px;
+    }
+    .login-card h3 {
+      font-size: 28px;
+    }
+    dialog {
+      max-width: min(460px, calc(100% - 32px));
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--panel);
+      padding: 32px;
+      box-shadow: 0 40px 100px #0009;
+    }
+    dialog::backdrop {
+      background: #030816bb;
+      backdrop-filter: blur(6px);
+    }
+    footer {
+      padding: 48px 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .paused *,
+    .paused *::before,
+    .paused *::after,
+    body.hidden *,
+    body.hidden *::before,
+    body.hidden *::after,
+    .offscreen,
+    .offscreen::before,
+    .offscreen::after {
+      animation-play-state: paused !important;
+    }
+    .light .lens {
+      opacity: 0.85;
+    }
+    .skip {
+      position: fixed;
+      top: -80px;
+      left: 16px;
+      z-index: 100;
+    }
+    .skip:focus {
+      top: 16px;
+      background: var(--panel);
+      padding: 12px;
+    }
+    ul {
+      color: var(--muted);
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 10px;
+    }
+    @keyframes drift {
+      to {
+        transform: translate(-55px, 30px) scale(1.12);
+      }
+    }
+    @keyframes orbit {
+      to {
+        rotate: 360deg;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *:before,
+      *:after {
+        animation: none !important;
+        transition: none !important;
+      }
+      html {
+        scroll-behavior: auto;
+      }
+    }
+    @media (max-width: 900px) {
+      .hero-copy {
+        max-width: 100%;
+      }
+      .hero {
+        padding: 80px 0 330px;
+      }
+      .lens {
+        width: 230px;
+        height: 230px;
+        top: auto;
+        bottom: 55px;
+        right: 20%;
+      }
+      .ship {
+        bottom: 12%;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .swatches {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .section-head {
+        display: block;
+      }
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .side {
+        display: none;
+      }
+      .mobile-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px;
+      }
+      .phone {
+        margin: auto;
+        width: 390px;
+      }
+      .login {
+        grid-template-columns: 1fr;
+      }
+      .login-card {
+        margin: auto;
+      }
+    }
+    @media (max-width: 600px) {
+      .wrap {
+        width: calc(100% - 32px);
+      }
+      .toolbar nav {
+        display: none;
+      }
+      section {
+        padding: 48px 0;
+      }
+      .tools button {
+        padding: 8px;
+        font-size: 11px;
+      }
+      .hero {
+        min-height: 720px;
+      }
+      .hero p {
+        font-size: 16px;
+      }
+      .grid,
+      .app-grid,
+      .support,
+      .demo-stage {
+        grid-template-columns: 1fr;
+      }
+      .workspace {
+        padding: 18px;
+      }
+      .app h3 {
+        font-size: 26px;
+      }
+      .card {
+        padding: 22px;
+      }
+      .sample-bg {
+        padding: 16px;
+      }
+      .swatches {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .login {
+        padding: 20px;
+      }
+      .login-card {
+        padding: 22px;
+      }
+      .section-head p {
+        font-size: 15px;
+      }
+      .phone {
+        padding: 10px;
+        border-radius: 28px;
+      }
+      .phone-body {
+        padding: 4px;
+      }
+      .hero h1 {
+        font-size: 48px;
+      }
+      .table-wrap {
+        max-width: 100%;
+      }
+    }
+  </style>
+  <body class="paused">
+    <a class="skip" href="#main">Ir para a prancheta</a>
+    <header>
+      <div class="wrap toolbar">
+        <div class="brand">✦ NexOS <small>/ D01</small></div>
+        <nav aria-label="Seções da prancheta">
+          <a href="#materiais">Materiais</a><a href="#composicao">Composição</a
+          ><a href="#interacao">Interação</a><a href="#mapa">Telas</a>
+        </nav>
+        <div class="tools">
+          <button id="theme" aria-pressed="false">Tema claro</button
+          ><button id="motion" aria-pressed="false">Ativar movimento</button>
+        </div>
+      </div>
+    </header>
+    <main id="main">
+      <div class="hero">
+        <div class="cosmos" aria-hidden="true">
+          <div class="stars"></div>
+          <div class="nebula"></div>
+          <div class="lens"></div>
+          <svg class="ship" viewBox="0 0 100 100">
+            <path
+              d="M50 8 69 70 91 88 55 77 50 89 45 77 9 88 31 70Z"
+              fill="none"
+              stroke="#b3d5ff"
+              stroke-width="1.5"
+            />
+            <path
+              d="M50 28 50 67M40 80 50 97 60 80"
+              fill="none"
+              stroke="#75e1ff"
+            />
+          </svg>
+        </div>
+        <div class="wrap">
+          <div class="hero-copy">
+            <span class="eyebrow">Direção visual / 11 outubro 2026</span>
+            <h1>Seu espaço,<br />em órbita.</h1>
+            <p>
+              Um observatório pessoal para transformar intenção em próximo
+              passo. O universo dá profundidade; a interface dá clareza.
+            </p>
+            <a href="#composicao">Explorar a composição ↓</a>
+            <div class="chips">
+              <span class="tag">Cosmos + Liquid Glass</span
+              ><span class="tag">Proposta de design</span
+              ><span class="tag">Dados ilustrativos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">01 / Direção</span>
+              <h2>Imersão com propósito.</h2>
+            </div>
+            <p>
+              Uma presença espacial sofisticada, com silêncio visual suficiente
+              para estudar, planejar, revisar e descansar.
+            </p>
+          </div>
+          <div class="grid">
+            <article class="card">
+              <span class="num">01 / HIERARQUIA</span>
+              <h3>O dia tem um centro.</h3>
+              <p>
+                Uma ação principal por região. Contexto antes de métricas;
+                métricas antes de decoração.
+              </p>
+            </article>
+            <article class="card">
+              <span class="num">02 / PROFUNDIDADE</span>
+              <h3>Vidro com função.</h3>
+              <p>
+                Navegação flutua. Conteúdo repousa. Nebulosas aparecem nos
+                intervalos, sem atravessar texto.
+              </p>
+            </article>
+            <article class="card">
+              <span class="num">03 / ATMOSFERA</span>
+              <h3>O cosmos acompanha.</h3>
+              <p>
+                Estrelas espaçadas, órbitas lentas e luz contida. Naves marcam
+                jornadas; descanso continua livre.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+      <section id="materiais">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">02 / Sistema de materiais</span>
+              <h2>Três planos.<br />Uma linguagem.</h2>
+            </div>
+            <p>
+              A lente 3D é assinatura de marca. O vidro funcional fica nos
+              controles; listas e números recebem uma base previsível.
+            </p>
+          </div>
+          <div class="sample-bg">
+            <div class="grid">
+              <article class="card material void">
+                <span class="num">00 / VAZIO CÓSMICO</span>
+                <h3>Ambiente</h3>
+                <small
+                  >Fundo profundo, estrelas estáticas e nebulosa de baixa
+                  intensidade. Sem camada atrás de campos de leitura.</small
+                >
+              </article>
+              <article class="card material">
+                <span class="num">01 / GRAFITE MINERAL</span>
+                <h3>Conteúdo</h3>
+                <small
+                  >Opaco na prancheta. Futuro vidro denso precisa manter
+                  contraste sobre todos os fundos permitidos.</small
+                >
+              </article>
+              <article class="card material control-glass">
+                <span class="num">02 / VIDRO LENTICULAR</span>
+                <h3>Navegação</h3>
+                <small
+                  >Rim luminoso, reflexo localizado, blur contido. Fallback
+                  sólido quando transparência não funciona.</small
+                >
+              </article>
+            </div>
+          </div>
+          <h3 style="margin-top: 40px">Paleta orbital</h3>
+          <p>
+            Ciano orienta a ação; violeta comunica identidade; âmbar chama
+            atenção. Status sempre inclui texto ou ícone.
+          </p>
+          <div class="swatches" id="swatches"></div>
+          <p class="meta" style="margin-top: 16px">
+            Valores propostos em tokens.json. Razões calculadas sobre o painel
+            opaco; vidro final exige medição composta na aplicação.
+          </p>
+          <div class="grid" style="margin-top: 32px">
+            <article class="card">
+              <span class="num">TIPOGRAFIA</span>
+              <h3>Clareza antes do efeito.</h3>
+              <p>
+                Inter / leitura e números.<br />Space Grotesk / títulos.<br />Oxanium
+                / acentos breves.
+              </p>
+              <small
+                >Esta prancheta usa fallback de sistema offline. A implementação
+                preserva as famílias já existentes.</small
+              >
+            </article>
+            <article class="card">
+              <span class="num">RITMO</span>
+              <h3>4 · 8 · 12 · 16 · 24 · 32</h3>
+              <p>
+                Corpo 16 px, compacto 14 px. Títulos 24–40 px na aplicação;
+                títulos maiores ficam na marca.
+              </p>
+              <small
+                >Raios: 12 controles / 20 cartões / 28 diálogos. Alvos táteis
+                propostos: 44 px.</small
+              >
+            </article>
+            <article class="card">
+              <span class="num">LUZ</span>
+              <h3>Uma fonte por plano.</h3>
+              <p>
+                Reflexo superior esquerdo; sombra inferior. Acento de rota
+                ilumina seleção, sem recolorir todo o ambiente.
+              </p>
+              <small
+                >Evitar halos em cada borda, gradientes no texto e brilho
+                competindo com estados de erro.</small
+              >
+            </article>
+          </div>
+        </div>
+      </section>
+      <section id="composicao">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">03 / Desktop — Agora</span>
+              <h2>O próximo passo<br />fica evidente.</h2>
+            </div>
+            <p>
+              Exemplo ilustrativo. Prioridade, janela disponível e agenda
+              convivem sem transformar cada dado em um painel gigante.
+            </p>
+          </div>
+          <div class="app">
+            <aside class="side" aria-label="Navegação ilustrativa">
+              <div class="brand">✦ NexOS</div>
+              <span class="active">◉ Agora</span><span>☷ Hoje</span
+              ><span>▦ Calendário</span><span>◎ Foco</span
+              ><small style="display: block; margin: 26px 14px 8px"
+                >CONSTRUIR</small
+              ><span>◇ Missões</span><span>▱ Projetos</span
+              ><span>↻ Rotinas</span><span>⌘ Estudos</span
+              ><small style="display: block; margin: 26px 14px 8px"
+                >OBSERVAR</small
+              ><span>⌁ Insights</span><span>◈ Finanças</span
+              ><span>✧ Life RPG</span>
+            </aside>
+            <div class="workspace">
+              <div class="appbar">
+                <small>ESPAÇO PESSOAL / G. TADEU</small
+                ><span class="tag">Prancheta · exemplo</span>
+              </div>
+              <span class="eyebrow">AGORA</span>
+              <h3>Boa tarde, Tadeu.</h3>
+              <p>Uma janela tranquila para avançar no que importa.</p>
+              <div class="app-grid">
+                <article class="card mission">
+                  <div class="orb-mini" aria-hidden="true"></div>
+                  <small>PRÓXIMO PASSO / ESTUDOS</small>
+                  <h3>Um bloco que cabe<br />no seu dia.</h3>
+                  <p>
+                    Revisar matemática · 45 minutos<br />Você escolhe quando
+                    começar.
+                  </p>
+                  <button class="primary" data-dialog>Iniciar foco ↗</button>
+                </article>
+                <article class="card">
+                  <h3 style="font-size: 20px">À frente</h3>
+                  <div class="row">
+                    <b>Revisão de matemática</b><time>16:00</time>
+                  </div>
+                  <div class="row"><b>Pausa livre</b><time>16:45</time></div>
+                  <div class="row">
+                    <b>Organizar amanhã</b><time>18:00</time>
+                  </div>
+                  <small
+                    >Horários ilustrativos; não são sua agenda
+                    sincronizada.</small
+                  >
+                </article>
+              </div>
+              <div class="support">
+                <article class="card">
+                  <small>HOJE</small>
+                  <h3 style="margin-top: 10px">Uma prioridade de cada vez.</h3>
+                  <p style="margin: 0">Revisar exercícios selecionados.</p>
+                </article>
+                <article class="card">
+                  <small>CONTINUIDADE</small>
+                  <h3 style="margin-top: 10px">Descanso também tem espaço.</h3>
+                  <p style="margin: 0">
+                    Nenhuma missão ocupa a pausa por padrão.
+                  </p>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section>
+        <div class="wrap mobile-layout">
+          <div class="phone">
+            <div class="phone-body">
+              <div class="appbar">
+                <b>✦ NexOS</b><small>Exemplo / mobile</small>
+              </div>
+              <span class="eyebrow">AGORA</span>
+              <h3>Seu dia, com espaço.</h3>
+              <p>O essencial primeiro.</p>
+              <article class="card mission">
+                <small>ESTUDOS / 45 MIN</small>
+                <h3>Um pequeno avanço.<br />Um horizonte maior.</h3>
+                <p>Revisar matemática</p>
+                <button class="primary" data-dialog>Iniciar foco ↗</button>
+              </article>
+              <h3 style="font-size: 20px; margin-top: 28px">À frente</h3>
+              <div class="row"><b>Revisão</b><time>16:00</time></div>
+              <div class="row"><b>Pausa livre</b><time>16:45</time></div>
+              <div class="dock glass" aria-label="Dock ilustrativo">
+                <span class="active"><b>◉</b>Agora</span
+                ><span><b>☷</b>Hoje</span><span><b>▦</b>Agenda</span
+                ><span><b>◎</b>Foco</span><span><b>☰</b>Mais</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <span class="eyebrow">04 / Mobile</span>
+            <h2>Profundidade.<br />Sem apertar a vida.</h2>
+            <div class="list-note">
+              <h3>Ordem vertical clara</h3>
+              <p>
+                Contexto breve → ação principal → agenda → continuidade.
+                Conteúdo secundário pode ir para inspector.
+              </p>
+            </div>
+            <div class="list-note">
+              <h3>Um dock, cinco destinos</h3>
+              <p>
+                Agora, Hoje, Agenda, Foco e Mais. Rótulos permanecem visíveis.
+                Safe areas e teclado fazem parte do lote V01.
+              </p>
+            </div>
+            <div class="list-note">
+              <h3>Sem parallax obrigatório</h3>
+              <p>
+                No toque, o estado selecionado e o feedback de pressão bastam. A
+                leitura não depende de hover, giroscópio ou animação.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section>
+        <div class="wrap">
+          <span class="eyebrow">05 / Login</span>
+          <h2>Uma entrada para o seu universo.</h2>
+          <div class="login">
+            <div>
+              <h3>Marca em primeiro plano.</h3>
+              <p>
+                Estrela existente preservada. Nebulosa contida, lente distante e
+                uma ação clara. A nave é um detalhe narrativo, sem ocupar
+                formulários ou tarefas.
+              </p>
+              <p class="meta">
+                Autenticação continua seguindo o contrato real do projeto. Texto
+                e provedor abaixo são composição ilustrativa.
+              </p>
+            </div>
+            <article class="card glass login-card">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 512 512"
+                role="img"
+                aria-labelledby="title desc"
+              >
+                <title id="title">NexOS</title>
+                <desc id="desc">
+                  Marca do NexOS: estrela fina de quatro pontas com núcleo
+                  central.
+                </desc>
+                <defs>
+                  <radialGradient id="core" cx="50%" cy="45%" r="58%">
+                    <stop offset="0" stop-color="#ffffff" />
+                    <stop offset="0.72" stop-color="#eef3ff" />
+                    <stop offset="1" stop-color="#cbd8ff" />
+                  </radialGradient>
+                  <linearGradient id="mark" x1="18%" y1="10%" x2="82%" y2="90%">
+                    <stop stop-color="#8eeaff" />
+                    <stop offset="0.5" stop-color="#78b8ff" />
+                    <stop offset="1" stop-color="#a783ff" />
+                  </linearGradient>
+                  <filter
+                    id="glow"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feGaussianBlur stdDeviation="8" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <rect width="512" height="512" rx="116" fill="#070b18" />
+                <path
+                  d="M256 78c15 83 48 132 132 150-84 18-117 67-132 150-15-83-48-132-132-150 84-18 117-67 132-150Z"
+                  fill="url(#mark)"
+                  filter="url(#glow)"
+                />
+                <circle cx="256" cy="256" r="48" fill="url(#core)" />
+              </svg>
+              <h3>Bem-vindo ao NexOS.</h3>
+              <p>Entre no seu espaço pessoal.</p>
+              <button class="primary" data-dialog>
+                Continuar com sua conta</button
+              ><small style="display: block; margin-top: 16px"
+                >Prancheta: nenhum login é realizado.</small
+              >
+            </article>
+          </div>
+        </div>
+      </section>
+      <section id="interacao">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">06 / Componentes e movimento</span>
+              <h2>Resposta precisa.<br />Atmosfera serena.</h2>
+            </div>
+            <p>
+              Experimente os controles. A prancheta começa estática; o botão no
+              topo ativa órbitas e nebulosa. Movimento reduzido prevalece.
+            </p>
+          </div>
+          <div class="demo-stage">
+            <article class="card">
+              <h3>Controles</h3>
+              <div class="components">
+                <button class="primary" data-dialog>Ação principal ↗</button
+                ><button data-dialog>Inspecionar</button
+                ><button disabled>Indisponível</button>
+              </div>
+              <div class="tabs" role="tablist" aria-label="Estado de exemplo">
+                <button
+                  id="tab-day"
+                  role="tab"
+                  aria-controls="tab-panel"
+                  aria-selected="true"
+                  tabindex="0"
+                >
+                  Dia</button
+                ><button
+                  id="tab-week"
+                  role="tab"
+                  aria-controls="tab-panel"
+                  aria-selected="false"
+                  tabindex="-1"
+                >
+                  Semana
+                </button>
+              </div>
+              <p
+                id="tab-panel"
+                role="tabpanel"
+                aria-labelledby="tab-day"
+                tabindex="0"
+              >
+                Dia: uma prioridade, contexto e pausas visíveis.
+              </p>
+              <small
+                >Tabs respondem a clique e setas; diálogos fecham com Escape.
+                Estados visuais precisam de semântica equivalente.</small
+              >
+            </article>
+            <article class="card">
+              <h3>Órbita de foco</h3>
+              <div class="focus-orbit" aria-hidden="true">
+                <strong>45:00</strong>
+              </div>
+              <p>
+                O arco sugere continuidade. O tempo permanece estável neste
+                exemplo; não há sessão real.
+              </p>
+              <small
+                >Na aplicação, relógio real vem do focus-clock. Pausar atmosfera
+                nunca pausa a contagem da sessão.</small
+              >
+            </article>
+          </div>
+          <div class="grid" style="margin-top: 20px">
+            <article class="card state">
+              <h3>Sem eventos neste período</h3>
+              <p>Espaço livre também é informação.</p>
+              <button data-dialog>Adicionar evento</button>
+            </article>
+            <article class="card state error">
+              <h3>Não foi possível carregar</h3>
+              <p>
+                Tente novamente. Dados anteriores devem ser identificados quando
+                exibidos.
+              </p>
+              <button data-dialog>Tentar novamente</button>
+            </article>
+            <article class="card state">
+              <h3>Carregando seus dados…</h3>
+              <p>
+                Estrutura estável, sem números fictícios. Placeholder não deve
+                parecer um resultado real.
+              </p>
+              <small>Status anunciado de forma apropriada.</small>
+            </article>
+          </div>
+          <div class="table-wrap" style="margin-top: 32px">
+            <table>
+              <caption>
+                Contrato proposto de movimento — valores iniciais, sujeitos a
+                perfil em dispositivos reais.
+              </caption>
+              <thead>
+                <tr>
+                  <th>Evento</th>
+                  <th>Tempo</th>
+                  <th>Propriedade e limite</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Pressão</td>
+                  <td>100 ms</td>
+                  <td>
+                    Feedback local; transform do wrapper. Não mover formulário
+                    inteiro.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Seleção / hover</td>
+                  <td>180 ms</td>
+                  <td>
+                    Cor e opacidade; estado final imediato em movimento
+                    reduzido.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Diálogo / inspector</td>
+                  <td>260 ms</td>
+                  <td>
+                    Opacity + até 12 px; foco e fechamento independem da
+                    animação.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Troca de rota</td>
+                  <td>360 ms</td>
+                  <td>
+                    Uma entrada curta; não atrasar interação ou loading real.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Nebulosa / órbita</td>
+                  <td>45 / 60 s</td>
+                  <td>
+                    Opcional e pausável; fora da área de leitura; parar em aba
+                    oculta e fora de tela.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section id="mapa">
+        <div class="wrap">
+          <span class="eyebrow">07 / Mapa por tela</span>
+          <h2>Cada região tem uma função.</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Lote / tela</th>
+                  <th>Centro da composição</th>
+                  <th>Metáfora e restrição</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>V01 / Shell e login</td>
+                  <td>Orientação, seleção, conta e acesso</td>
+                  <td>
+                    Vidro flutuante; nave discreta só na entrada. Sem brilho em
+                    todos os itens.
+                  </td>
+                </tr>
+                <tr>
+                  <td>V02 / Agora e Hoje</td>
+                  <td>Próximo passo e planejamento diário</td>
+                  <td>
+                    Horizonte + uma órbita focal. Pausas livres preservadas.
+                  </td>
+                </tr>
+                <tr>
+                  <td>V03 / Calendário</td>
+                  <td>Tempo, grade e inspector do dia</td>
+                  <td>
+                    Constelação como acento externo. Células legíveis e densas.
+                  </td>
+                </tr>
+                <tr>
+                  <td>V03 / Foco</td>
+                  <td>Relógio, missão e pausa</td>
+                  <td>
+                    Órbita única; contexto escurece sem desaparecer. Sem
+                    partículas sobre o timer.
+                  </td>
+                </tr>
+                <tr>
+                  <td>V04 / Missões e Projetos</td>
+                  <td>Prioridade, progresso e dependências</td>
+                  <td>
+                    Trajetória pontual. Lista real domina; nada de mapa espacial
+                    obrigatório.
+                  </td>
+                </tr>
+                <tr>
+                  <td>V04 / Rotinas e Estudos</td>
+                  <td>Sequência, execução e revisão</td>
+                  <td>
+                    Ritmo e marcos. Estados atrasados não são punição visual.
+                  </td>
+                </tr>
+                <tr>
+                  <td>V05 / Insights e Finanças</td>
+                  <td>Escala, período e origem dos números</td>
+                  <td>
+                    Gráficos sobre painéis opacos. Cosmos fica na margem, fora
+                    dos eixos.
+                  </td>
+                </tr>
+                <tr>
+                  <td>V05 / Life RPG</td>
+                  <td>Progressão e regras verificáveis</td>
+                  <td>
+                    Constelações e nave podem aparecer aqui; celebração breve e
+                    desativável.
+                  </td>
+                </tr>
+                <tr>
+                  <td>V06 / Perfil, Revisão e Tutorial</td>
+                  <td>Preferências, reflexão e compreensão</td>
+                  <td>
+                    Identidade no cabeçalho; formulários estáveis, texto direto.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Section / demais áreas</td>
+                  <td>Metas, conhecimento, planejamento, saúde e histórico</td>
+                  <td>
+                    Mesmo padrão de lista/inspector. Não criar uma linguagem
+                    visual paralela.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">08 / Guardas e execução</span>
+              <h2>Beleza que aguenta o uso.</h2>
+            </div>
+            <p>
+              A prancheta define direção e exemplos. A aplicação precisa de
+              contraste composto, dados reais, dispositivos reais e revisão de
+              cada lote.
+            </p>
+          </div>
+          <div class="grid">
+            <article class="card">
+              <h3>Acessibilidade</h3>
+              <p>
+                Texto normal ≥ 4,5:1; texto grande ≥ 3:1. Foco e componentes
+                identificáveis. Reflow, teclado e preferências de movimento.
+              </p>
+              <small
+                >Não declarar conformidade por uma paleta ou screenshot.</small
+              >
+            </article>
+            <article class="card">
+              <h3>Propriedade</h3>
+              <p>
+                21 CSS owners mantidos. Tokens em foundation; ambiente em
+                environment; keyframes em motion. Página não reescreve o shell.
+              </p>
+              <small
+                >Sem arquivos de acabamento v2/v3 e sem dois autores do mesmo
+                transform.</small
+              >
+            </article>
+            <article class="card">
+              <h3>Começar por V01</h3>
+              <p>
+                Tokens → materiais → navegação → login → estados. Depois
+                Agora/Hoje. Dados e autenticação seguem B01 antes de promessas.
+              </p>
+              <small
+                >Plano, referências e paleta estão versionados junto desta
+                prancheta.</small
+              >
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="wrap">
+      NexOS / Observatório pessoal · D01<br />Direção solicitada por Tadeu.
+      Referências: Apple HIG / materiais; NASA Webb / profundidade; Linear /
+      hierarquia; W3C / acessibilidade.<br /><a href="REFERENCES.md"
+        >Referências e atribuição</a
+      >
+      · <a href="IMPLEMENTATION_PLAN.md">Plano de implementação</a> ·
+      <a href="tokens.json">Tokens propostos</a>
+    </footer>
+    <dialog id="dialog" aria-labelledby="dialog-title">
+      <h3 id="dialog-title">Prévia de interação</h3>
+      <p>
+        Este diálogo demonstra a camada de inspeção. Nenhum dado é salvo e
+        nenhuma sessão é iniciada.
+      </p>
+      <form method="dialog">
+        <button class="primary">Voltar à prancheta</button>
+      </form>
+    </dialog>
+    <script>
+      const palettes = {
+        dark: {
+          background: "#050816",
+          content: "#101A2B",
+          text: "#EEF3FF",
+          muted: "#A8B5D1",
+          cyan: "#75E1FF",
+          violet: "#AD9FFF",
+          amber: "#F3C982",
+        },
+        light: {
+          background: "#EEF3FB",
+          content: "#FFFFFF",
+          text: "#17243C",
+          muted: "#51627B",
+          cyan: "#126A8A",
+          violet: "#664BC1",
+          amber: "#8A5C0B",
+        },
+      };
+      const ratios = {
+        dark: {
+          text: 15.69,
+          muted: 8.46,
+          cyan: 11.6,
+          violet: 7.62,
+          amber: 11.2,
+        },
+        light: {
+          text: 15.51,
+          muted: 6.21,
+          cyan: 6.08,
+          violet: 6.28,
+          amber: 5.81,
+        },
+      };
+      const body = document.body;
+      const theme = document.getElementById("theme");
+      const motion = document.getElementById("motion");
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+      let enabled = false;
+      function swatches() {
+        const mode = body.classList.contains("light") ? "light" : "dark";
+        document.getElementById("swatches").innerHTML = Object.entries(
+          palettes[mode],
+        )
+          .map(
+            ([name, color]) =>
+              `<div class="swatch"><i style="background:${color}"></i><span>${name}<br>${color}${ratios[mode][name] ? "<br>" + ratios[mode][name] + ":1 no painel" : ""}</span></div>`,
+          )
+          .join("");
+      }
+      theme.onclick = () => {
+        const light = body.classList.toggle("light");
+        theme.setAttribute("aria-pressed", String(light));
+        theme.textContent = light ? "Tema escuro" : "Tema claro";
+        swatches();
+      };
+      function syncMotion() {
+        body.classList.toggle("paused", !enabled || reduced.matches);
+        motion.setAttribute(
+          "aria-pressed",
+          String(enabled && !reduced.matches),
+        );
+        motion.textContent = reduced.matches
+          ? "Movimento reduzido"
+          : enabled
+            ? "Pausar movimento"
+            : "Ativar movimento";
+        motion.disabled = reduced.matches;
+      }
+      motion.onclick = () => {
+        enabled = !enabled;
+        syncMotion();
+      };
+      reduced.addEventListener("change", syncMotion);
+      document.addEventListener("visibilitychange", () =>
+        body.classList.toggle("hidden", document.hidden),
+      );
+      const observer = new IntersectionObserver((entries) =>
+        entries.forEach((entry) =>
+          entry.target.classList.toggle("offscreen", !entry.isIntersecting),
+        ),
+      );
+      document
+        .querySelectorAll(".nebula,.lens,.focus-orbit")
+        .forEach((el) => observer.observe(el));
+      document
+        .querySelectorAll("[data-dialog]")
+        .forEach(
+          (button) =>
+            (button.onclick = () =>
+              document.getElementById("dialog").showModal()),
+        );
+      const tabs = [...document.querySelectorAll("[role=tab]")];
+      function activate(tab) {
+        tabs.forEach((t) => {
+          t.setAttribute("aria-selected", String(t === tab));
+          t.tabIndex = t === tab ? 0 : -1;
+        });
+        const panel = document.getElementById("tab-panel");
+        panel.setAttribute("aria-labelledby", tab.id);
+        panel.textContent =
+          tab.id === "tab-day"
+            ? "Dia: uma prioridade, contexto e pausas visíveis."
+            : "Semana: marcos claros, carga possível e espaço para ajustes.";
+      }
+      tabs.forEach((tab, i) => {
+        tab.onclick = () => activate(tab);
+        tab.onkeydown = (event) => {
+          let next;
+          if (event.key === "ArrowRight") next = tabs[(i + 1) % tabs.length];
+          if (event.key === "ArrowLeft")
+            next = tabs[(i + tabs.length - 1) % tabs.length];
+          if (event.key === "Home") next = tabs[0];
+          if (event.key === "End") next = tabs[tabs.length - 1];
+          if (next) {
+            event.preventDefault();
+            activate(next);
+            next.focus();
+          }
+        };
+      });
+      swatches();
+      syncMotion();
+    </script>
+  </body>
+</html>

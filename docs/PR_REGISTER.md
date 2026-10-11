@@ -2,11 +2,11 @@
 
 Revisão: 11 de outubro de 2026. Só três PRs estavam abertos: #14, #15 e #17. Branches preservadas; fechamento de PR supersedido não apaga código nem histórico.
 
-| PR                                                     | Head auditado                              | Destino                                                   | Razão                                                                                  |
-| ------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| [#17](https://github.com/Gabriel2069/Nexus-OS/pull/17) | `refactor/nexos-foundations`               | F01: integrar estrutura revisada                          | Propriedade, correções funcionais, lockfile, testes e mapa de produção                 |
-| [#14](https://github.com/Gabriel2069/Nexus-OS/pull/14) | `d2f4fdbe1312de12acd7057b5baed5d2e5bb7fc2` | Encerrar como supersedido por F01; recuperar itens abaixo | 6 commits exclusivos; import global antigo e conflito com navegação/estilos atuais     |
-| [#15](https://github.com/Gabriel2069/Nexus-OS/pull/15) | `e0bb2455b0dcb19a2c16a70c01c74249cafa0312` | Encerrar como supersedido por F01; recuperar itens abaixo | 3 commits exclusivos; duas folhas globais concorrentes e conflito com ponto de entrada |
+| PR                                                     | Head auditado                              | Destino                                                | Razão                                                                                  |
+| ------------------------------------------------------ | ------------------------------------------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| [#17](https://github.com/Gabriel2069/Nexus-OS/pull/17) | `refactor/nexos-foundations`               | F01 integrado na main; squash `3d1a901`                | Propriedade, correções funcionais, lockfile, testes e mapa de produção                 |
+| [#14](https://github.com/Gabriel2069/Nexus-OS/pull/14) | `d2f4fdbe1312de12acd7057b5baed5d2e5bb7fc2` | Encerrado como supersedido por F01; recuperação abaixo | 6 commits exclusivos; import global antigo e conflito com navegação/estilos atuais     |
+| [#15](https://github.com/Gabriel2069/Nexus-OS/pull/15) | `e0bb2455b0dcb19a2c16a70c01c74249cafa0312` | Encerrado como supersedido por F01; recuperação abaixo | 3 commits exclusivos; duas folhas globais concorrentes e conflito com ponto de entrada |
 
 ## Mapa de recuperação — não é cherry-pick integral
 
