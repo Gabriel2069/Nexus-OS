@@ -1,0 +1,428 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oxanium:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@media (max-width: 240px), (max-height: 260px) and (max-width: 400px) {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box !important;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+/* foundation: canonical owner. See DESIGN.md and docs/STYLE_SYSTEM.md. */
+
+:root {
+  font-family:
+    Inter,
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "Segoe UI",
+    sans-serif;
+  color: #f5f7fb;
+  background: #080a0f;
+  --bg: #080a0f;
+  --panel: #10131a;
+  --panel2: #151923;
+  --line: #232938;
+  --text: #f5f7fb;
+  --muted: #8f98aa;
+  --blue: #72a5ff;
+  --primary: var(--blue);
+  --cyan: #55d6e8;
+  --green: #67d6a2;
+  --violet: #9d7cff;
+  --rose: #ff7698;
+  --amber: #f7bb67;
+  --shadow: 0 18px 60px #0007;
+  --radius: 22px;
+}
+html {
+  background: var(--bg);
+  color-scheme: dark;
+}
+html[data-theme="light"] {
+  --bg: #f5f6f8;
+  --panel: #fff;
+  --panel2: #f0f2f6;
+  --line: #dfe3eb;
+  --text: #111521;
+  --muted: #697386;
+  --shadow: 0 18px 50px #3f47521f;
+  color-scheme: light;
+}
+body {
+  margin: 0;
+}
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --motion-fast: 100ms;
+  --motion-ui: 160ms;
+  --motion-surface: 220ms;
+  --material: color-mix(in srgb, var(--panel) 82%, transparent);
+  --material-strong: color-mix(in srgb, var(--panel) 93%, transparent);
+  --hairline: color-mix(in srgb, var(--line) 78%, transparent);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--blue) 24%, transparent);
+}
+html {
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+}
+body {
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+  font-optical-sizing: auto;
+}
+@media (max-width: 760px) {
+  :root {
+    --radius: 18px;
+  }
+  html[data-theme="light"] .mobile-dock {
+    background: color-mix(in srgb, #ffffff 85%, transparent);
+  }
+  html,
+  body,
+  #root {
+    width: 100%;
+  }
+  body {
+    background:
+      radial-gradient(circle at 50% -5%, #24375b22, transparent 30%), var(--bg);
+  }
+}
+:root {
+  --content-max: 1440px;
+  --page-x: clamp(22px, 2.6vw, 42px);
+  --page-y: clamp(26px, 3vw, 44px);
+  --section-gap: clamp(16px, 1.5vw, 23px);
+  --card-pad: clamp(18px, 1.55vw, 24px);
+  --radius-card: 21px;
+  --radius-hero: 27px;
+  --control-h: 40px;
+  --copy-leading: 1.58;
+}
+html {
+  scroll-padding-top: 88px;
+}
+body {
+  line-height: 1.45;
+}
+@media (max-width: 1180px) and (min-width: 921px) {
+  :root {
+    --page-x: 24px;
+    --page-y: 28px;
+  }
+}
+@media (max-width: 920px) {
+  :root {
+    --page-x: 18px;
+    --page-y: 22px;
+  }
+}
+@media (max-width: 760px) {
+  :root {
+    --page-x: 10px;
+    --page-y: 11px;
+    --section-gap: 10px;
+    --card-pad: 14px;
+    --radius-card: 17px;
+    --radius-hero: 19px;
+    --control-h: 44px;
+  }
+  html {
+    scroll-padding-top: 68px;
+  }
+}
+@media (max-width: 390px) {
+  :root {
+    --page-x: 8px;
+  }
+}
+html[data-theme="light"] .surface-card,
+html[data-theme="light"] .page-hero,
+html[data-theme="light"] .home-hero,
+html[data-theme="light"] .rpg-hero,
+html[data-theme="light"] .today-header {
+  box-shadow:
+    0 1px 0 #ffffff,
+    0 15px 42px #26344a10;
+}
+html[data-theme="light"] .calendar-grid {
+  background: #fff;
+}
+html[data-theme="light"] .calendar-day {
+  background: #fff;
+}
+html[data-theme="light"] .mobile-dock {
+  box-shadow: 0 12px 34px #26344a1a;
+}
+@media (max-width: 760px) {
+  html,
+  body,
+  #root {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+:root {
+  --nexus-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nexus-fast: 140ms;
+  --nexus-ui: 180ms;
+  --nexus-panel: 250ms;
+  --nexus-layout: 320ms;
+  --nexus-press: scale(0.982);
+  --n4-orbit: 16s;
+}
+body {
+  letter-spacing: -0.008em;
+}
+:root {
+  --nexus-motion-fast: 140ms;
+  --nexus-motion-ui: 180ms;
+  --nexus-motion-panel: 240ms;
+  --nexus-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --nexus-ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --nexus-ease-press: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --nexus-glass-border: color-mix(in srgb, var(--line) 62%, transparent);
+  --nexus-glass-sheen: rgb(255 255 255 / 6%);
+}
+:root {
+  --nexus-motion-instant: 90ms;
+  --nexus-motion-micro: 140ms;
+  --nexus-motion-control: 180ms;
+  --nexus-motion-surface: 240ms;
+  --nexus-motion-layout: 320ms;
+  --nexus-motion-emphasis: 420ms;
+  --nexus-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nexus-motion-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --nexus-motion-spring: cubic-bezier(0.2, 0.85, 0.25, 1.15);
+  --nexus-motion-spring-soft: cubic-bezier(0.18, 0.9, 0.24, 1.04);
+  --nexus-motion-glass: cubic-bezier(0.12, 0.72, 0.2, 1);
+}
+:root {
+  --nexos-void: #03040b;
+  --nexos-deep: #070918;
+  --nexos-night: #0b0f25;
+  --nexos-nebula: #12183a;
+  --nexos-glass: rgba(13, 18, 43, 0.58);
+  --nexos-glass-strong: rgba(15, 21, 50, 0.78);
+  --nexos-line: rgba(163, 184, 255, 0.15);
+  --nexos-line-strong: rgba(185, 203, 255, 0.3);
+  --nexos-text: #f5f7ff;
+  --nexos-muted: #8f9abc;
+  --nexos-blue: #83aaff;
+  --nexos-cyan: #67e7ff;
+  --nexos-violet: #ae91ff;
+  --nexos-pink: #ed91ff;
+  --nexos-star: #edf2ff;
+  --nexos-gold: #d9c28a;
+  --nexos-shadow: 0 26px 90px rgba(0, 0, 0, 0.46);
+  --nexos-display: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
+  --nexos-body:
+    Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+html,
+body,
+#root {
+  background: var(--nexos-void);
+  color: var(--nexos-text);
+}
+body {
+  font-family: var(--nexos-body);
+  background:
+    radial-gradient(
+      ellipse 75% 45% at 76% -8%,
+      rgba(91, 91, 219, 0.24),
+      transparent 64%
+    ),
+    radial-gradient(
+      ellipse 50% 42% at 2% 24%,
+      rgba(41, 109, 210, 0.13),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 42% 34% at 88% 82%,
+      rgba(164, 83, 221, 0.09),
+      transparent 72%
+    ),
+    linear-gradient(180deg, #03040b 0%, #07091a 48%, #04050c 100%);
+  background-attachment: fixed;
+}
+:root {
+  --nx-soft: cubic-bezier(0.4, 0, 0.2, 1);
+}
+:root {
+  --nx-page-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nx-page-spring: cubic-bezier(0.16, 1.1, 0.3, 1);
+}
+:root {
+  --nx-cubic: cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root {
+  --nx-display: Oxanium, "Space Grotesk", sans-serif;
+  --nx-heading: "Space Grotesk", Oxanium, sans-serif;
+  --nx-body: Inter, system-ui, sans-serif;
+  --nx-content: 68rem;
+}
+html,
+body,
+#root {
+  font-family: var(--nx-body);
+}
+:root {
+  --nx-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nx-space-line: rgba(137, 188, 255, 0.055);
+}
+:root {
+  --nx-touch: 44px;
+}
+:root {
+  --nx-safe-top: max(0px, env(safe-area-inset-top));
+  --nx-safe-right: max(0px, env(safe-area-inset-right));
+  --nx-safe-bottom: max(0px, env(safe-area-inset-bottom));
+  --nx-safe-left: max(0px, env(safe-area-inset-left));
+  --nx-content-max: 1480px;
+  --nx-gutter: clamp(14px, 2.2vw, 34px);
+  --nx-control: 44px;
+  --nx-spring: cubic-bezier(0.22, 1, 0.36, 1);
+}
+html {
+  min-height: 100%;
+  overflow-x: hidden;
+}
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+:root {
+  --nx-motion-fast: 150ms;
+  --nx-motion-ui: 210ms;
+  --nx-motion-panel: 330ms;
+  --nx-motion-route: 420ms;
+  --nx-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --nx-ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
+}
+:root {
+  --nx-glass-bg: rgb(10 18 34 / 58%);
+  --nx-glass-bg-strong: rgb(9 16 31 / 78%);
+  --nx-glass-border: rgb(185 220 255 / 12%);
+  --nx-glass-highlight: rgb(255 255 255 / 8%);
+  --nx-glass-shadow: rgb(0 0 0 / 42%);
+  --nx-glass-blur: 22px;
+  --nx-glass-sat: 1.32;
+}
+:root {
+  --nx-cosmic-cyan: #69e3ff;
+  --nx-cosmic-violet: #a78bfa;
+  --nx-cosmic-blue: #7299ff;
+  --nx-cosmic-star: rgb(225 244 255 / 72%);
+}
+html {
+  --nexos-brand-name: "NexOS";
+  --nexos-night-0: #050712;
+  --nexos-night-1: #080d1c;
+  --nexos-night-2: #0d1426;
+  --nexos-ink: #e9efff;
+  --nexos-muted: #8d9ab8;
+  --nexos-cyan: #69e3ff;
+  --nexos-violet: #a78bfa;
+  --nexos-amber: #f4c86b;
+  --nexos-green: #67d6a2;
+}
+body {
+  color: var(--nexos-ink);
+}
+:root {
+  --nx-interaction-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --nx-interaction-fast: 140ms;
+  --nx-interaction-normal: 210ms;
+}
+:root {
+  --nx-dust-cyan: 105 227 255;
+  --nx-dust-violet: 167 139 250;
+  --nx-dust-blue: 114 153 255;
+  --nx-dust-warm: 244 200 107;
+}
+@media (max-width: 240px), (max-height: 260px) and (max-width: 400px) {
+  :root {
+    --watch-edge: max(6px, env(safe-area-inset-left));
+    --watch-edge-right: max(6px, env(safe-area-inset-right));
+    --watch-top: max(5px, env(safe-area-inset-top));
+    --watch-bottom: max(7px, env(safe-area-inset-bottom));
+  }
+  html {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    background: #050711;
+  }
+  body {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 100%;
+    margin: 0;
+    overflow-x: hidden;
+    background: #050711;
+    color: #e9efff;
+    font-size: 12px;
+  }
+  #root {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 100%;
+    background: #050711;
+  }
+}
+
+/* Theme values are semantic; material owners consume these tokens. */
+html[data-theme="light"] {
+  --nexos-void: #eef3fb;
+  --nexos-deep: #f6f8ff;
+  --nexos-night: #e9eef8;
+  --nexos-nebula: #e4eafa;
+  --nexos-glass: rgb(248 251 255 / 82%);
+  --nexos-glass-strong: rgb(248 251 255 / 94%);
+  --nexos-night-0: #eef3fb;
+  --nexos-night-1: #f6f8ff;
+  --nexos-night-2: #e9eef8;
+  --nexos-ink: #19243b;
+  --nexos-text: #19243b;
+  --nexos-muted: #52617c;
+  --nexos-line: rgb(54 79 120 / 18%);
+  --blue: #315fc7;
+  --cyan: #086b83;
+  --green: #18704b;
+  --violet: #7046c4;
+  --rose: #b62a56;
+  --amber: #895715;
+  --nexos-cyan: var(--cyan);
+  --nexos-violet: var(--violet);
+  --nexos-amber: var(--amber);
+  --nexos-green: var(--green);
+  --nexos-line-strong: rgb(54 79 120 / 32%);
+  --nx-glass-bg: rgb(248 251 255 / 82%);
+  --nx-glass-bg-strong: rgb(248 251 255 / 94%);
+  --nx-glass-border: rgb(54 79 120 / 20%);
+  --nx-glass-highlight: rgb(255 255 255 / 78%);
+  --nx-glass-shadow: rgb(40 57 90 / 14%);
+}
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

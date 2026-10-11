@@ -1,38 +1,329 @@
-import { CircleStop, Coffee, Focus, Pause, Play, RotateCcw } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { CSSProperties } from 'react'
-import { SurfaceCard } from '../components/SurfaceCard'
-import { useNexus } from '../context/NexusContext'
-import { navigate } from '../lib/router'
-import type { FocusSession } from '../types/nexus'
+import { elapsedFocus, pauseFocus, type FocusClock } from "../lib/focus-clock";
+import { dateKey } from "../lib/dates";
+import {
+  CircleStop,
+  Coffee,
+  Focus,
+  Pause,
+  Play,
+  RotateCcw,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+import { SurfaceCard } from "../components/SurfaceCard";
+import { useNexus } from "../context/NexusContext";
+import { navigate } from "../lib/router";
+import type { FocusSession } from "../types/nexus";
 
 function initialParams() {
-  const params = new URLSearchParams(window.location.search)
-  const parsed = Number(params.get('minutes') ?? 45)
-  const allowed = [25,45,60,90]
-  const minutes = allowed.includes(parsed) ? parsed : parsed >= 75 ? 90 : parsed >= 53 ? 60 : parsed >= 35 ? 45 : 25
-  return { minutes, missionId: params.get('mission') ?? '' }
+  const params = new URLSearchParams(window.location.search);
+  const parsed = Number(params.get("minutes") ?? 45);
+  const allowed = [25, 45, 60, 90];
+  const minutes = allowed.includes(parsed)
+    ? parsed
+    : parsed >= 75
+      ? 90
+      : parsed >= 53
+        ? 60
+        : parsed >= 35
+          ? 45
+          : 25;
+  return { minutes, missionId: params.get("mission") ?? "" };
 }
 
 export function FocusPage() {
-  const { workspace, beginFocus, endFocus } = useNexus()
-  const initial = useMemo(initialParams, [])
-  const [minutes, setMinutes] = useState(initial.minutes)
-  const [secondsLeft, setSecondsLeft] = useState(initial.minutes*60)
-  const [running, setRunning] = useState(false)
-  const [session, setSession] = useState<FocusSession | null>(null)
-  const [missionId, setMissionId] = useState<string>(initial.missionId)
-  const startedAt = useRef<number | null>(null)
-  useEffect(() => { if (!running) return; const id = window.setInterval(() => setSecondsLeft((value) => Math.max(0, value - 1)), 1000); return () => window.clearInterval(id) }, [running])
-  useEffect(() => { if (!session) setSecondsLeft(minutes*60) },[minutes,session])
-  const todayMinutes = useMemo(() => workspace.focusSessions.filter((item)=>item.status==='completed' && item.started_at.slice(0,10)===new Date().toISOString().slice(0,10)).reduce((sum,item)=>sum+(item.actual_minutes??0),0),[workspace.focusSessions])
-  const formatted = `${String(Math.floor(secondsLeft/60)).padStart(2,'0')}:${String(secondsLeft%60).padStart(2,'0')}`
-  const progress = 1 - secondsLeft/(minutes*60)
-  const linkedMission = workspace.missions.find((mission)=>mission.id===missionId)
-  async function start() { if (running) return; if (!session) { const active=await beginFocus(minutes,linkedMission?.title||'Sessão de foco',missionId||null); setSession(active); startedAt.current=Date.now() } setRunning(true) }
-  async function finish() { const elapsed = startedAt.current ? Math.max(1,Math.round((Date.now()-startedAt.current)/60000)) : Math.max(1,minutes-Math.floor(secondsLeft/60)); if(session) await endFocus(session.id,elapsed); setSession(null); setRunning(false); setSecondsLeft(minutes*60); startedAt.current=null; navigate('/') }
-  useEffect(() => { if (secondsLeft === 0 && session) void finish() }, [secondsLeft, session])
-  function reset(){setRunning(false);setSecondsLeft(minutes*60)}
+  const { workspace, userId, beginFocus, endFocus, cancelFocus } = useNexus();
+  const initial = useMemo(initialParams, []);
+  const storageKey = `nexos:focus:${userId ?? "demo"}`;
+  const restored = useMemo(() => {
+    try {
+      const data = JSON.parse(sessionStorage.getItem(storageKey) ?? "null");
+      if (
+        data?.version === 1 &&
+        [25, 45, 60, 90].includes(data.minutes) &&
+        typeof data.clock?.elapsedMs === "number" &&
+        data.clock.plannedMs === data.minutes * 60_000 &&
+        (data.clock.resumedAt === null ||
+          typeof data.clock.resumedAt === "number")
+      )
+        return data as {
+          minutes: number;
+          missionId: string;
+          session: FocusSession | null;
+          active: boolean;
+          clock: FocusClock;
+        };
+    } catch {
+      /* Discard an invalid local checkpoint. */
+    }
+    return null;
+  }, [storageKey]);
+  const [minutes, setMinutes] = useState(restored?.minutes ?? initial.minutes);
+  const [session, setSession] = useState<FocusSession | null>(
+    restored?.session ?? null,
+  );
+  const [active, setActive] = useState(restored?.active ?? false);
+  const [missionId, setMissionId] = useState(
+    restored?.missionId ?? initial.missionId,
+  );
+  const [clock, setClock] = useState<FocusClock>(
+    restored?.clock ?? {
+      elapsedMs: 0,
+      resumedAt: null,
+      plannedMs: initial.minutes * 60_000,
+    },
+  );
+  const [now, setNow] = useState(Date.now);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const pending = useRef(false);
+  const running = clock.resumedAt !== null;
+  const secondsLeft = Math.max(
+    0,
+    Math.ceil((clock.plannedMs - elapsedFocus(clock, now)) / 1000),
+  );
+  useEffect(() => {
+    if (!running) return;
+    const id = window.setInterval(() => setNow(Date.now()), 250);
+    return () => window.clearInterval(id);
+  }, [running]);
+  useEffect(() => {
+    if (!active)
+      setClock({ elapsedMs: 0, resumedAt: null, plannedMs: minutes * 60_000 });
+  }, [minutes, active]);
+  useEffect(() => {
+    try {
+      if (active)
+        sessionStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            version: 1,
+            minutes,
+            missionId,
+            session,
+            active,
+            clock,
+          }),
+        );
+      else sessionStorage.removeItem(storageKey);
+    } catch {
+      /* Storage availability does not block the timer. */
+    }
+  }, [storageKey, minutes, missionId, session, active, clock]);
+  const todayMinutes = useMemo(
+    () =>
+      workspace.focusSessions
+        .filter(
+          (item) =>
+            item.status === "completed" &&
+            dateKey(new Date(item.started_at)) === dateKey(),
+        )
+        .reduce((sum, item) => sum + (item.actual_minutes ?? 0), 0),
+    [workspace.focusSessions],
+  );
+  const formatted = `${String(Math.floor(secondsLeft / 60)).padStart(2, "0")}:${String(secondsLeft % 60).padStart(2, "0")}`;
+  const progress = 1 - secondsLeft / (minutes * 60);
+  const linkedMission = workspace.missions.find(
+    (mission) => mission.id === missionId,
+  );
+  async function start() {
+    if (running || pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    setError(null);
+    try {
+      if (!active) {
+        const next = await beginFocus(
+          minutes,
+          linkedMission?.title || "Sessão de foco",
+          missionId || null,
+        );
+        setSession(next);
+        setActive(true);
+        try {
+          sessionStorage.setItem(
+            storageKey,
+            JSON.stringify({
+              version: 1,
+              minutes,
+              missionId,
+              session: next,
+              active: true,
+              clock: { ...clock, resumedAt: Date.now() },
+            }),
+          );
+        } catch {
+          /* The live timer remains usable without storage. */
+        }
+      }
+      const timestamp = Date.now();
+      setNow(timestamp);
+      setClock((value) => ({ ...value, resumedAt: timestamp }));
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Não foi possível iniciar.",
+      );
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+  function pause() {
+    const timestamp = Date.now();
+    setNow(timestamp);
+    setClock((value) => pauseFocus(value, timestamp));
+  }
+  async function finish(cancel = false) {
+    if (!active || pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    setError(null);
+    const stopped = pauseFocus(clock, Date.now());
+    setClock(stopped);
+    try {
+      if (session) {
+        if (cancel) await cancelFocus(session.id);
+        else await endFocus(session.id, Math.round(stopped.elapsedMs / 60_000));
+      }
+      try {
+        sessionStorage.removeItem(storageKey);
+      } catch {
+        /* No stored checkpoint. */
+      }
+      setSession(null);
+      setActive(false);
+      setClock({ elapsedMs: 0, resumedAt: null, plannedMs: minutes * 60_000 });
+      if (!cancel) navigate("/");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível encerrar. Tente novamente.",
+      );
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+  useEffect(() => {
+    if (secondsLeft === 0 && active && running) void finish();
+  }, [secondsLeft, active, running]);
+  function reset() {
+    if (active) void finish(true);
+    else
+      setClock({ elapsedMs: 0, resumedAt: null, plannedMs: minutes * 60_000 });
+  }
 
-  return <div className="page-stack focus-page"><section className="page-hero page-hero--indigo"><div><span className="eyebrow">Um bloco por vez</span><h1>Foco</h1><p>{linkedMission?`Este bloco está ligado a “${linkedMission.title}”. Quando terminar, você volta para o Agora e o Nexus recalcula o que vem depois.`:'Escolha quanto tempo quer dedicar e comece. Quando terminar, volte para o Agora.'}</p></div><div className="page-hero__badge"><Focus size={17}/> <span>{todayMinutes} min hoje</span></div></section><section className="focus-layout"><SurfaceCard tone="indigo" className="focus-console"><div className="focus-modes">{[25,45,60,90].map((value)=><button key={value} disabled={Boolean(session)} className={minutes===value?'active':''} onClick={()=>setMinutes(value)}>{value} min</button>)}</div><div className="focus-clock"><div className="focus-clock__ring" style={{'--progress':`${progress*360}deg`} as CSSProperties}><div><span>{formatted}</span><small>{running?'EM FOCO':session?'PAUSADO':'PRONTO'}</small></div></div></div><select className="focus-mission-select" value={missionId} onChange={(e)=>setMissionId(e.target.value)} disabled={Boolean(session)}><option value="">Sessão sem missão vinculada</option>{workspace.missions.slice(0,20).map((mission)=><option key={mission.id} value={mission.id}>{mission.title}</option>)}</select><div className="focus-controls"><button className="icon-button focus-control" onClick={reset} disabled={running} aria-label="Reiniciar"><RotateCcw size={18}/></button><button className="primary-button focus-main" onClick={running?()=>setRunning(false):start}>{running?<><Pause size={18}/> Pausar</>:<><Play size={18}/> {session?'Continuar':'Começar'}</>}</button><button className="icon-button focus-control" onClick={finish} disabled={!session} aria-label="Encerrar sessão"><CircleStop size={18}/></button></div></SurfaceCard><div className="focus-side"><SurfaceCard eyebrow="Hoje" title="Tempo em foco"><div className="focus-stat-big"><strong>{todayMinutes}</strong><span>minutos registrados</span></div></SurfaceCard><SurfaceCard tone="amber" eyebrow="Depois"><div className="recovery-card"><Coffee size={20}/><p>Ao terminar, o Nexus volta ao Agora. Se houver outro compromisso perto, ele vai sugerir transição ou pausa em vez de empilhar outro bloco.</p></div></SurfaceCard></div></section></div>
+  return (
+    <div className="page-stack focus-page">
+      <section className="page-hero page-hero--indigo">
+        <div>
+          <span className="eyebrow">Um bloco por vez</span>
+          <h1>Foco</h1>
+          <p>
+            {linkedMission
+              ? `Este bloco está ligado a “${linkedMission.title}”. Quando terminar, você volta para o Agora e o Nexus recalcula o que vem depois.`
+              : "Escolha quanto tempo quer dedicar e comece. Quando terminar, volte para o Agora."}
+          </p>
+        </div>
+        <div className="page-hero__badge">
+          <Focus size={17} /> <span>{todayMinutes} min hoje</span>
+        </div>
+      </section>
+      <section className="focus-layout">
+        <SurfaceCard tone="indigo" className="focus-console">
+          <div className="focus-modes">
+            {[25, 45, 60, 90].map((value) => (
+              <button
+                key={value}
+                disabled={active}
+                className={minutes === value ? "active" : ""}
+                onClick={() => setMinutes(value)}
+              >
+                {value} min
+              </button>
+            ))}
+          </div>
+          <div className="focus-clock">
+            <div
+              className="focus-clock__ring"
+              style={{ "--progress": `${progress * 360}deg` } as CSSProperties}
+            >
+              <div>
+                <span>{formatted}</span>
+                <small>
+                  {running ? "EM FOCO" : active ? "PAUSADO" : "PRONTO"}
+                </small>
+              </div>
+            </div>
+          </div>
+          <select
+            className="focus-mission-select"
+            value={missionId}
+            onChange={(e) => setMissionId(e.target.value)}
+            disabled={active}
+          >
+            <option value="">Sessão sem missão vinculada</option>
+            {workspace.missions.slice(0, 20).map((mission) => (
+              <option key={mission.id} value={mission.id}>
+                {mission.title}
+              </option>
+            ))}
+          </select>
+          {error && <p role="alert">{error}</p>}
+          <div className="focus-controls">
+            <button
+              className="icon-button focus-control"
+              onClick={reset}
+              disabled={running || busy}
+              aria-label="Reiniciar"
+            >
+              <RotateCcw size={18} />
+            </button>
+            <button
+              className="primary-button focus-main"
+              disabled={busy}
+              onClick={running ? pause : start}
+            >
+              {running ? (
+                <>
+                  <Pause size={18} /> Pausar
+                </>
+              ) : (
+                <>
+                  <Play size={18} /> {active ? "Continuar" : "Começar"}
+                </>
+              )}
+            </button>
+            <button
+              className="icon-button focus-control"
+              onClick={() => void finish()}
+              disabled={!active || busy}
+              aria-label="Encerrar sessão"
+            >
+              <CircleStop size={18} />
+            </button>
+          </div>
+        </SurfaceCard>
+        <div className="focus-side">
+          <SurfaceCard eyebrow="Hoje" title="Tempo em foco">
+            <div className="focus-stat-big">
+              <strong>{todayMinutes}</strong>
+              <span>minutos registrados</span>
+            </div>
+          </SurfaceCard>
+          <SurfaceCard tone="amber" eyebrow="Depois">
+            <div className="recovery-card">
+              <Coffee size={20} />
+              <p>
+                Ao terminar, o Nexus volta ao Agora. Se houver outro compromisso
+                perto, ele vai sugerir transição ou pausa em vez de empilhar
+                outro bloco.
+              </p>
+            </div>
+          </SurfaceCard>
+        </div>
+      </section>
+    </div>
+  );
 }

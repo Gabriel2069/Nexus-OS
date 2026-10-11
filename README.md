@@ -101,3 +101,7 @@ docs/                 decisões e evolução do produto
 > O Notion é a origem da arquitetura mental, não o limite técnico do NexOS.
 
 No NexOS, dados passam a ser relacionais, ações podem ser transacionais, gráficos são calculados a partir de eventos reais e a interface pode responder ao dispositivo, contexto, tempo e estado do usuário.
+
+## Organização e manutenção
+
+Consulte [a direção visual](DESIGN.md), [o sistema de estilos](docs/STYLE_SYSTEM.md) e [a revisão da base](docs/FOUNDATION_REVIEW.md) antes de novas mudanças. Use `npm ci` e `npm run check`. Demonstração isolada: `VITE_NEXOS_DEMO=true npm run dev`; não habilite essa opção em produção.
