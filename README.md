@@ -105,3 +105,5 @@ No NexOS, dados passam a ser relacionais, ações podem ser transacionais, gráf
 ## Organização e manutenção
 
 Consulte [a direção visual](DESIGN.md), [o sistema de estilos](docs/STYLE_SYSTEM.md) e [a revisão da base](docs/FOUNDATION_REVIEW.md) antes de novas mudanças. Use `npm ci` e `npm run check`. Demonstração isolada: `VITE_NEXOS_DEMO=true npm run dev`; não habilite essa opção em produção.
+
+O índice de decisões, notas e sequência de trabalho fica em [docs/INDEX.md](docs/INDEX.md).

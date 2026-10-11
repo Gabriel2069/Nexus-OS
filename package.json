@@ -6,12 +6,13 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "check": "npm run check:foundations && npm test && npm run typecheck && npm run build",
+    "check": "npm run check:foundations && npm run check:docs && npm test && npm run typecheck && npm run build",
     "preview": "npm run build && vite preview",
     "deploy": "npm run check && wrangler deploy",
     "typecheck": "tsc -b --pretty false",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
-    "check:foundations": "node scripts/check-foundations.mjs"
+    "check:foundations": "node scripts/check-foundations.mjs",
+    "check:docs": "node scripts/check-docs.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.8",

@@ -284,7 +284,7 @@ export function NexusProvider({ children }: PropsWithChildren) {
       const command = parseNexosCommand(input);
       return { command, preview: buildCommandPreview(command, workspace) };
     },
-    [workspace, clock],
+    [workspace],
   );
 
   const executeCommand = useCallback(
@@ -395,8 +395,13 @@ export function NexusProvider({ children }: PropsWithChildren) {
         await saveDailyCheckin(userId, input);
         await refresh();
       },
-      beginFocus: async (minutes, label, missionId) =>
-        userId ? startFocusSession(userId, minutes, label, missionId) : null,
+      beginFocus: async (minutes, label, missionId) => {
+        if (userId) return startFocusSession(userId, minutes, label, missionId);
+        if (isDemoMode) return null;
+        throw new Error(
+          "Aguarde o carregamento do seu perfil antes de iniciar.",
+        );
+      },
       cancelFocus: async (sessionId) => {
         if (!userId) return;
         await cancelFocusSession(userId, sessionId);

@@ -1,6 +1,6 @@
 # NexOS: regras de manutenção
 
-Leia `DESIGN.md`, `docs/STYLE_SYSTEM.md` e `docs/FOUNDATION_REVIEW.md` antes de alterar interface ou fluxo de dados.
+Leia `docs/INDEX.md`, `docs/PRODUCTION_MAP.md`, `DESIGN.md`, `docs/STYLE_SYSTEM.md` e `docs/FOUNDATION_REVIEW.md` antes de alterar interface ou fluxo de dados.
 
 - Preserve identidade, conteúdo e trabalho não relacionado. Não substitua telas inteiras para corrigir uma regra.
 - CSS tem proprietários registrados em `scripts/check-foundations.mjs`. Edite o proprietário existente. Não crie arquivos `refinement`, `polish`, `final`, versões `vN` ou uma segunda implementação global do mesmo material.
@@ -14,3 +14,5 @@ Leia `DESIGN.md`, `docs/STYLE_SYSTEM.md` e `docs/FOUNDATION_REVIEW.md` antes de 
 - Execute `npm ci` quando necessário e `npm run check`. Para mudanças de UI, confira estados representativos em desktop e celular; para comportamento, teste o fluxo e o erro relevante.
 - Formate arquivos tocados com `npm exec -- prettier --write <arquivos>`. Não minifique arquivos-fonte.
 - Entregue alterações em branch e PR com escopo, verificações e limitações. Merge e publicação precisam seguir a autorização da sessão.
+
+- Todo PR declara ID do mapa, fronteira, dependências e evidência. Atualize o proprietário e o mapa corrente; documentos em archive são históricos. Não reintroduza PR supersedido por merge integral.

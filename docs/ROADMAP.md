@@ -1,77 +1,13 @@
-# Nexus OS · Roadmap
+# NexOS — sequência de trabalho
 
-## V0 · Fundação — concluída
-- [x] React + TypeScript + Vite
-- [x] design system próprio
-- [x] navegação responsiva
-- [x] tema persistente
-- [x] Supabase real conectado
-- [x] Auth por magic link
-- [x] schema com RLS
-- [x] Cloudflare Worker + SPA routing
-- [x] keep-alive exclusivamente por GitHub Actions
+A fonte corrente é [PRODUCTION_MAP.md](PRODUCTION_MAP.md). O roadmap anterior foi preservado em [archive/ROADMAP_2026-10-11.md](archive/ROADMAP_2026-10-11.md) como contexto histórico; suas marcações de conclusão não substituem teste ou inspeção.
 
-## V1 · Rotina como produto — concluída na base
-- [x] Home dinâmica
-- [x] Today cockpit
-- [x] check-in diário
-- [x] Inbox operacional
-- [x] missões persistentes
-- [x] portfólio real de projetos
-- [x] rotinas por período
-- [x] Focus Studio persistente
-- [x] calendário mensal
-- [x] insights de XP, foco e energia
-- [x] motor de decisão por readiness e carga
-- [x] Revisão Semanal guiada por dados e diagnóstico
-- [x] ledger de atividade
-- [x] Command Palette
-- [x] Quick Capture
-- [x] PWA e mobile dock
+| Ordem | Frente                | Resultado                                                   |
+| ----- | --------------------- | ----------------------------------------------------------- |
+| 1     | F01 → D01             | Estrutura integrada e prancheta visual consistente          |
+| 2     | V01 → V02             | Shell/login e Agora/Hoje como referência de qualidade       |
+| 3     | B01/B02/P01           | Dados confiáveis, retomada de foco e validação PWA          |
+| 4     | V03 → V04 → V05 → V06 | Refinamento progressivo por tela no sistema comum           |
+| 5     | I01 → I02; R01        | Integrações e progressão avançada com contratos verificados |
 
-## V2 · Life RPG transacional — em andamento
-- [x] XP de perfil
-- [x] Nexus Coins
-- [x] níveis
-- [x] atributos
-- [x] XP de projeto
-- [x] conclusão de missão atômica/idempotente
-- [x] recompensas e resgates atômicos
-- [x] temporada ativa
-- [x] streak calculado automaticamente
-- [x] XP transacional em rotinas
-- [ ] combos calculados automaticamente
-- [ ] conquistas por regras/eventos
-- [ ] árvore de talentos interativa
-- [ ] Bosses com objetivos compostos
-- [ ] animações e celebrações de progressão
-
-## V3 · Inteligência pessoal
-- [x] score de capacidade do dia baseado em check-in
-- [x] recomendação de missão por energia, prazo, prioridade e duração
-- [x] sinalização de projetos sem próxima ação
-- [x] previsão semanal de carga por minutos com prazo
-- [x] correlação inicial entre energia e execução
-- [x] revisão semanal guiada por dados
-- [ ] previsão de carga baseada em histórico suficiente
-- [ ] melhor horário pessoal de foco
-- [ ] detecção de sobrecarga multi-sinal
-- [ ] widgets personalizáveis na Home
-
-## V4 · Áreas profundas
-- [ ] Estudos: cronograma, matérias, sessões, provas e domínio
-- [ ] Saúde: treino, hábitos, bem-estar e recuperação
-- [ ] Finanças: contas, transações, orçamentos e projeções
-- [ ] Segundo Cérebro: notas, fontes, relações e busca
-- [ ] Metas: objetivos, indicadores e milestones
-- [ ] Histórico: timeline automática a partir do ledger
-
-## V5 · Ecossistema
-- [ ] importador assistido do Notion
-- [ ] uploads via Supabase Storage/R2
-- [ ] notificações push
-- [ ] integrações com calendário
-- [ ] atalhos/iOS share sheet quando viável
-- [ ] modo offline com fila de mutações
-- [ ] busca universal full-text
-- [ ] realtime seletivo
+Sem alterar o núcleo do produto: contextualizar o dia, apoiar execução e preservar tempo livre. Funcionalidades de áreas futuras continuam no arquivo histórico e entram por item com escopo e evidência antes de desenvolvimento.
