@@ -1,6 +1,8 @@
 name: Verify Nexus OS
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -17,12 +19,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: package.json
+          cache-dependency-path: package-lock.json
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Typecheck
-        run: npm run typecheck
-      - name: Build
-        run: npm run build
+        run: npm ci --no-audit --no-fund
+      - name: Verify foundations and build
+        run: npm run check
       - name: Wrangler dry run
         run: npx wrangler deploy --dry-run

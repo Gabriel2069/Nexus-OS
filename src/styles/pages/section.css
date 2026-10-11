@@ -1,0 +1,74 @@
+/* pages/section: canonical owner. See DESIGN.md and docs/STYLE_SYSTEM.md. */
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+@media (max-width: 760px) {
+  .section-heading {
+    gap: 8px;
+  }
+  .section-heading {
+    margin: 4px 2px 0;
+  }
+}
+.section-heading {
+  align-items: end;
+  margin: 4px 2px 0;
+  min-width: 0;
+}
+.section-heading > div {
+  min-width: 0;
+}
+.section-heading h2 {
+  margin-top: 4px;
+}
+.section-heading .text-button {
+  flex: 0 0 auto;
+}
+@media (max-width: 760px) {
+  .section-heading {
+    margin-top: 2px;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-heading h2 {
+    font-size: 1.11rem;
+  }
+  .section-heading .text-button {
+    font-size: 0.66rem;
+    white-space: nowrap;
+  }
+}
+.section-label {
+  letter-spacing: 0.12em;
+}
+:where(.eyebrow, .section-label, .surface-card__eyebrow) {
+  color: color-mix(
+    in srgb,
+    var(--nexus-control-accent, var(--primary)) 76%,
+    currentColor
+  );
+  transition: color var(--nexus-motion-ui) var(--nexus-ease-out);
+}
+.section-heading {
+  font-family: var(--nexos-display);
+}
+@media (max-width: 760px) {
+  .section-heading {
+    min-width: 0;
+  }
+  .section-heading > *:not(svg) {
+    min-width: 0;
+  }
+  .section-heading h2 {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.page-content .section-label {
+  letter-spacing: 0.09em;
+}

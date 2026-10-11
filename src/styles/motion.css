@@ -1,0 +1,1456 @@
+/* motion: canonical owner. See DESIGN.md and docs/STYLE_SYSTEM.md. */
+
+@keyframes load {
+  from {
+    transform: translateX(-40%);
+  }
+  to {
+    transform: translateX(40%);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes surface-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0.5;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes nexus-orbit {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-2deg);
+    opacity: 0.38;
+  }
+  50% {
+    transform: translate3d(-12px, 10px, 0) rotate(3deg);
+    opacity: 0.62;
+  }
+  100% {
+    transform: translate3d(8px, -8px, 0) rotate(-3deg);
+    opacity: 0.45;
+  }
+}
+@keyframes nexus-icon-settle {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  60% {
+    transform: scale(1.075);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes tab-settle {
+  from {
+    opacity: 0;
+    transform: scaleX(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+@keyframes context-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-hero-ring {
+  from {
+    transform: rotate(-2deg) scale(0.99);
+    opacity: 0.42;
+  }
+  to {
+    transform: rotate(3deg) scale(1.025);
+    opacity: 0.62;
+  }
+}
+@keyframes medallion-breathe {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.08;
+  }
+  50% {
+    transform: scale(1.035);
+    opacity: 0.2;
+  }
+}
+@keyframes glass-sheen {
+  from {
+    background-position: 130% 0;
+  }
+  to {
+    background-position: -30% 0;
+  }
+}
+@keyframes status-breathe {
+  0% {
+    opacity: 0.45;
+    transform: scale(0.7);
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.99);
+  }
+}
+@keyframes nexus-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes nexus-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-selection-thread {
+  from {
+    opacity: 0;
+    transform: scaleX(0.12);
+  }
+  64% {
+    opacity: 1;
+    transform: scaleX(1.06);
+  }
+  to {
+    opacity: 0.88;
+    transform: scaleX(1);
+  }
+}
+@keyframes nexus-indicator-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.55) rotate(-8deg);
+  }
+  72% {
+    opacity: 1;
+    transform: scale(1.08) rotate(1deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes nexus-panel-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.994);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-menu-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-control-sheen {
+  from {
+    transform: translateX(-150%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(260%) skewX(-18deg);
+  }
+}
+@keyframes nexus-soft-breathe {
+  0%,
+  100% {
+    opacity: 0.86;
+    filter: saturate(0.96);
+  }
+  50% {
+    opacity: 1;
+    filter: saturate(1.08) brightness(1.035);
+  }
+}
+@keyframes nexus-progress-breathe {
+  0%,
+  100% {
+    filter: saturate(0.94);
+  }
+  50% {
+    filter: saturate(1.11) brightness(1.05);
+  }
+}
+@keyframes nexus-page-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-focus-ring {
+  from {
+    outline-offset: 1px;
+    filter: brightness(1);
+  }
+  to {
+    outline-offset: 3px;
+    filter: brightness(1.04);
+  }
+}
+@keyframes nexus-popover-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.975);
+    filter: blur(2px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nexus-surface-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+    filter: blur(3px);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nexus-backdrop-enter {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(3px);
+  }
+}
+@keyframes nexus-expand-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes nexus-route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.998);
+    filter: blur(1.5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nexus-live-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.15);
+  }
+}
+@keyframes nexus-loading-breathe {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes nexus-tooltip-enter {
+  from {
+    opacity: 0;
+    transform: translateY(3px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-copy-collapse {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+    max-width: 140px;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+    max-width: 0;
+  }
+}
+@keyframes nexus-copy-expand {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+    max-width: 0;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    max-width: 160px;
+  }
+}
+@keyframes nexus-group-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-nav-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-command-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.965) rotateX(-3deg);
+    filter: blur(7px);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-command-search {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-command-block {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-result-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nexus-drawer-enter {
+  from {
+    opacity: 0;
+    transform: translateX(28px) scale(0.975) rotateY(-3deg);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nexus-drawer-header {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexus-notification-item {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nexus-sheet-backdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes nexus-mobile-sheet-enter {
+  from {
+    opacity: 0;
+    transform: translateY(34px) scale(0.985);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nexus-sheet-item {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nexos-starfield {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-18px, 12px, 0);
+  }
+}
+@keyframes nexos-nebula-drift {
+  from {
+    transform: translate3d(-2%, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) scale(1.08);
+  }
+}
+@keyframes nexos-orbit-drift-one {
+  from {
+    transform: rotate(-22deg) translate3d(0, 0, 0);
+  }
+  to {
+    transform: rotate(-17deg) translate3d(-22px, -12px, 0);
+  }
+}
+@keyframes nexos-orbit-drift-two {
+  from {
+    transform: rotate(28deg) translate3d(0, 0, 0);
+  }
+  to {
+    transform: rotate(34deg) translate3d(24px, 12px, 0);
+  }
+}
+@keyframes nexos-orbit-pulse {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+}
+@keyframes nx-drift-far {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-35px, 24px, 0);
+  }
+}
+@keyframes nx-drift-near {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(48px, -28px, 0) scale(1.025);
+  }
+}
+@keyframes nx-nebula-a {
+  from {
+    transform: translate3d(-2%, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(7%, 5%, 0) scale(1.08);
+  }
+}
+@keyframes nx-nebula-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(8%, -4%, 0) scale(1.1);
+  }
+}
+@keyframes nx-galaxy {
+  from {
+    transform: rotate(-19deg) translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: rotate(-13deg) translate3d(-4%, 5%, 0) scale(1.08);
+  }
+}
+@keyframes nx-orbit {
+  from {
+    transform: rotate(-22deg);
+  }
+  to {
+    transform: rotate(338deg);
+  }
+}
+@keyframes nx-orbit-dot {
+  0%,
+  100% {
+    transform: scale(0.72);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+}
+@keyframes nx-constellation {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.18;
+  }
+  to {
+    transform: translate3d(-8px, -5px, 0);
+    opacity: 0.34;
+  }
+}
+@keyframes nx-page-in {
+  from {
+    opacity: 0;
+    transform: translate3d(22px, 0, 0) scale(0.992);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nx-content-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-page-orb-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.94);
+  }
+  to {
+    transform: translate3d(-18px, 12px, 0) scale(1.08);
+  }
+}
+@keyframes nx-page-orb-b {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(15px, -12px, 0);
+  }
+}
+@keyframes nx-stage-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.985);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nx-stage-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+@keyframes nx-complete {
+  0% {
+    transform: scale(0.98);
+  }
+  45% {
+    transform: scale(1.018);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes nx-header-line {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scaleX(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+@keyframes nx-route-slide {
+  from {
+    opacity: 0;
+    transform: translateX(9px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nx-icon-pop {
+  0% {
+    transform: scale(1) rotate(0);
+  }
+  35% {
+    transform: scale(1.22) rotate(-7deg);
+  }
+  65% {
+    transform: scale(0.94) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes nx-menu-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.985);
+  }
+}
+@keyframes nx-menu-item {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-geometry-drift {
+  from {
+    transform: rotate(-12deg) translate3d(0, 0, 0);
+  }
+  to {
+    transform: rotate(-5deg) translate3d(-28px, 18px, 0);
+  }
+}
+@keyframes nx-constellation-ring {
+  from {
+    transform: rotate(31deg);
+  }
+  to {
+    transform: rotate(391deg);
+  }
+}
+@keyframes nx-nav-icon {
+  0%,
+  100% {
+    transform: scale(1) rotate(0);
+  }
+  35% {
+    transform: scale(1.18) rotate(-5deg);
+  }
+  65% {
+    transform: scale(0.96) rotate(3deg);
+  }
+}
+@keyframes nx-plus-spin {
+  0% {
+    transform: rotate(0) scale(1);
+  }
+  55% {
+    transform: rotate(90deg) scale(1.12);
+  }
+  100% {
+    transform: rotate(90deg) scale(1);
+  }
+}
+@keyframes nx-editorial-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.992);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nx-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-title-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+    letter-spacing: -0.02em;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    letter-spacing: -0.055em;
+  }
+}
+@keyframes nx-copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-icon-instrument {
+  0%,
+  100% {
+    transform: scale(1) rotate(0);
+  }
+  30% {
+    transform: scale(1.16) rotate(-5deg);
+  }
+  58% {
+    transform: scale(0.95) rotate(3deg);
+  }
+  78% {
+    transform: scale(1.05) rotate(0);
+  }
+}
+@keyframes nx-hero-breathe {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-12deg) scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate3d(-18px, 12px, 0) rotate(-8deg) scale(1.04);
+    opacity: 1;
+  }
+}
+@keyframes nx-grid-drift {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      70px 0,
+      70px 0;
+  }
+}
+@keyframes focus-orbit {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+@keyframes focus-tick {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes insight-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes nx-profile-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes nx-profile-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.975);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-profile-sheen {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes nx-profile-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes nx-profile-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(42px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-finance-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes nx-finance-sheen {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(110%);
+  }
+}
+@keyframes nx-finance-progress {
+  0%,
+  35% {
+    transform: translateX(-100%);
+  }
+  65%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+@keyframes nx-finance-pulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+@keyframes nx-review-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes nx-review-detail-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-inbox-orbit {
+  to {
+    transform: rotate(342deg);
+  }
+}
+@keyframes nx-inbox-pulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+@keyframes nx-inbox-inspector-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-inbox-inspector-stack {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-project-orbit {
+  to {
+    transform: rotate(344deg);
+  }
+}
+@keyframes nx-project-pulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+@keyframes nx-project-progress-sheen {
+  0%,
+  38% {
+    transform: translateX(-100%);
+  }
+  68%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+@keyframes nx-project-inspector-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-project-empty-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes nx-project-inspector-stack {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-routine-orbit {
+  to {
+    transform: rotate(342deg);
+  }
+}
+@keyframes nx-routine-breathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+@keyframes nx-routine-progress {
+  0%,
+  38% {
+    transform: translateX(-100%);
+  }
+  68%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+@keyframes nx-routine-inspector-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-routine-empty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes nx-routine-inspector-stack {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-study-orbit {
+  to {
+    transform: rotate(346deg);
+  }
+}
+@keyframes nx-study-urgency {
+  0%,
+  100% {
+    transform: scale(0.98);
+    opacity: 0;
+  }
+  45% {
+    transform: scale(1.08);
+    opacity: 0.25;
+  }
+  65% {
+    transform: scale(1.14);
+    opacity: 0;
+  }
+}
+@keyframes nx-study-sheen {
+  0%,
+  38% {
+    transform: translateX(-100%);
+  }
+  68%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+@keyframes nx-study-inspector-in {
+  from {
+    opacity: 0;
+    transform: translateX(13px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-today-orbit {
+  to {
+    transform: rotate(348deg);
+  }
+}
+@keyframes nx-today-pulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+@keyframes nx-today-checkin {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+@keyframes nx-today-current {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(105, 227, 255, 0.04),
+      0 0 12px rgba(105, 227, 255, 0.25);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(105, 227, 255, 0.02),
+      0 0 20px rgba(105, 227, 255, 0.4);
+  }
+}
+@keyframes nx-today-study-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes nx-today-spark {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(-3px) rotate(5deg);
+  }
+}
+@keyframes nx-insight-orbit {
+  to {
+    transform: rotate(376deg);
+  }
+}
+@keyframes nx-insight-orbit-reverse {
+  to {
+    transform: rotate(-384deg);
+  }
+}
+@keyframes nx-insight-cell-pulse {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.7;
+  }
+}
+@keyframes nx-insight-inspector-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-insight-stack-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-route-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-overlay-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-drawer-enter {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-sheet-enter {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nx-press {
+  0% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(0.965);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes nx-success-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.02);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes nx-cosmic-breathe {
+  from {
+    transform: scale(1);
+    opacity: 0.72;
+  }
+  to {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+@keyframes nx-star-drift {
+  to {
+    background-position:
+      330px 300px,
+      460px 410px,
+      550px 490px,
+      710px 620px;
+  }
+}
+@keyframes nx-orbit-drift {
+  to {
+    transform: rotate(342deg);
+  }
+}
+@keyframes nx-orbit-drift-reverse {
+  to {
+    transform: rotate(-338deg);
+  }
+}
+@keyframes nx-boot-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes nx-boot-orbit-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes nx-boot-drift {
+  from {
+    transform: scale(1) translate3d(-3px, 0, 0);
+  }
+  to {
+    transform: scale(1.04) translate3d(4px, -5px, 0);
+  }
+}
+@keyframes nx-boot-breathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+@keyframes nx-boot-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes nx-boot-pulse {
+  0% {
+    transform: scale(0.86);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.28);
+    opacity: 0;
+  }
+}
+@keyframes nx-boot-mark-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+@keyframes nx-boot-status {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes nx-stellar-glow {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}

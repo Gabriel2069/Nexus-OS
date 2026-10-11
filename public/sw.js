@@ -1,54 +1,71 @@
-const CACHE = 'nexos-shell-v3'
-const SHELL = ['/manifest.webmanifest', '/nexos-mark.svg']
+const CACHE = "nexos-shell-v4";
+const SHELL = ["/", "/manifest.webmanifest", "/nexos-mark.svg"];
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(SHELL)),
-  )
-  self.skipWaiting()
-})
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
+  self.skipWaiting();
+});
 
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key.startsWith('nexus-os-shell-') || key.startsWith('nexos-shell-'))
+          .filter(
+            (key) =>
+              key.startsWith("nexus-os-shell-") ||
+              key.startsWith("nexos-shell-"),
+          )
           .filter((key) => key !== CACHE)
           .map((key) => caches.delete(key)),
       ),
     ),
-  )
-  self.clients.claim()
-})
+  );
+  self.clients.claim();
+});
 
-self.addEventListener('fetch', (event) => {
-  const request = event.request
-  if (request.method !== 'GET') return
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET") return;
 
-  const url = new URL(request.url)
-  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/"))
+    return;
 
   // The HTML shell must always prefer the network so a standalone install
   // cannot get stuck on an obsolete login/app bundle after a deployment.
-  if (request.mode === 'navigate' || url.pathname === '/') {
+  if (request.mode === "navigate" || url.pathname === "/") {
     event.respondWith(
-      fetch(request, { cache: 'no-store' })
-        .then((response) => response)
-        .catch(() => caches.match('/').then((cached) => cached || Response.error())),
-    )
-    return
+      fetch(request, { cache: "no-store" })
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            event.waitUntil(
+              caches.open(CACHE).then((cache) => cache.put("/", copy)),
+            );
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match("/").then((cached) => cached || Response.error()),
+        ),
+    );
+    return;
   }
 
   event.respondWith(
     fetch(request)
       .then((response) => {
         if (response.ok) {
-          const copy = response.clone()
-          caches.open(CACHE).then((cache) => cache.put(request, copy))
+          const copy = response.clone();
+          event.waitUntil(
+            caches.open(CACHE).then((cache) => cache.put(request, copy)),
+          );
         }
-        return response
+        return response;
       })
-      .catch(() => caches.match(request).then((cached) => cached || Response.error())),
-  )
-})
+      .catch(() =>
+        caches.match(request).then((cached) => cached || Response.error()),
+      ),
+  );
+});

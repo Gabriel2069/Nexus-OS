@@ -1,0 +1,24 @@
+# NexOS — registro e recuperação de PRs
+
+Revisão: 11 de outubro de 2026. Só três PRs estavam abertos: #14, #15 e #17. Branches preservadas; fechamento de PR supersedido não apaga código nem histórico.
+
+| PR                                                     | Head auditado                              | Destino                                                   | Razão                                                                                  |
+| ------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [#17](https://github.com/Gabriel2069/Nexus-OS/pull/17) | `refactor/nexos-foundations`               | F01: integrar estrutura revisada                          | Propriedade, correções funcionais, lockfile, testes e mapa de produção                 |
+| [#14](https://github.com/Gabriel2069/Nexus-OS/pull/14) | `d2f4fdbe1312de12acd7057b5baed5d2e5bb7fc2` | Encerrar como supersedido por F01; recuperar itens abaixo | 6 commits exclusivos; import global antigo e conflito com navegação/estilos atuais     |
+| [#15](https://github.com/Gabriel2069/Nexus-OS/pull/15) | `e0bb2455b0dcb19a2c16a70c01c74249cafa0312` | Encerrar como supersedido por F01; recuperar itens abaixo | 3 commits exclusivos; duas folhas globais concorrentes e conflito com ponto de entrada |
+
+## Mapa de recuperação — não é cherry-pick integral
+
+| Origem                     | Proposta preservada                              | Situação atual ou destino                                                                    |
+| -------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| #14 Sidebar `aria-current` | Semântica da rota ativa                          | Já presente no Sidebar atual; manter                                                         |
+| #14 tons de navegação      | Acentos por seção consistentes no desktop e dock | V01; usar os tons de `data/navigation`, sem uma segunda paleta                               |
+| #14 estados de sheet       | Material, press, safe areas e scroll de diálogo  | ModalSurface/shell já organizados; V01 revisa o material nos proprietários atuais            |
+| #14 superfícies/hero       | Borda especular, sombra, halo e órbita           | D01/V01 definem contrato; distribuir entre components/environment/page owner                 |
+| #15 botões/ícones/tabs     | Feedback de pressão, seleção e resposta local    | V01/V04; reconciliar com estados existentes; não animar ícone/formulário indiscriminadamente |
+| #15 continuidade/menus     | Entrada de página e inspector/drawer             | V01/V03; um autor de transform e foco preservado                                             |
+| #15 atmosfera/tipografia   | Campos de fundo e identidade de seção            | D01; manter Inter/Space Grotesk/Oxanium até decisão formal e prova de legibilidade           |
+| #15 motion reduzido        | Estados estáticos utilizáveis                    | Política global já presente; cada lote visual valida o resultado                             |
+
+Os diffs exclusivos foram confrontados com a base atual. “Já presente” refere-se à capacidade observada, não à equivalência de cada valor CSS. A recuperação futura reimplementa a intenção no proprietário atual e registra comparação antes/depois. Não reabrir os PRs antigos para fundi-los à nova cascata.
