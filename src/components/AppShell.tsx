@@ -15,11 +15,19 @@ type AppShellProps = PropsWithChildren<{ pathname: string }>;
 type IOSNavigator = Navigator & { standalone?: boolean };
 
 export function AppShell({ pathname, children }: AppShellProps) {
-  const [collapsed, setCollapsed] = useState(
-    () => localStorage.getItem("nexus-sidebar") === "collapsed",
-  );
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("nexus-sidebar") === "collapsed";
+    } catch {
+      return false;
+    }
+  });
   useEffect(() => {
-    localStorage.setItem("nexus-sidebar", collapsed ? "collapsed" : "open");
+    try {
+      localStorage.setItem("nexus-sidebar", collapsed ? "collapsed" : "open");
+    } catch {
+      /* The menu still works without persistent storage. */
+    }
   }, [collapsed]);
   useEffect(() => {
     const standalone =

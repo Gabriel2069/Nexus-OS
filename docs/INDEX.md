@@ -24,3 +24,5 @@ A execução é acompanhada no [issue #18](https://github.com/Gabriel2069/Nexus-
 A direção D01 está em [docs/design](design/README.md), com prancheta, tokens propostos, fontes e plano de incorporação. Não copiar seus estilos como uma camada global de produção.
 
 A [revisão V01](design/V01_REVIEW.md) registra a base compartilhada e o login implementados, com capturas e limites de verificação.
+
+A [revisão V02](design/V02_REVIEW.md) registra menu, Agora/Hoje, estados e ordem de integração sobre V01.

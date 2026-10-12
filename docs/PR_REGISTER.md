@@ -26,3 +26,5 @@ Os diffs exclusivos foram confrontados com a base atual. “Já presente” refe
 ## Direção e implementação atual
 
 A [PR #19](https://github.com/Gabriel2069/Nexus-OS/pull/19) integrou D01 na main (`965c426`). V01 parte dessa base e recupera seletivamente materiais e feedback dos PRs supersedidos, mantendo os proprietários atuais. Evidência e fronteira estão em [V01_REVIEW.md](design/V01_REVIEW.md); o link da entrega corrente fica no issue #18.
+
+V02 (`feat/v02-daily-observatory`) é dependente de V01 (`feat/v01-cosmic-shell`, PR #20); seu PR aponta para essa branch até a integração de V01. Não mesclar V02 antes da base. Após integrar V01, retarget para main e verificar novo merge/head/CI. Registro corrente no issue #18.

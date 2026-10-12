@@ -27,10 +27,12 @@ Materiais comuns ficam antes das variantes de página. Para um ajuste exclusivo 
 
 A consolidação retirou 1.373 declarações que eram sobrescritas por regras posteriores equivalentes, mantendo barreiras conservadoras para shorthands. Listas de seletores foram distribuídas entre proprietários; isso pode aumentar o número textual de declarações sem acrescentar um comportamento. Não confundir contagem de bytes com quantidade de sistemas visuais.
 
-Há ainda regras históricas e exceções responsivas dentro dos proprietários. A reorganização não promete uma cascata inteiramente minimalista: a simplificação restante deve acompanhar o refinamento de cada tela, com comparação visual. O teto atual de 103 declarações `!important` (reduzido de 243 em V01) congela a dívida existente; a meta é reduzi-lo, não usá-lo como espaço para novas exceções.
+Há ainda regras históricas e exceções responsivas dentro dos proprietários. A reorganização não promete uma cascata inteiramente minimalista: a simplificação restante deve acompanhar o refinamento de cada tela, com comparação visual. O teto atual de 101 declarações `!important` (243 → 103 em V01 → 101 em V02) congela a dívida existente; a meta é reduzi-lo, não usá-lo como espaço para novas exceções.
 
 ## Verificação automática
 
 `npm run check:foundations` verifica registro e ordem dos imports, arquivos não registrados, seletores com dois proprietários, nomes duplicados de animação, keyframes fora do proprietário, imports internos indevidos, `:global` inválido, conflitos de merge e teto de `!important`. `npm run check` também executa testes de datas/timer, TypeScript e build.
 
 A verificação não prova ausência de todo conflito de especificidade nem valida contraste de todas as telas. Revisão visual e teste de fluxo continuam necessários.
+
+Em V02, `day-route`, `essential-loop` e `exam-glance` pertencem a pages/now; check-in, `routine-mini`, `single-study-target` e `life-space-note` pertencem a pages/today. Foram retiradas 87 entradas desses seletores de components. Navegação desktop/dock/menu usa o catálogo único em data/navigation.

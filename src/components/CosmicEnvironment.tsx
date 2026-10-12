@@ -49,3 +49,31 @@ export function CosmicEnvironment() {
     </div>
   );
 }
+
+export function OrbitalSignal() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (ref.current)
+        ref.current.dataset.visible = String(entry.isIntersecting);
+    });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div
+      ref={ref}
+      className="orbital-signal"
+      aria-hidden="true"
+      data-visible="true"
+    >
+      <div className="orbital-signal__sphere">
+        <span className="orbital-signal__star" />
+      </div>
+      <div className="orbital-signal__path">
+        <i data-ambient />
+      </div>
+      <span className="orbital-signal__latitude" />
+    </div>
+  );
+}

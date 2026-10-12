@@ -175,3 +175,70 @@ html[data-theme="light"] .cosmic-lens {
     margin: 10px auto;
   }
 }
+
+/* Data surfaces get a compact orbital instrument, outside their text column. */
+.orbital-signal {
+  position: relative;
+  width: 210px;
+  height: 210px;
+  justify-self: center;
+  pointer-events: none;
+}
+.orbital-signal__sphere {
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--cyan) 25%, transparent);
+  background:
+    radial-gradient(
+      circle at 30% 23%,
+      var(--nx-glass-highlight),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 65% 65%,
+      color-mix(in srgb, var(--violet) 10%, var(--panel)),
+      var(--panel)
+    );
+  box-shadow:
+    inset -10px -12px 28px var(--nx-glass-shadow),
+    inset 1px 2px 5px var(--nx-glass-highlight),
+    0 20px 40px var(--nx-glass-shadow);
+}
+.orbital-signal__star {
+  position: absolute;
+  inset: 46%;
+  background: var(--cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+.orbital-signal__path {
+  position: absolute;
+  inset: 4%;
+  border: 1px solid color-mix(in srgb, var(--cyan) 35%, transparent);
+  border-radius: 50%;
+  transform: rotate(-25deg) rotateX(62deg);
+}
+.orbital-signal__path i {
+  position: absolute;
+  inset: 0;
+  animation: observatory-satellite 60s linear infinite;
+}
+.orbital-signal__path i:before {
+  content: "";
+  position: absolute;
+  left: calc(50% - 3px);
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  background: var(--cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--cyan) 30%, transparent);
+}
+.orbital-signal__latitude {
+  position: absolute;
+  inset: 24%;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  transform: rotate(20deg) rotateY(60deg);
+}

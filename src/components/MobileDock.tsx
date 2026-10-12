@@ -1,29 +1,24 @@
 import { ModalSurface } from "./ModalSurface";
 import { useOverlay } from "../lib/use-overlay";
 import {
-  CalendarDays,
   ChevronRight,
-  Crosshair,
-  Focus,
   MoreHorizontal,
   Sparkles,
   Search,
-  SunMedium,
   X,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { navigation } from "../data/navigation";
+import {
+  isCurrentDestination,
+  mobileNavigation,
+  navigation,
+} from "../data/navigation";
 import { emitUI } from "../lib/ui-events";
 import { navigate } from "../lib/router";
 
 type Props = { pathname: string };
-const primary = [
-  { path: "/", label: "Agora", icon: Crosshair },
-  { path: "/hoje", label: "Hoje", icon: SunMedium },
-  { path: "/calendario", label: "Agenda", icon: CalendarDays },
-  { path: "/foco", label: "Foco", icon: Focus },
-];
+const primary = mobileNavigation;
 
 export function MobileDock({ pathname }: Props) {
   const { open: more, setOpen: setMore, show } = useOverlay("navigation");
@@ -64,7 +59,7 @@ export function MobileDock({ pathname }: Props) {
         aria-label="Navegação móvel"
         data-motion-shell="dock"
       >
-        {primary.map(({ path, label, icon: Icon }) => (
+        {primary.map(({ path, label, shortLabel, icon: Icon }) => (
           <button
             key={path}
             className={pathname === path ? "active" : ""}
@@ -73,7 +68,7 @@ export function MobileDock({ pathname }: Props) {
             aria-current={pathname === path ? "page" : undefined}
           >
             <Icon size={19} />
-            <span>{label}</span>
+            <span>{shortLabel ?? label}</span>
             <i aria-hidden="true" />
           </button>
         ))}
@@ -144,29 +139,55 @@ export function MobileDock({ pathname }: Props) {
                 </button>
               </div>
             </div>
-            <div className="mobile-sheet__grid">
-              {navigation
-                .flatMap((group) => group.items)
-                .filter((item) => !primary.some((p) => p.path === item.path))
-                .map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.path}
-                      onClick={() => {
-                        closeSheet();
-                        navigate(item.path);
-                      }}
-                      data-motion="sheet-item"
-                    >
-                      <span className={`nav-item__icon tone-${item.tone}`}>
-                        <Icon size={18} />
-                      </span>
-                      <span>{item.label}</span>
-                      <ChevronRight size={13} />
-                    </button>
-                  );
-                })}
+            <div className="mobile-sheet__intro">
+              <span className="eyebrow">Navegação</span>
+              <h2>Explore seu espaço.</h2>
+            </div>
+            <div className="mobile-sheet__sections">
+              {navigation.map((group) => {
+                const items = group.items.filter(
+                  (item) => !primary.some((p) => p.path === item.path),
+                );
+                if (!items.length) return null;
+                return (
+                  <section
+                    className="mobile-sheet__group"
+                    key={group.label}
+                    aria-label={group.label}
+                  >
+                    <h3>{group.label}</h3>
+                    <div className="mobile-sheet__grid">
+                      {items.map((item) => {
+                        const Icon = item.icon;
+                        const active = isCurrentDestination(
+                          item.path,
+                          pathname,
+                        );
+                        return (
+                          <button
+                            key={item.path}
+                            className={active ? "is-current" : ""}
+                            aria-current={active ? "page" : undefined}
+                            onClick={() => {
+                              closeSheet();
+                              navigate(item.path);
+                            }}
+                            data-motion="sheet-item"
+                          >
+                            <span
+                              className={`nav-item__icon tone-${item.tone}`}
+                            >
+                              <Icon size={18} />
+                            </span>
+                            <span>{item.label}</span>
+                            <ChevronRight size={13} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
             </div>
           </section>
         </ModalSurface>

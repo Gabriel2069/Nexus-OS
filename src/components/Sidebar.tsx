@@ -1,5 +1,5 @@
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
-import { navigation } from "../data/navigation";
+import { isCurrentDestination, navigation } from "../data/navigation";
 import { navigate } from "../lib/router";
 
 type SidebarProps = {
@@ -41,9 +41,7 @@ export function Sidebar({ pathname, collapsed, onToggle }: SidebarProps) {
               <span className="nav-group__label">{group.label}</span>
             )}
             {group.items.map((item) => {
-              const active =
-                pathname === item.path ||
-                (item.path === "/tutorial" && pathname === "/guia");
+              const active = isCurrentDestination(item.path, pathname);
               const Icon = item.icon;
               return (
                 <button
