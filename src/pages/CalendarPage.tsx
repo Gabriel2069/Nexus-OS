@@ -11,7 +11,9 @@ import {
   Plus,
   RotateCcw,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { PageLoading } from "../components/PageLoading";
+import { WorkspaceFeedback } from "../components/WorkspaceFeedback";
 import { SurfaceCard } from "../components/SurfaceCard";
 import { useNexus } from "../context/NexusContext";
 import { navigate } from "../lib/router";
@@ -138,8 +140,12 @@ function freeWindows(date: Date, events: CalendarOccurrence[], now: Date) {
 }
 
 export function CalendarPage() {
-  const { workspace, userId, refresh, completeMission } = useNexus();
+  const { workspace, userId, refresh, completeMission, loading, error } =
+    useNexus();
   const now = new Date();
+  const actionPending = useRef(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [completing, setCompleting] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [cursor, setCursor] = useState(() => {
     const d = initialDate();
@@ -164,7 +170,11 @@ export function CalendarPage() {
   const missionsByDate = useMemo(() => {
     const map = new Map<string, typeof workspace.missions>();
     workspace.missions.forEach((mission) => {
-      if (!mission.due_at) return;
+      if (
+        !mission.due_at ||
+        ["Inbox", "Feita", "Cancelada"].includes(mission.status)
+      )
+        return;
       const key = iso(new Date(mission.due_at));
       map.set(key, [...(map.get(key) ?? []), mission]);
     });
@@ -178,10 +188,7 @@ export function CalendarPage() {
     [workspace.calendarCommitments, selectedDate],
   );
   const selectedMissions = missionsByDate.get(iso(selectedDate)) ?? [];
-  const windows = useMemo(
-    () => freeWindows(selectedDate, selectedEvents, now),
-    [selectedDate, selectedEvents],
-  );
+  const windows = freeWindows(selectedDate, selectedEvents, now);
   const busyMinutes = selectedEvents
     .filter((event) => !event.isOptional && isTimed(event))
     .reduce((sum, event) => sum + durationMinutes(event.start, event.end), 0);
@@ -190,7 +197,7 @@ export function CalendarPage() {
       upcomingOccurrences(workspace.calendarCommitments, now, 16)
         .filter((event) => !["sleep", "recovery"].includes(event.category))
         .slice(0, 6),
-    [workspace.calendarCommitments],
+    [workspace.calendarCommitments, now],
   );
   const selectedIsToday = iso(selectedDate) === iso(now);
 
@@ -204,9 +211,13 @@ export function CalendarPage() {
     if (window.matchMedia("(max-width:760px)").matches)
       window.setTimeout(
         () =>
-          document
-            .querySelector(".calendar-day-inspector")
-            ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+          document.querySelector(".calendar-day-inspector")?.scrollIntoView({
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+              .matches
+              ? "instant"
+              : "smooth",
+            block: "start",
+          }),
         80,
       );
   }
@@ -222,26 +233,63 @@ export function CalendarPage() {
     emitUI("quickAdd", { type: "mission", dueDate: iso(selectedDate) });
   }
   async function toggleConditional(event: CalendarOccurrence) {
-    if (!userId || updatingEvent) return;
+    if (actionPending.current) return;
+    actionPending.current = true;
     setUpdatingEvent(event.sourceId);
-    const { error } = await supabase
-      .from("calendar_commitments")
-      .update({
-        is_optional: !event.isOptional,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", event.sourceId)
-      .eq("user_id", userId);
-    setUpdatingEvent(null);
-    if (!error) await refresh();
+    setActionError(null);
+    try {
+      if (!userId)
+        throw new Error("Entre na sua conta para atualizar este compromisso.");
+      const { error } = await supabase
+        .from("calendar_commitments")
+        .update({
+          is_optional: !event.isOptional,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", event.sourceId)
+        .eq("user_id", userId);
+      if (error) throw error;
+      await refresh();
+    } catch (err) {
+      setActionError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível atualizar o compromisso.",
+      );
+    } finally {
+      setUpdatingEvent(null);
+      actionPending.current = false;
+    }
   }
+  async function finishMission(id: string) {
+    if (actionPending.current) return;
+    actionPending.current = true;
+    setCompleting(id);
+    setActionError(null);
+    try {
+      await completeMission(id);
+    } catch (err) {
+      setActionError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível concluir a missão.",
+      );
+    } finally {
+      setCompleting(null);
+      actionPending.current = false;
+    }
+  }
+
   const canToggle = (event: CalendarOccurrence) =>
     event.isOptional ||
     /condicional|substitutiva/i.test(`${event.title} ${event.note ?? ""}`);
 
+  if (loading) return <PageLoading />;
+  if (error) return <WorkspaceFeedback error={error} retry={refresh} />;
+
   return (
     <div className="page-stack calendar-page calendar-page--connected calendar-page--consultable">
-      <section className="page-hero page-hero--cyan">
+      <section className="orbital-heading">
         <div>
           <span className="eyebrow">Seu tempo</span>
           <h1>Calendário</h1>
@@ -255,6 +303,11 @@ export function CalendarPage() {
           Missão em {selectedIsToday ? "hoje" : compactDate(selectedDate)}
         </button>
       </section>
+      {actionError && (
+        <p className="orbital-action-error" role="alert">
+          {actionError}
+        </p>
+      )}
       <section className="calendar-layout calendar-layout--consultable">
         <SurfaceCard className="calendar-card">
           <div className="calendar-toolbar">
@@ -301,11 +354,45 @@ export function CalendarPage() {
               return (
                 <button
                   type="button"
+                  tabIndex={
+                    selected ||
+                    (!cells.some((cell) => iso(cell) === iso(selectedDate)) &&
+                      key === iso(cursor))
+                      ? 0
+                      : -1
+                  }
+                  id={`calendar-day-${key}`}
+                  aria-current={today ? "date" : undefined}
                   aria-pressed={selected}
                   aria-label={`${fullDate(date)} · ${total} itens`}
                   className={`calendar-day calendar-day--button ${today ? "today" : ""} ${selected ? "selected" : ""} ${muted ? "muted" : ""}`}
                   key={key}
                   onClick={() => selectDay(date)}
+                  onKeyDown={(e) => {
+                    const offset =
+                      e.key === "ArrowLeft"
+                        ? -1
+                        : e.key === "ArrowRight"
+                          ? 1
+                          : e.key === "ArrowUp"
+                            ? -7
+                            : e.key === "ArrowDown"
+                              ? 7
+                              : e.key === "Home"
+                                ? -date.getUTCDay()
+                                : e.key === "End"
+                                  ? 6 - date.getUTCDay()
+                                  : null;
+                    if (offset === null) return;
+                    e.preventDefault();
+                    const next = shiftDate(date, offset);
+                    selectDay(next);
+                    requestAnimationFrame(() =>
+                      document
+                        .getElementById(`calendar-day-${iso(next)}`)
+                        ?.focus(),
+                    );
+                  }}
                 >
                   <span className="calendar-number">{date.getUTCDate()}</span>
                   <div className="calendar-events calendar-events--desktop">
@@ -328,7 +415,16 @@ export function CalendarPage() {
                         {mission.title}
                       </span>
                     ))}
-                    {total > 3 && <small>+{total - 3}</small>}
+                    {total >
+                      Math.min(fixed.length, 2) +
+                        Math.min(missions.length, 1) && (
+                      <small>
+                        +
+                        {total -
+                          Math.min(fixed.length, 2) -
+                          Math.min(missions.length, 1)}
+                      </small>
+                    )}
                   </div>
                   <div className="calendar-dots" aria-hidden="true">
                     {fixed.slice(0, 4).map((event) => (
@@ -359,12 +455,14 @@ export function CalendarPage() {
               <div>
                 <button
                   className="icon-button"
+                  aria-label="Dia anterior"
                   onClick={() => shiftSelected(-1)}
                 >
                   <ChevronLeft size={16} />
                 </button>
                 <button
                   className="icon-button"
+                  aria-label="Próximo dia"
                   onClick={() => shiftSelected(1)}
                 >
                   <ChevronRight size={16} />
@@ -417,6 +515,7 @@ export function CalendarPage() {
                   >
                     <button
                       className="day-detail-item__main"
+                      aria-expanded={expanded}
                       onClick={() =>
                         setExpandedEvent(expanded ? null : event.id)
                       }
@@ -452,7 +551,7 @@ export function CalendarPage() {
                         {canToggle(event) && (
                           <button
                             className="text-button"
-                            disabled={updatingEvent === event.sourceId}
+                            disabled={Boolean(updatingEvent || completing)}
                             onClick={() => void toggleConditional(event)}
                           >
                             {event.isOptional
@@ -485,6 +584,7 @@ export function CalendarPage() {
                     {selectedIsToday && (
                       <button
                         className="icon-button"
+                        aria-label={`Focar em ${mission.title}`}
                         onClick={() =>
                           navigate(
                             `/foco?minutes=${mission.duration_minutes ?? 45}&mission=${mission.id}`,
@@ -496,7 +596,9 @@ export function CalendarPage() {
                     )}
                     <button
                       className="icon-button"
-                      onClick={() => void completeMission(mission.id)}
+                      aria-label={`Concluir ${mission.title}`}
+                      disabled={Boolean(completing || updatingEvent)}
+                      onClick={() => void finishMission(mission.id)}
                     >
                       <CheckCircle2 size={15} />
                     </button>
@@ -511,79 +613,86 @@ export function CalendarPage() {
               )}
             </div>
           </SurfaceCard>
-          <SurfaceCard
-            tone="green"
-            eyebrow="Espaço disponível"
-            title={windows.length ? "Janelas livres" : "Sem janela longa"}
-          >
-            <div className="free-window-list">
-              {windows.slice(0, 4).map((window, index) => {
-                const preset = focusPreset(window.minutes);
-                const current =
-                  selectedIsToday &&
-                  index === 0 &&
-                  window.start <= now &&
-                  window.end > now;
-                return (
-                  <div
-                    className="free-window"
-                    key={`${window.start.toISOString()}-${window.end.toISOString()}`}
-                  >
-                    <div>
-                      <strong>
-                        {time(window.start)}–{time(window.end)}
-                      </strong>
-                      <span>{window.minutes} min livres</span>
-                    </div>
-                    {current && (
-                      <button
-                        className="secondary-button"
-                        onClick={() => navigate(`/foco?minutes=${preset}`)}
-                      >
-                        <Focus size={14} />
-                        Foco {preset}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-              {!windows.length && (
-                <p className="panel-copy">
-                  Entre 7h e 22h não há um intervalo livre de pelo menos 25
-                  minutos neste dia.
-                </p>
-              )}
-            </div>
-          </SurfaceCard>
-          <SurfaceCard
-            tone="slate"
-            eyebrow="Adiante"
-            title="Próximos compromissos"
-          >
-            <div className="agenda-list">
-              {upcomingCalendar.map((event) => (
-                <button
-                  className={`agenda-item agenda-item--calendar agenda-item--button ${event.isOptional ? "agenda-item--optional" : ""}`}
-                  key={event.id}
-                  onClick={() => selectDay(event.start)}
-                >
-                  <span
-                    className={`agenda-category tone-${categoryTone[event.category] ?? "slate"}`}
-                  >
-                    <CalendarDays size={14} />
-                  </span>
-                  <div>
-                    <strong>{event.title}</strong>
-                    <small>
-                      {compactDate(event.start)} ·{" "}
-                      {event.isOptional ? "se necessário" : time(event.start)}
-                    </small>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </SurfaceCard>
         </aside>
+      </section>
+      <section className="calendar-horizon">
+        <SurfaceCard
+          tone="green"
+          eyebrow="Espaço disponível"
+          title={windows.length ? "Janelas livres" : "Sem janela longa"}
+        >
+          <div className="free-window-list">
+            {windows.slice(0, 4).map((window, index) => {
+              const preset = focusPreset(window.minutes);
+              const current =
+                selectedIsToday &&
+                index === 0 &&
+                window.start <= now &&
+                window.end > now;
+              return (
+                <div
+                  className="free-window"
+                  key={`${window.start.toISOString()}-${window.end.toISOString()}`}
+                >
+                  <div>
+                    <strong>
+                      {time(window.start)}–{time(window.end)}
+                    </strong>
+                    <span>{window.minutes} min livres</span>
+                  </div>
+                  {current && (
+                    <button
+                      className="secondary-button"
+                      onClick={() => navigate(`/foco?minutes=${preset}`)}
+                    >
+                      <Focus size={14} />
+                      Foco {preset}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            {!windows.length && (
+              <p className="panel-copy">
+                Entre 7h e 22h não há um intervalo livre de pelo menos 25
+                minutos neste dia.
+              </p>
+            )}
+          </div>
+        </SurfaceCard>
+        <SurfaceCard
+          tone="slate"
+          eyebrow="Adiante"
+          title="Próximos compromissos"
+        >
+          <div className="agenda-list">
+            {upcomingCalendar.map((event) => (
+              <button
+                className={`agenda-item agenda-item--calendar agenda-item--button ${event.isOptional ? "agenda-item--optional" : ""}`}
+                key={event.id}
+                onClick={() => selectDay(event.start)}
+              >
+                <span
+                  className={`agenda-category tone-${categoryTone[event.category] ?? "slate"}`}
+                >
+                  <CalendarDays size={14} />
+                </span>
+                <div>
+                  <strong>{event.title}</strong>
+                  <small>
+                    {compactDate(event.start)} ·{" "}
+                    {event.isOptional ? "se necessário" : time(event.start)}
+                  </small>
+                </div>
+              </button>
+            ))}
+            {!upcomingCalendar.length && (
+              <p className="panel-copy">
+                Nenhum próximo compromisso cadastrado.
+              </p>
+            )}
+          </div>
+        </SurfaceCard>
       </section>
     </div>
   );

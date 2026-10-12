@@ -28,3 +28,5 @@ Os diffs exclusivos foram confrontados com a base atual. “Já presente” refe
 A [PR #19](https://github.com/Gabriel2069/Nexus-OS/pull/19) integrou D01 na main (`965c426`). V01 parte dessa base e recupera seletivamente materiais e feedback dos PRs supersedidos, mantendo os proprietários atuais. Evidência e fronteira estão em [V01_REVIEW.md](design/V01_REVIEW.md); o link da entrega corrente fica no issue #18.
 
 V02 (`feat/v02-daily-observatory`) é dependente de V01 (`feat/v01-cosmic-shell`, PR #20); seu PR aponta para essa branch até a integração de V01. Não mesclar V02 antes da base. Após integrar V01, retarget para main e verificar novo merge/head/CI. Registro corrente no issue #18.
+
+A próxima entrega (`feat/v03-orbital-workspace`) depende da PR #21 (`01129e4`). Contém V07 e fases de V03/V04, conforme a prioridade do usuário; não representa conclusão de Foco ou dos demais domínios. Ordem de integração: #20 → #21 → entrega de visor/Calendário/Inbox/Estudos. Retarget e CI devem ser revistos após cada integração. Revisão em [V03_REVIEW.md](design/V03_REVIEW.md); links correntes ficam no issue #18.

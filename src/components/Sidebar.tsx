@@ -14,6 +14,7 @@ export function Sidebar({ pathname, collapsed, onToggle }: SidebarProps) {
       className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}
       data-motion-shell="sidebar"
     >
+      <span className="visor-texture" aria-hidden="true" />
       <div className="sidebar__brand" data-motion="brand">
         <button
           className="brand-mark"
@@ -26,7 +27,7 @@ export function Sidebar({ pathname, collapsed, onToggle }: SidebarProps) {
         {!collapsed && (
           <div className="sidebar__brand-copy">
             <strong>NexOS</strong>
-            <span>Sistema pessoal</span>
+            <span>Observatório pessoal</span>
           </div>
         )}
       </div>

@@ -118,6 +118,14 @@
   --nx-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --nx-ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
   --nx-glass-bg: color-mix(in srgb, var(--panel) 88%, transparent);
+  --nx-visor-bg: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--panel2) 78%, transparent),
+    color-mix(in srgb, var(--panel) 90%, transparent) 55%,
+    color-mix(in srgb, var(--panel) 80%, transparent)
+  );
+  --nx-visor-star: color-mix(in srgb, var(--muted) 28%, transparent);
+  --nx-visor-rim: color-mix(in srgb, var(--cyan) 34%, transparent);
   --nx-glass-bg-strong: color-mix(in srgb, var(--panel) 97%, transparent);
   --nx-glass-border: color-mix(in srgb, var(--text) 18%, transparent);
   --nx-glass-highlight: rgb(255 255 255 / 22%);
