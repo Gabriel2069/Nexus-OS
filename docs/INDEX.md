@@ -20,3 +20,5 @@ Código/teste observado decide o que existe; GitHub issue/PR decide o estado de 
 Ao alterar uma decisão, atualize o proprietário e registre motivo, impacto e critério de verificação no PR. Não replique o mesmo checklist em vários mapas. Nenhum mecanismo garante ausência de todos os conflitos futuros: a disciplina torna responsabilidade, divergência e dívida detectáveis.
 
 A execução é acompanhada no [issue #18](https://github.com/Gabriel2069/Nexus-OS/issues/18); a frente de integrações permanece no [issue #16](https://github.com/Gabriel2069/Nexus-OS/issues/16).
+
+A direção D01 está em [docs/design](design/README.md), com prancheta, tokens propostos, fontes e plano de incorporação. Não copiar seus estilos como uma camada global de produção.

@@ -2,7 +2,7 @@
 
 NexOS é um sistema pessoal com identidade cósmica: profundidade discreta, luz ciano e violeta, materiais de vidro e tipografia clara. O conteúdo e o próximo passo devem dominar a tela. Tempo livre continua sendo tempo livre; progressão nunca exige ocupar todo intervalo.
 
-Esta etapa organiza a base existente. O refinamento seguinte deve trabalhar composição, hierarquia, densidade e microinterações por tela, usando os mesmos materiais e tokens, sem acrescentar folhas de correção globais.
+A base foi integrada pela PR #17. A direção proposta é **Observatório pessoal**: ambiente cósmico, conteúdo estável e navegação em vidro lenticular. A [prancheta D01](docs/design/visual-board.html) demonstra desktop, mobile, login, materiais, paleta, estados e movimento. O [plano de implementação](docs/design/IMPLEMENTATION_PLAN.md) define a incorporação por lote; as [referências](docs/design/REFERENCES.md) distinguem evidência e tradução autoral. Valores propostos não estão aplicados ao runtime.
 
 ## Princípios
 
@@ -23,4 +23,18 @@ Esta etapa organiza a base existente. O refinamento seguinte deve trabalhar comp
 5. Insights, Finanças e Life RPG: densidade e interpretação honesta dos dados.
 6. Perfil, tutorial, revisão e acabamento PWA.
 
-O mapa técnico está em [STYLE_SYSTEM.md](docs/STYLE_SYSTEM.md). O estado de execução e as pendências estão em [FOUNDATION_REVIEW.md](docs/FOUNDATION_REVIEW.md).
+O mapa técnico está em [STYLE_SYSTEM.md](docs/STYLE_SYSTEM.md). O estado de execução está no [issue #18](https://github.com/Gabriel2069/Nexus-OS/issues/18), com dependências em [PRODUCTION_MAP.md](docs/PRODUCTION_MAP.md). [FOUNDATION_REVIEW.md](docs/FOUNDATION_REVIEW.md) preserva evidência histórica.
+
+## Contrato de composição e materiais
+
+- Ambiente: vazio profundo, nebulosa assimétrica, estrelas rarefeitas; o efeito não atravessa regiões de leitura.
+- Conteúdo: grafite mineral no escuro e painel claro estável no claro; tabelas, gráficos, campos e números não recebem vidro transparente.
+- Controles: vidro lenticular na navegação, dock e inspeção, com rim superior e sombra coerente; fallback sólido mantém identificação.
+- Marca: lente 3D e estrela existente. Naves são detalhes narrativos de login/progressão, sem substituir instruções por jargão espacial.
+- Uma ação principal por região, com títulos, contexto e métricas em ordem explícita. Tema claro tem acentos escuros próprios.
+- Movimento: resposta curta nos controles, órbita serena no foco, ambiente opcional e pausável. Movimento reduzido prevalece. Pausar ambiente não pausa o relógio funcional.
+- Layout: alvos táteis propostos de 44 px; leitura normal em 16 px e compacto em 14 px. Valores iniciais de ritmo, raio e movimento estão em [tokens.json](docs/design/tokens.json), sem segunda fonte de runtime.
+
+## Aceitação visual
+
+Texto normal ≥ 4,5:1 e grande ≥ 3:1; medir contraste composto em material translúcido e conferir foco/ícones/contornos. Validar os dois temas, teclado, reflow, movimento reduzido, estados loading/error/empty e aparelhos reais. A paleta isolada não certifica conformidade ou desempenho. A prancheta é referência visual, não substitui dados reais nem os contratos de autenticação.
