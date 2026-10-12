@@ -421,3 +421,20 @@ html[data-atmosphere="paused"] .today-score:before,
 html[data-atmosphere="paused"] .today-timeline .is-current i {
   animation-play-state: paused;
 }
+
+/* One material fallback for every visor, including navigation and pop-ups. */
+@media (prefers-reduced-transparency: reduce) {
+  html[data-theme] {
+    --nx-visor-bg: var(--panel);
+    --nx-glass-bg: var(--panel);
+    --nx-glass-bg-strong: var(--panel);
+    --nx-glass-blur: 0px;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  html[data-theme] {
+    --nx-visor-bg: var(--panel);
+    --nx-glass-bg: var(--panel);
+    --nx-glass-bg-strong: var(--panel);
+  }
+}

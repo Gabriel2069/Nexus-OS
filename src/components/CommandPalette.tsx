@@ -1,3 +1,4 @@
+import { CosmicTexture } from "./CosmicEnvironment";
 import { ModalSurface } from "./ModalSurface";
 import { useOverlay } from "../lib/use-overlay";
 import {
@@ -26,11 +27,14 @@ export function CommandPalette() {
       ),
     [],
   );
-  const filtered = items
-    .filter((item) =>
-      `${item.label} ${item.group}`.toLowerCase().includes(query.toLowerCase()),
-    )
-    .slice(0, 10);
+  const normalize = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  const filtered = items.filter((item) =>
+    normalize(`${item.label} ${item.group}`).includes(normalize(query)),
+  );
   function go(path: string) {
     setOpen(false);
     setQuery("");
@@ -101,6 +105,12 @@ export function CommandPalette() {
   useEffect(() => {
     setSelected(0);
   }, [query, open]);
+  useEffect(() => {
+    if (open)
+      document
+        .getElementById(`command-option-${selected}`)
+        ?.scrollIntoView({ block: "nearest" });
+  }, [selected, open]);
   if (!open) return null;
   return (
     <ModalSurface
@@ -109,6 +119,7 @@ export function CommandPalette() {
       onClose={() => setOpen(false)}
     >
       <section className="command-palette" data-motion-surface="command">
+        <CosmicTexture />
         <div className="command-palette__search" data-motion="command-search">
           <Search size={17} />
           <input

@@ -1,3 +1,4 @@
+import { CosmicTexture } from "./CosmicEnvironment";
 import { ModalSurface } from "./ModalSurface";
 import { useOverlay } from "../lib/use-overlay";
 import {
@@ -103,6 +104,7 @@ export function MobileDock({ pathname }: Props) {
             onClick={(event) => event.stopPropagation()}
             data-motion-surface="sheet"
           >
+            <CosmicTexture />
             <div
               className="mobile-sheet__handle"
               aria-label="Arraste para fechar"

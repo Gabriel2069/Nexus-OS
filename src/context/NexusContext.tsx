@@ -312,7 +312,10 @@ export function NexusProvider({ children }: PropsWithChildren) {
       ...adaptive,
       suggestions: adaptive.orientation.suggestions,
       editProfile: async (patch) => {
-        if (!userId) return;
+        if (!userId)
+          throw new Error(
+            "Seu perfil ainda não está disponível para salvar alterações.",
+          );
         await updateProfile(userId, patch);
         await refresh();
       },
@@ -469,13 +472,40 @@ export function NexusProvider({ children }: PropsWithChildren) {
         await refresh();
       },
       claimReward: async (rewardId) => {
-        if (!userId) return "Recompensa simulada";
+        if (!userId)
+          throw new Error(
+            isDemoMode
+              ? "Resgates exigem uma conta autenticada; a demonstração não altera coins."
+              : "Seu perfil ainda não está disponível para resgatar recompensas.",
+          );
         const result = await redeemReward(rewardId);
         await refresh();
         return result.reward;
       },
       saveReview: async (review) => {
-        if (!userId) return;
+        if (!userId) {
+          if (!isDemoMode)
+            throw new Error(
+              "Seu perfil ainda não está disponível para salvar a revisão.",
+            );
+          setWorkspace((current) => ({
+            ...current,
+            weeklyReviews: [
+              {
+                ...review,
+                id:
+                  current.weeklyReviews.find(
+                    (r) => r.week_start === review.week_start,
+                  )?.id ?? crypto.randomUUID(),
+                user_id: "demo",
+              },
+              ...current.weeklyReviews.filter(
+                (r) => r.week_start !== review.week_start,
+              ),
+            ],
+          }));
+          return;
+        }
         await saveWeeklyReview(userId, review);
         await refresh();
       },

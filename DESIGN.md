@@ -1,58 +1,48 @@
-# Direção visual do NexOS
+# Sistema de estilos: proprietários e cascata
 
-NexOS é um sistema pessoal com identidade cósmica: profundidade discreta, luz ciano e violeta, materiais de vidro e tipografia clara. O conteúdo e o próximo passo devem dominar a tela. Tempo livre continua sendo tempo livre; progressão nunca exige ocupar todo intervalo.
+`src/styles.css` é o único ponto de entrada. Os 59 imports antigos foram substituídos por 21 proprietários. Os nomes expressam responsabilidade, não a ordem histórica de ajustes.
 
-A base foi integrada pela PR #17. A direção proposta é **Observatório pessoal**: ambiente cósmico, painéis translúcidos e navegação em vidro lenticular, com detalhes ópticos de visor de nave. A [prancheta D01](docs/design/visual-board.html) demonstra desktop, mobile, login, materiais, paleta, estados e movimento. O [plano de implementação](docs/design/IMPLEMENTATION_PLAN.md) define a incorporação por lote; as [referências](docs/design/REFERENCES.md) distinguem evidência e tradução autoral. V01 incorpora a paleta e os materiais principais no runtime; o JSON da prancheta permanece um registro de proposta, não uma segunda fonte de tokens. A [revisão V01](docs/design/V01_REVIEW.md) registra escopo e evidências.
+| Proprietário                              | Responsabilidade                                                               |
+| ----------------------------------------- | ------------------------------------------------------------------------------ |
+| `foundation.css`                          | Tokens, fontes, tema, documento, foco visível e política de movimento reduzido |
+| `motion.css`                              | Definições únicas de keyframes                                                 |
+| `environment.css`                         | Estrelas, nebulosas, órbitas e pseudo-elementos de atmosfera                   |
+| `components.css`                          | Cards, botões, inputs, modais, materiais e padrões compartilhados              |
+| `shell.css`                               | Sidebar, topbar, dock, geometria e navegação móvel                             |
+| `auth.css`                                | Login e boot                                                                   |
+| `pages/now.css`, `pages/today.css`        | Agora e Hoje                                                                   |
+| `pages/calendar.css`, `pages/focus.css`   | Calendário e Foco                                                              |
+| `pages/mission.css`, `pages/project.css`  | Missões e Projetos                                                             |
+| `pages/routine.css`, `pages/studies.css`  | Rotinas e Estudos                                                              |
+| `pages/insight.css`, `pages/finance.css`  | Insights e Finanças                                                            |
+| `pages/rpg.css`                           | Life RPG, atributos, temporada, conquistas e recompensas                       |
+| `pages/inbox.css`, `pages/review.css`     | Inbox e revisão semanal                                                        |
+| `pages/section.css`, `pages/tutorial.css` | Seções auxiliares e tutorial                                                   |
 
-## Princípios
+## Como alterar
 
-- Uma responsabilidade visual tem um arquivo proprietário. Ajustar a regra existente antes de acrescentar outra.
-- `--text`, `--muted`, `--panel`, `--line` e tokens de vidro devem responder ao tema. Cores de status precisam continuar distinguíveis no tema claro.
-- Usar Inter para leitura, Space Grotesk para títulos e Oxanium apenas para acentos de identidade. Fontes têm uma única declaração em `foundation.css`.
-- Gradientes e atmosfera apoiam o conteúdo. Evitar vários autores animando o mesmo `transform`.
-- Modais usam `ModalSurface`; o plano de fundo fica inerte, Escape fecha, Tab permanece no diálogo e o foco retorna ao acionador.
-- Conferir celular a 320 e 390 px, tablet a 834 px e desktop a 1440 px. A apresentação de relógio abaixo de 240 px tem limitações próprias e não deve governar celulares.
-- Movimento reduzido é uma preferência funcional. A interface precisa ficar utilizável sem animações de entrada ou atmosfera contínua.
+Localize o seletor no proprietário. Corrija o bloco existente e suas variantes de breakpoint. Um seletor pode reaparecer em condições diferentes; isso não autoriza uma nova camada global ao fim do ponto de entrada. Quando houver conflito, confira especificidade, condição e ordem, incluindo shorthands como `background`, `animation` e `transform`.
 
-## Ordem do refinamento
+Materiais comuns ficam antes das variantes de página. Para um ajuste exclusivo de tela, use o namespace da tela. A atmosfera não deve ocupar o pseudo-elemento usado para foco ou interação do componente.
 
-1. Shell, navegação, carregamento e estados de erro/vazio.
-2. Agora e Hoje: hierarquia, espaços vazios, ações e leitura contextual.
-3. Calendário e Foco: legibilidade, controles e detalhes do dia/sessão.
-4. Missões, Projetos, Rotinas e Estudos: listas, formulários e inspeção.
-5. Insights, Finanças e Life RPG: densidade e interpretação honesta dos dados.
-6. Perfil, tutorial, revisão e acabamento PWA.
+A consolidação retirou 1.373 declarações que eram sobrescritas por regras posteriores equivalentes, mantendo barreiras conservadoras para shorthands. Listas de seletores foram distribuídas entre proprietários; isso pode aumentar o número textual de declarações sem acrescentar um comportamento. Não confundir contagem de bytes com quantidade de sistemas visuais.
 
-O mapa técnico está em [STYLE_SYSTEM.md](docs/STYLE_SYSTEM.md). O estado de execução está no [issue #18](https://github.com/Gabriel2069/Nexus-OS/issues/18), com dependências em [PRODUCTION_MAP.md](docs/PRODUCTION_MAP.md). [FOUNDATION_REVIEW.md](docs/FOUNDATION_REVIEW.md) preserva evidência histórica.
+Há ainda regras históricas e exceções responsivas dentro dos proprietários. A reorganização não promete uma cascata inteiramente minimalista: a simplificação restante deve acompanhar o refinamento de cada tela, com comparação visual. O teto atual de 82 declarações `!important` (243 → 103 em V01 → 101 em V02 → 94 no visor → 87 em V04 → 82 em V05/V06) congela a dívida existente; a meta é reduzi-lo, não usá-lo como espaço para novas exceções.
 
-## Contrato de composição e materiais
+## Verificação automática
 
-- Ambiente: vazio profundo, nebulosa assimétrica, estrelas rarefeitas; o efeito não atravessa regiões de leitura.
-- Conteúdo: vidro denso no escuro e no claro, conforme a revisão solicitada pelo usuário em 12/10/2026. Painéis transmitem a atmosfera com blur e gradiente de densidade; texto, campos e números preservam contraste sobre a composição real. Textura espacial estática fica numa camada decorativa própria, sem capturar eventos ou disputar o foco.
-- Controles: vidro lenticular na navegação, dock e inspeção, com rim superior e sombra coerente; fallback sólido mantém identificação.
-- Marca: lente 3D e estrela existente. Cantos ópticos, rim e estrelas discretas dão aos painéis a linguagem de instrumento de nave; rótulos continuam em linguagem cotidiana. Naves são detalhes narrativos de login/progressão, sem substituir instruções por jargão espacial.
-- Uma ação principal por região, com títulos, contexto e métricas em ordem explícita. Tema claro tem acentos escuros próprios.
-- Movimento: resposta curta nos controles, órbita serena no foco, ambiente opcional e pausável. Movimento reduzido prevalece. Pausar ambiente não pausa o relógio funcional.
-- Layout: alvos táteis propostos de 44 px; leitura normal em 16 px e compacto em 14 px. Valores iniciais de ritmo, raio e movimento estão em [tokens.json](docs/design/tokens.json), sem segunda fonte de runtime.
+`npm run check:foundations` verifica registro e ordem dos imports, arquivos não registrados, seletores com dois proprietários, nomes duplicados de animação, keyframes fora do proprietário, imports internos indevidos, `:global` inválido, conflitos de merge e teto de `!important`. `npm run check` também executa testes de datas/timer, TypeScript e build.
 
-## Aceitação visual
+A verificação não prova ausência de todo conflito de especificidade nem valida contraste de todas as telas. Revisão visual e teste de fluxo continuam necessários.
 
-Texto normal ≥ 4,5:1 e grande ≥ 3:1; medir contraste composto em material translúcido e conferir foco/ícones/contornos. Validar os dois temas, teclado, reflow, movimento reduzido, estados loading/error/empty e aparelhos reais. A paleta isolada não certifica conformidade ou desempenho. A prancheta é referência visual, não substitui dados reais nem os contratos de autenticação.
+Em V02, `day-route`, `essential-loop` e `exam-glance` pertencem a pages/now; check-in, `routine-mini`, `single-study-target` e `life-space-note` pertencem a pages/today. Foram retiradas 87 entradas desses seletores de components. Navegação desktop/dock/menu usa o catálogo único em data/navigation.
 
-## V01 — estado incorporado
+Neste lote, detalhes privados do Calendário foram retirados de components e consolidados em pages/calendar; inbox e studies simplificam as respectivas cascatas. `visor-texture` é uma camada estática de components usada por SurfaceCard, Sidebar e Agora, com `aria-hidden`/pointer-events none. O gradiente de densidade de vidro é único em foundation. Foram retirados os halos genéricos de page-stack que duplicavam CosmicEnvironment e excediam os limites do documento. Geometria desktop reserva a mesma variável de largura usada pela sidebar fixed; listas de destinos rolam internamente.
 
-Login e base compartilhada adotam Observatório pessoal. `AppearanceProvider` centraliza tema e atmosfera, com controle disponível antes e depois do acesso. Atmosfera inclui a pausa dos loops decorativos legados; spinners funcionais e relógio não são paralisados. Vidro tem fallback opaco e campo de acesso conserva label, ajuda, foco e erro. Dock usa Agora/Hoje/Agenda/Foco/Mais; a busca também está disponível no menu móvel. A composição das páginas segue os lotes V02–V06.
+V04 centraliza CosmicTexture/StellarSpark e o mapa estelar de ambiente; cores de emissão pertencem a foundation. Missões/Projetos/Rotinas consolidam seus proprietários e deixam componentes comuns de formulário em components. As regras do cronômetro permanecem iguais; o entorno foi reconciliado no proprietário focus. Não reintroduzir halos independentes em cada página para reforçar a identidade.
 
-## V02 — menu e dia
+V05/V06 consolida os proprietários de Insights, Finanças, Life e Revisão; context-signal/live pertence agora a pages/section. Heatmap/consulta de dia pertence a pages/insight. View-switcher e materiais de pop-up têm uma implementação compartilhada em components; a antiga seleção com camadas luminosas concorrentes foi retirada. Nove keyframes de domínios sem referência foram retirados. Não alterar mostrador/anéis de Foco para propagar material de modal.
 
-Agora organiza próximo passo → trajetória → continuidade; Hoje organiza contexto/check-in → compromissos/estudo → rotinas/espaço livre. A órbita é um instrumento decorativo fora do texto, com os mesmos controles de movimento de V01. Menu móvel usa grupos e o catálogo único de navegação. Estados desconhecidos não viram vazios confirmados; rascunhos e falhas de escrita permanecem explícitos. A [revisão V02](docs/design/V02_REVIEW.md) registra escopo, evidências e dependência da PR #20.
+## V05/V06 — completar a consulta e o acabamento
 
-## V03/V04/V07 — visor e espaço de trabalho
-
-A preferência por cards translúcidos substitui a restrição anterior de conteúdo opaco. O material comum pertence a components, seus tokens a foundation; as telas não mantêm implementações concorrentes de textura. A sidebar desktop fica presa à janela, com coluna reservada e rolagem interna de destinos. Calendário (parte de V03), Estudos (parte de V04) e Caixa de entrada (V07) seguem o ritmo de Agora/Hoje. Foco e os demais domínios de V04 continuam pendentes. Evidências e limites em [V03_REVIEW.md](docs/design/V03_REVIEW.md).
-
-## V04: luz estelar e execução
-
-Pedido do usuário em 12/10/2026: dar mais personalidade cósmica às telas já incorporadas, com luz branca em controles e itens, e seguir para Missões, Rotinas, Foco e Projetos. Nebulosas e constelações ganham presença na camada de ambiente; os cards recebem um mapa estelar estático com luminosidade contida. Photon branco no escuro e azul frio no claro preserva identificação dos controles. Reflexos aparecem em bordas, controles principais e seleção, com hierarquia de texto preservada.
-
-O desenho aprovado do cronômetro de Foco é uma restrição: manter mostrador, anéis, números, proporções e animações; refinar apenas entorno, controles e estados. [V04_REVIEW.md](docs/design/V04_REVIEW.md) registra implementação, verificação e limites. A personalidade espacial tem um proprietário compartilhado, sem novos arquivos de acabamento por tela.
+As onze áreas restantes adotam a assinatura estelar aprovada, com hierarquia própria para progressão, dados, revisões e contexto. Biblioteca e Conhecimento têm consultas distintas sobre os registros existentes; nenhum cadastro ausente é sugerido por decoração. Pop-ups usam a textura e o material compartilhados, e seletores têm uma fonte de estilo para emissão/seleção. Rótulos de dias seguem São Paulo mesmo em outro fuso do navegador. Cronômetro de Foco preservado. Evidências e limites em [V05_REVIEW.md](docs/design/V05_REVIEW.md).

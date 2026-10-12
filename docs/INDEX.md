@@ -30,3 +30,5 @@ A [revisão V02](design/V02_REVIEW.md) registra menu, Agora/Hoje, estados e orde
 - [V03_REVIEW.md](design/V03_REVIEW.md): visor compartilhado, menu fixo, Calendário, Caixa de entrada e Estudos; fases V03/V04 e V07.
 
 A [revisão V04](design/V04_REVIEW.md) registra personalidade estelar, Missões/Rotinas/Foco/Projetos e preservação do cronômetro aprovado.
+
+A [revisão V05/V06](design/V05_REVIEW.md) registra as onze áreas restantes e o acabamento compartilhado de menus, pop-ups e seletores.

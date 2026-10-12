@@ -1,3 +1,4 @@
+import { CosmicTexture } from "./CosmicEnvironment";
 import { ModalSurface } from "./ModalSurface";
 import { useOverlay } from "../lib/use-overlay";
 import { AlertCircle, Bell, CheckCircle2, LoaderCircle, X } from "lucide-react";
@@ -19,6 +20,7 @@ export function NotificationCenter() {
         onClick={(e) => e.stopPropagation()}
         data-motion-surface="notification"
       >
+        <CosmicTexture />
         <header data-motion="drawer-header">
           <div>
             <span className="eyebrow">Central</span>

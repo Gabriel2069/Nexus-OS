@@ -177,7 +177,6 @@ function RouteContent({ pathname }: { pathname: string }) {
     case "/financas":
       return <FinancePage />;
     case "/conhecimento":
-    case "/biblioteca":
       return (
         <SectionPage
           eyebrow="Conhecimento"
@@ -209,6 +208,18 @@ function RouteContent({ pathname }: { pathname: string }) {
               body: "Conteúdo recém-capturado que ainda precisa ser lido, resumido ou descartado.",
             },
           ]}
+        />
+      );
+    case "/biblioteca":
+      return (
+        <SectionPage
+          eyebrow="Referências"
+          title="Biblioteca"
+          description="Reencontre notas e aprendizados preservados nas suas ações e revisões."
+          tone="cyan"
+          icon={BookOpen}
+          highlights={[]}
+          panels={[]}
         />
       );
     case "/planejamento":

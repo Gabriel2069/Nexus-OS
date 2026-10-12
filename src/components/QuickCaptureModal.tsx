@@ -1,3 +1,4 @@
+import { CosmicTexture } from "./CosmicEnvironment";
 import { ModalSurface } from "./ModalSurface";
 import { useOverlay } from "../lib/use-overlay";
 import {
@@ -26,6 +27,7 @@ export function QuickCaptureModal() {
   const [projectId, setProjectId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const writeLock = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -48,7 +50,8 @@ export function QuickCaptureModal() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!title.trim() || saving) return;
+    if (!title.trim() || writeLock.current) return;
+    writeLock.current = true;
     setSaving(true);
     setError(null);
     try {
@@ -73,6 +76,7 @@ export function QuickCaptureModal() {
           : "Não foi possível salvar. Sua captura foi preservada.",
       );
     } finally {
+      writeLock.current = false;
       setSaving(false);
     }
   }
@@ -84,6 +88,7 @@ export function QuickCaptureModal() {
       onClose={() => setOpen(false)}
     >
       <section className="quick-modal">
+        <CosmicTexture />
         <div className="modal-title">
           <div>
             <span className="eyebrow">Captura rápida</span>
@@ -101,6 +106,7 @@ export function QuickCaptureModal() {
           <button
             className={type === "mission" ? "active" : ""}
             aria-pressed={type === "mission"}
+            disabled={saving}
             onClick={() => setType("mission")}
           >
             <ListChecks size={15} /> Missão
@@ -108,6 +114,7 @@ export function QuickCaptureModal() {
           <button
             className={type === "inbox" ? "active" : ""}
             aria-pressed={type === "inbox"}
+            disabled={saving}
             onClick={() => setType("inbox")}
           >
             <Inbox size={15} /> Inbox
@@ -116,6 +123,7 @@ export function QuickCaptureModal() {
         <form onSubmit={submit} className="quick-form">
           <label htmlFor="capture-title">O que precisa entrar?</label>
           <input
+            disabled={saving}
             id="capture-title"
             ref={inputRef}
             value={title}
@@ -134,6 +142,7 @@ export function QuickCaptureModal() {
               <div className="quick-date-control">
                 <input
                   id="capture-date"
+                  disabled={saving}
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
@@ -143,6 +152,7 @@ export function QuickCaptureModal() {
                 Projeto <span>opcional</span>
               </label>
               <select
+                disabled={saving}
                 id="capture-project"
                 value={projectId}
                 onChange={(e) => setProjectId(e.target.value)}
@@ -164,6 +174,7 @@ export function QuickCaptureModal() {
                 {(["D", "C", "B", "A", "S"] as const).map((item) => (
                   <button
                     type="button"
+                    disabled={saving}
                     key={item}
                     className={rank === item ? "active" : ""}
                     aria-pressed={rank === item}
