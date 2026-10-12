@@ -1,3 +1,4 @@
+import { CosmicTexture } from "./CosmicEnvironment";
 import type { CSSProperties, PropsWithChildren, ReactNode } from "react";
 type SurfaceCardProps = PropsWithChildren<{
   className?: string;
@@ -18,7 +19,7 @@ export function SurfaceCard({
 }: SurfaceCardProps) {
   return (
     <section className={`surface-card tone-${tone} ${className}`} style={style}>
-      <span className="visor-texture" aria-hidden="true" />
+      <CosmicTexture />
       {(eyebrow || title || action) && (
         <header className="surface-card__header">
           <div>

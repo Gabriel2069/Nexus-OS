@@ -9,3 +9,5 @@ D01 entrega uma proposta completa para guiar V01–V06, não a interface já imp
 O estado de execução permanece no [issue #18](https://github.com/Gabriel2069/Nexus-OS/issues/18). A autoridade visual está em [DESIGN.md](../../DESIGN.md); a autoridade técnica de cascata está em [STYLE_SYSTEM.md](../STYLE_SYSTEM.md).
 
 A revisão de 12/10/2026 introduz vidro denso e textura espacial também nos cards, conforme a preferência do usuário. O contrato corrente em DESIGN.md prevalece sobre os materiais opacos da proposta D01. [V03_REVIEW.md](V03_REVIEW.md) registra essa atualização e o recorte de Calendário, Caixa de entrada e Estudos.
+
+[V04_REVIEW.md](V04_REVIEW.md) incorpora luz estelar e constelações à base, além de Missões/Rotinas/Foco/Projetos. O cronômetro aprovado permanece preservado; a identidade compartilhada passa a seguir essa revisão.

@@ -1,3 +1,4 @@
+import { StellarSpark } from "../components/CosmicEnvironment";
 import { civilDate, dateKey, monthDate, shiftDate } from "../lib/dates";
 import {
   ArrowRight,
@@ -292,7 +293,10 @@ export function CalendarPage() {
       <section className="orbital-heading">
         <div>
           <span className="eyebrow">Seu tempo</span>
-          <h1>Calendário</h1>
+          <h1>
+            Calendário
+            <StellarSpark />
+          </h1>
           <p>
             Clique em qualquer dia para consultar o contexto completo. Horários,
             missões, janelas livres e ações ficam no mesmo lugar.

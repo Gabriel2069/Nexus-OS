@@ -1,3 +1,6 @@
+import { PageLoading } from "../components/PageLoading";
+import { WorkspaceFeedback } from "../components/WorkspaceFeedback";
+import { StellarSpark } from "../components/CosmicEnvironment";
 import { elapsedFocus, pauseFocus, type FocusClock } from "../lib/focus-clock";
 import { dateKey } from "../lib/dates";
 import {
@@ -32,7 +35,16 @@ function initialParams() {
 }
 
 export function FocusPage() {
-  const { workspace, userId, beginFocus, endFocus, cancelFocus } = useNexus();
+  const {
+    workspace,
+    userId,
+    beginFocus,
+    endFocus,
+    cancelFocus,
+    loading,
+    error: workspaceError,
+    refresh,
+  } = useNexus();
   const initial = useMemo(initialParams, []);
   const storageKey = `nexos:focus:${userId ?? "demo"}`;
   const restored = useMemo(() => {
@@ -214,29 +226,37 @@ export function FocusPage() {
       setClock({ elapsedMs: 0, resumedAt: null, plannedMs: minutes * 60_000 });
   }
 
+  if (loading && !active) return <PageLoading />;
   return (
     <div className="page-stack focus-page">
-      <section className="page-hero page-hero--indigo">
+      <section className="orbital-heading">
         <div>
           <span className="eyebrow">Um bloco por vez</span>
-          <h1>Foco</h1>
+          <h1>
+            Foco
+            <StellarSpark />
+          </h1>
           <p>
             {linkedMission
-              ? `Este bloco está ligado a “${linkedMission.title}”. Quando terminar, você volta para o Agora e o Nexus recalcula o que vem depois.`
+              ? `Este bloco está ligado a “${linkedMission.title}”. Quando terminar, você volta para o Agora e o NexOS recalcula o que vem depois.`
               : "Escolha quanto tempo quer dedicar e comece. Quando terminar, volte para o Agora."}
           </p>
         </div>
-        <div className="page-hero__badge">
+        <div className="orbital-heading__status">
           <Focus size={17} /> <span>{todayMinutes} min hoje</span>
         </div>
       </section>
+      {workspaceError && (
+        <WorkspaceFeedback error={workspaceError} retry={refresh} />
+      )}
       <section className="focus-layout">
         <SurfaceCard tone="indigo" className="focus-console">
           <div className="focus-modes">
             {[25, 45, 60, 90].map((value) => (
               <button
                 key={value}
-                disabled={active}
+                disabled={active || busy || Boolean(workspaceError)}
+                aria-pressed={minutes === value}
                 className={minutes === value ? "active" : ""}
                 onClick={() => setMinutes(value)}
               >
@@ -258,19 +278,30 @@ export function FocusPage() {
             </div>
           </div>
           <select
+            aria-label="Missão vinculada"
             className="focus-mission-select"
             value={missionId}
             onChange={(e) => setMissionId(e.target.value)}
-            disabled={active}
+            disabled={active || busy || Boolean(workspaceError)}
           >
             <option value="">Sessão sem missão vinculada</option>
-            {workspace.missions.slice(0, 20).map((mission) => (
-              <option key={mission.id} value={mission.id}>
-                {mission.title}
-              </option>
-            ))}
+            {workspace.missions
+              .filter(
+                (m) =>
+                  !["Inbox", "Feita", "Cancelada"].includes(m.status) ||
+                  m.id === missionId,
+              )
+              .map((mission) => (
+                <option key={mission.id} value={mission.id}>
+                  {mission.title}
+                </option>
+              ))}
           </select>
-          {error && <p role="alert">{error}</p>}
+          {error && (
+            <p className="orbital-action-error" role="alert">
+              {error}
+            </p>
+          )}
           <div className="focus-controls">
             <button
               className="icon-button focus-control"
@@ -282,7 +313,7 @@ export function FocusPage() {
             </button>
             <button
               className="primary-button focus-main"
-              disabled={busy}
+              disabled={busy || (!active && Boolean(workspaceError))}
               onClick={running ? pause : start}
             >
               {running ? (
@@ -316,7 +347,7 @@ export function FocusPage() {
             <div className="recovery-card">
               <Coffee size={20} />
               <p>
-                Ao terminar, o Nexus volta ao Agora. Se houver outro compromisso
+                Ao terminar, o NexOS volta ao Agora. Se houver outro compromisso
                 perto, ele vai sugerir transição ou pausa em vez de empilhar
                 outro bloco.
               </p>

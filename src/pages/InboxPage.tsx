@@ -1,3 +1,4 @@
+import { StellarSpark } from "../components/CosmicEnvironment";
 import { ArrowRight, Inbox, Layers3, Sparkles, Trash2, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { SurfaceCard } from "../components/SurfaceCard";
@@ -79,7 +80,10 @@ export function InboxPage() {
       <header className="orbital-heading">
         <div>
           <span className="eyebrow">Anote primeiro · decida depois</span>
-          <h1>Caixa de entrada</h1>
+          <h1>
+            Caixa de entrada
+            <StellarSpark />
+          </h1>
           <p>
             Um lugar para capturar ideias e dar destino ao que merece sua
             atenção.

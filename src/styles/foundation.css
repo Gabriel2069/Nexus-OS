@@ -124,8 +124,10 @@
     color-mix(in srgb, var(--panel) 90%, transparent) 55%,
     color-mix(in srgb, var(--panel) 80%, transparent)
   );
-  --nx-visor-star: color-mix(in srgb, var(--muted) 28%, transparent);
-  --nx-visor-rim: color-mix(in srgb, var(--cyan) 34%, transparent);
+  --nx-photon: #f0faff;
+  --nx-photon-glow: #e6f5ff30;
+  --nx-visor-star: color-mix(in srgb, var(--nx-photon) 45%, transparent);
+  --nx-visor-rim: color-mix(in srgb, var(--nx-photon) 58%, transparent);
   --nx-glass-bg-strong: color-mix(in srgb, var(--panel) 97%, transparent);
   --nx-glass-border: color-mix(in srgb, var(--text) 18%, transparent);
   --nx-glass-highlight: rgb(255 255 255 / 22%);
@@ -329,6 +331,8 @@ body {
   }
 }
 html[data-theme="light"] {
+  --nx-photon: #314b73;
+  --nx-photon-glow: #688dbc30;
   --bg: #eef3fb;
   --panel: #ffffff;
   --panel2: #e7edf7;

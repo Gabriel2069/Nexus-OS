@@ -50,3 +50,9 @@ Agora organiza próximo passo → trajetória → continuidade; Hoje organiza co
 ## V03/V04/V07 — visor e espaço de trabalho
 
 A preferência por cards translúcidos substitui a restrição anterior de conteúdo opaco. O material comum pertence a components, seus tokens a foundation; as telas não mantêm implementações concorrentes de textura. A sidebar desktop fica presa à janela, com coluna reservada e rolagem interna de destinos. Calendário (parte de V03), Estudos (parte de V04) e Caixa de entrada (V07) seguem o ritmo de Agora/Hoje. Foco e os demais domínios de V04 continuam pendentes. Evidências e limites em [V03_REVIEW.md](docs/design/V03_REVIEW.md).
+
+## V04: luz estelar e execução
+
+Pedido do usuário em 12/10/2026: dar mais personalidade cósmica às telas já incorporadas, com luz branca em controles e itens, e seguir para Missões, Rotinas, Foco e Projetos. Nebulosas e constelações ganham presença na camada de ambiente; os cards recebem um mapa estelar estático com luminosidade contida. Photon branco no escuro e azul frio no claro preserva identificação dos controles. Reflexos aparecem em bordas, controles principais e seleção, com hierarquia de texto preservada.
+
+O desenho aprovado do cronômetro de Foco é uma restrição: manter mostrador, anéis, números, proporções e animações; refinar apenas entorno, controles e estados. [V04_REVIEW.md](docs/design/V04_REVIEW.md) registra implementação, verificação e limites. A personalidade espacial tem um proprietário compartilhado, sem novos arquivos de acabamento por tela.

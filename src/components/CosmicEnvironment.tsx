@@ -46,6 +46,24 @@ export function CosmicEnvironment() {
         data-ambient
       />
       <div className="nexos-environment__galaxy" />
+      <svg className="nexos-star-chart" viewBox="0 0 1440 900" fill="none">
+        <path d="M872 78 939 148 1052 117 1154 223 1290 181M37 636 94 701 198 670 263 764" />
+        <g>
+          <circle cx="872" cy="78" r="2" />
+          <circle cx="1052" cy="117" r="2" />
+          <circle cx="1290" cy="181" r="2" />
+          <circle cx="37" cy="636" r="2" />
+          <circle cx="198" cy="670" r="2" />
+        </g>
+        <path
+          className="nexos-star-chart__beacon"
+          d="m939 135 3 10 10 3-10 3-3 10-3-10-10-3 10-3Z"
+        />
+        <path
+          className="nexos-star-chart__beacon"
+          d="m94 692 2 7 7 2-7 2-2 7-2-7-7-2 7-2Z"
+        />
+      </svg>
     </div>
   );
 }
@@ -76,4 +94,30 @@ export function OrbitalSignal() {
       <span className="orbital-signal__latitude" />
     </div>
   );
+}
+
+/** One shared, static star chart; details stay outside the reading column. */
+export function CosmicTexture() {
+  return (
+    <span className="visor-texture" aria-hidden="true">
+      <svg className="visor-constellation" viewBox="0 0 180 110" fill="none">
+        <path d="M18 87 52 58 89 76 124 29 161 46" />
+        <path
+          className="visor-constellation__arc"
+          d="M16 105C72 4 144-8 177 60M38 110C102 15 155 14 180 81"
+        />
+        <circle cx="18" cy="87" r="1.4" />
+        <circle cx="89" cy="76" r="1.5" />
+        <circle cx="124" cy="29" r="2" />
+        <circle cx="161" cy="46" r="1.3" />
+        <path
+          className="visor-constellation__star"
+          d="m52 48 2.5 7.5L62 58l-7.5 2.5L52 68l-2.5-7.5L42 58l7.5-2.5Z"
+        />
+      </svg>
+    </span>
+  );
+}
+export function StellarSpark() {
+  return <span className="stellar-spark" aria-hidden="true" />;
 }

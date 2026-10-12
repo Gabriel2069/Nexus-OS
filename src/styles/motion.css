@@ -557,97 +557,6 @@
     transform: none;
   }
 }
-@keyframes nx-project-orbit {
-  to {
-    transform: rotate(344deg);
-  }
-}
-@keyframes nx-project-pulse {
-  0%,
-  100% {
-    transform: scale(0.92);
-    opacity: 0.45;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
-}
-@keyframes nx-project-progress-sheen {
-  0%,
-  38% {
-    transform: translateX(-100%);
-  }
-  68%,
-  100% {
-    transform: translateX(100%);
-  }
-}
-@keyframes nx-project-inspector-in {
-  from {
-    opacity: 0;
-    transform: translateX(14px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nx-project-empty-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-@keyframes nx-project-inspector-stack {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nx-routine-orbit {
-  to {
-    transform: rotate(342deg);
-  }
-}
-@keyframes nx-routine-breathe {
-  0%,
-  100% {
-    transform: scale(0.92);
-    opacity: 0.45;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
-}
-@keyframes nx-routine-progress {
-  0%,
-  38% {
-    transform: translateX(-100%);
-  }
-  68%,
-  100% {
-    transform: translateX(100%);
-  }
-}
-@keyframes nx-routine-inspector-in {
-  from {
-    opacity: 0;
-    transform: translateX(12px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 @keyframes nx-routine-empty {
   0%,
   100% {
@@ -655,16 +564,6 @@
   }
   50% {
     transform: translateY(-5px);
-  }
-}
-@keyframes nx-routine-inspector-stack {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 @keyframes nx-study-orbit {

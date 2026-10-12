@@ -1,3 +1,4 @@
+import { StellarSpark } from "../components/CosmicEnvironment";
 import {
   BatteryMedium,
   Check,
@@ -78,7 +79,9 @@ export function TodayPage() {
   );
   const readiness = getReadiness(currentCheckin);
   const completed = new Set(
-    workspace.routineCompletions.map((c) => c.routine_item_id),
+    workspace.routineCompletions
+      .filter((item) => item.completion_date === dateKey())
+      .map((c) => c.routine_item_id),
   );
   const morning = workspace.routines.find((r) => r.period === "morning");
   const evening = workspace.routines.find((r) => r.period === "evening");
@@ -126,7 +129,10 @@ export function TodayPage() {
               timeZone: "America/Sao_Paulo",
             }).format(now)}
           </span>
-          <h1>Hoje</h1>
+          <h1>
+            Hoje
+            <StellarSpark />
+          </h1>
           <p>
             Compromissos, energia e espaço livre. Um dia que respeita seu ritmo.
           </p>

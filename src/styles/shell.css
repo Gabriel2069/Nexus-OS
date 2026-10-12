@@ -158,6 +158,8 @@
 }
 .nav-item--active .nav-item__active-light {
   opacity: 1;
+  background: var(--nx-photon);
+  box-shadow: 0 0 12px var(--nx-photon-glow);
 }
 .sidebar__collapse {
   margin-top: auto;
@@ -540,4 +542,9 @@ html.nexus-standalone .topbar {
       inset 0 1px var(--nx-glass-highlight),
       0 4px 10px var(--nx-glass-shadow);
   }
+}
+
+.sidebar .visor-constellation {
+  bottom: 72px;
+  opacity: 0.45;
 }

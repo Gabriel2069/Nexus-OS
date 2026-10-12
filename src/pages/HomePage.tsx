@@ -1,3 +1,5 @@
+import { StellarSpark } from "../components/CosmicEnvironment";
+import { CosmicTexture } from "../components/CosmicEnvironment";
 import {
   ArrowRight,
   CalendarClock,
@@ -69,7 +71,9 @@ export function HomePage() {
     (routine) => routine.routine_items ?? [],
   );
   const completedIds = new Set(
-    workspace.routineCompletions.map((item) => item.routine_item_id),
+    workspace.routineCompletions
+      .filter((item) => item.completion_date === dateKey())
+      .map((item) => item.routine_item_id),
   );
   const eveningDone = routineItems
     .filter((item) => /fechar|vitória|amanhã/i.test(item.title))
@@ -95,7 +99,10 @@ export function HomePage() {
       <header className="now-heading">
         <div>
           <span className="eyebrow">Seu observatório pessoal</span>
-          <h1>Agora</h1>
+          <h1>
+            Agora
+            <StellarSpark />
+          </h1>
         </div>
         <div className="now-heading__time">
           <time dateTime={now.toISOString()}>{timeLabel(now)}</time>
@@ -106,7 +113,7 @@ export function HomePage() {
         className={`now-stage now-stage--${context.suggestion.kind}`}
         aria-labelledby="now-next-title"
       >
-        <span className="visor-texture" aria-hidden="true" />
+        <CosmicTexture />
         <div className="now-stage__main">
           <div className="now-stage__copy">
             <span className="eyebrow">
