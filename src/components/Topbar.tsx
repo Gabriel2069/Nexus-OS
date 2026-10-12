@@ -1,16 +1,8 @@
-import {
-  Bell,
-  Command,
-  Download,
-  Flame,
-  Moon,
-  Plus,
-  Search,
-  Sun,
-} from "lucide-react";
+import { Bell, Command, Download, Flame, Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNexus } from "../context/NexusContext";
 import { navigation } from "../data/navigation";
+import { AppearanceControls } from "./AppearanceControls";
 import { emitUI } from "../lib/ui-events";
 
 type InstallPromptEvent = Event & {
@@ -20,12 +12,7 @@ type InstallPromptEvent = Event & {
 type TopbarProps = { pathname: string };
 
 export function Topbar({ pathname }: TopbarProps) {
-  const { workspace } = useNexus();
-  const [dark, setDark] = useState(
-    () =>
-      (localStorage.getItem("nexus-theme") ||
-        document.documentElement.dataset.theme) !== "light",
-  );
+  const { workspace, notifications } = useNexus();
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(
     null,
   );
@@ -36,10 +23,6 @@ export function Topbar({ pathname }: TopbarProps) {
     }
     return { group: "NexOS", label: "Sistema" };
   }, [pathname]);
-  useEffect(() => {
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
-    localStorage.setItem("nexus-theme", dark ? "dark" : "light");
-  }, [dark]);
   useEffect(() => {
     const handler = (event: Event) => {
       event.preventDefault();
@@ -118,22 +101,15 @@ export function Topbar({ pathname }: TopbarProps) {
             <Download size={17} />
           </button>
         )}
-        <button
-          className="icon-button theme-button"
-          onClick={() => setDark((value) => !value)}
-          aria-label="Alternar tema"
-          data-motion="icon-action"
-        >
-          {dark ? <Sun size={17} /> : <Moon size={17} />}
-        </button>
+        <AppearanceControls />
         <button
           className="icon-button notification-button"
           onClick={() => emitUI("notifications")}
-          aria-label="Notificações"
+          aria-label={`Notificações${notifications.length ? `: ${notifications.length} lembretes` : ""}`}
           data-motion="icon-action"
         >
           <Bell size={17} />
-          <span />
+          {notifications.length > 0 && <span aria-hidden="true" />}
         </button>
         <button
           className="avatar avatar--button"

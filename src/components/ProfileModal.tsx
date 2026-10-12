@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNexus } from "../context/NexusContext";
 
 export function ProfileModal() {
-  const { workspace, editProfile } = useNexus();
+  const { workspace, editProfile, loading, error: loadError } = useNexus();
   const profile = workspace.profile;
   const { open, setOpen } = useOverlay("profile");
   const [saving, setSaving] = useState(false);
@@ -47,7 +47,37 @@ export function ProfileModal() {
     [displayName],
   );
 
-  if (!open || !profile) return null;
+  if (!open) return null;
+  if (!profile)
+    return (
+      <ModalSurface
+        className="overlay profile-overlay"
+        label="Perfil"
+        onClose={() => setOpen(false)}
+      >
+        <section className="profile-modal" aria-busy={loading}>
+          <header className="profile-modal__header">
+            <div>
+              <span className="eyebrow">Seu espaço</span>
+              <h2>{loading ? "Carregando perfil…" : "Perfil indisponível"}</h2>
+            </div>
+            <button
+              className="icon-button"
+              onClick={() => setOpen(false)}
+              aria-label="Fechar"
+            >
+              <X size={17} />
+            </button>
+          </header>
+          <p role={loadError ? "alert" : "status"}>
+            {loadError ??
+              (loading
+                ? "Aguarde a leitura dos seus dados."
+                : "Seu perfil ainda não está disponível. Tente novamente quando seu espaço estiver sincronizado.")}
+          </p>
+        </section>
+      </ModalSurface>
+    );
 
   async function submit() {
     if (!displayName.trim() || saving) return;

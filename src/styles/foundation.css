@@ -1,4 +1,148 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oxanium:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+:root {
+  font-family:
+    Inter,
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "Segoe UI",
+    sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  --bg: #050816;
+  --panel: #101a2b;
+  --panel2: #162338;
+  --line: #314159;
+  --text: #eef3ff;
+  --muted: #a8b5d1;
+  --blue: #91b9ff;
+  --primary: var(--cyan);
+  --cyan: #75e1ff;
+  --green: #7de1b1;
+  --violet: #ad9fff;
+  --rose: #ff9eb7;
+  --amber: #f3c982;
+  --shadow: 0 18px 60px #0007;
+  --radius: 20px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --motion-fast: 100ms;
+  --motion-ui: 160ms;
+  --motion-surface: 220ms;
+  --material: color-mix(in srgb, var(--panel) 92%, transparent);
+  --material-strong: color-mix(in srgb, var(--panel) 98%, transparent);
+  --hairline: color-mix(in srgb, var(--text) 16%, transparent);
+  --focus-ring: 0 0 0 3px var(--cyan);
+  --content-max: 1440px;
+  --page-x: clamp(22px, 2.6vw, 42px);
+  --page-y: clamp(26px, 3vw, 44px);
+  --section-gap: clamp(16px, 1.5vw, 23px);
+  --card-pad: clamp(18px, 1.55vw, 24px);
+  --radius-card: 20px;
+  --radius-hero: 28px;
+  --control-h: 44px;
+  --control-line: color-mix(in srgb, var(--muted) 70%, var(--panel));
+  --copy-leading: 1.58;
+  --nexus-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nexus-fast: 140ms;
+  --nexus-ui: 180ms;
+  --nexus-panel: 250ms;
+  --nexus-layout: 320ms;
+  --nexus-press: scale(0.982);
+  --n4-orbit: 16s;
+  --nexus-motion-fast: 140ms;
+  --nexus-motion-ui: 180ms;
+  --nexus-motion-panel: 240ms;
+  --nexus-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --nexus-ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --nexus-ease-press: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --nexus-glass-border: color-mix(in srgb, var(--line) 62%, transparent);
+  --nexus-glass-sheen: rgb(255 255 255 / 6%);
+  --nexus-motion-instant: 90ms;
+  --nexus-motion-micro: 140ms;
+  --nexus-motion-control: 180ms;
+  --nexus-motion-surface: 240ms;
+  --nexus-motion-layout: 320ms;
+  --nexus-motion-emphasis: 420ms;
+  --nexus-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nexus-motion-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --nexus-motion-spring: cubic-bezier(0.2, 0.85, 0.25, 1.15);
+  --nexus-motion-spring-soft: cubic-bezier(0.18, 0.9, 0.24, 1.04);
+  --nexus-motion-glass: cubic-bezier(0.12, 0.72, 0.2, 1);
+  --nexos-void: var(--bg);
+  --nexos-deep: var(--bg);
+  --nexos-night: var(--panel);
+  --nexos-nebula: var(--panel2);
+  --nexos-glass: var(--nx-glass-bg);
+  --nexos-glass-strong: var(--nx-glass-bg-strong);
+  --nexos-line: var(--hairline);
+  --nexos-line-strong: var(--line);
+  --nexos-text: var(--text);
+  --nexos-muted: var(--muted);
+  --nexos-blue: var(--blue);
+  --nexos-cyan: var(--cyan);
+  --nexos-violet: var(--violet);
+  --nexos-pink: #ed91ff;
+  --nexos-star: #edf2ff;
+  --nexos-gold: #d9c28a;
+  --nexos-shadow: var(--shadow);
+  --nexos-display: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
+  --nexos-body:
+    Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --nx-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --nx-page-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nx-page-spring: cubic-bezier(0.16, 1.1, 0.3, 1);
+  --nx-cubic: cubic-bezier(0.22, 1, 0.36, 1);
+  --nx-display: Oxanium, "Space Grotesk", sans-serif;
+  --nx-heading: "Space Grotesk", Oxanium, sans-serif;
+  --nx-body: Inter, system-ui, sans-serif;
+  --nx-content: 68rem;
+  --nx-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nx-space-line: rgba(137, 188, 255, 0.055);
+  --nx-touch: 44px;
+  --nx-safe-top: max(0px, env(safe-area-inset-top));
+  --nx-safe-right: max(0px, env(safe-area-inset-right));
+  --nx-safe-bottom: max(0px, env(safe-area-inset-bottom));
+  --nx-safe-left: max(0px, env(safe-area-inset-left));
+  --nx-content-max: 1480px;
+  --nx-gutter: clamp(14px, 2.2vw, 34px);
+  --nx-control: 44px;
+  --nx-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --nx-motion-fast: 100ms;
+  --nx-motion-ui: 180ms;
+  --nx-motion-panel: 260ms;
+  --nx-motion-route: 360ms;
+  --nx-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --nx-ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
+  --nx-glass-bg: color-mix(in srgb, var(--panel) 88%, transparent);
+  --nx-glass-bg-strong: color-mix(in srgb, var(--panel) 97%, transparent);
+  --nx-glass-border: color-mix(in srgb, var(--text) 18%, transparent);
+  --nx-glass-highlight: rgb(255 255 255 / 22%);
+  --nx-glass-shadow: rgb(0 0 0 / 38%);
+  --nx-glass-blur: 20px;
+  --nx-glass-sat: 1.16;
+  --nx-cosmic-cyan: var(--cyan);
+  --nx-cosmic-violet: var(--violet);
+  --nx-cosmic-blue: var(--blue);
+  --nx-cosmic-star: rgb(225 244 255 / 72%);
+  --nx-interaction-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --nx-interaction-fast: 140ms;
+  --nx-interaction-normal: 210ms;
+  --nx-dust-cyan: 105 227 255;
+  --nx-dust-violet: 167 139 250;
+  --nx-dust-blue: 114 153 255;
+  --nx-dust-warm: 244 200 107;
+  --on-primary: #071624;
+  --nexos-night-0: var(--bg);
+  --nexos-night-1: var(--panel);
+  --nexos-night-2: var(--panel2);
+  --nexos-ink: var(--text);
+  --nexos-green: var(--green);
+  --nexos-amber: var(--amber);
+}
 @media (max-width: 240px), (max-height: 260px) and (max-width: 400px) {
   *,
   *::before,
@@ -10,62 +154,12 @@
   box-sizing: border-box;
 }
 /* foundation: canonical owner. See DESIGN.md and docs/STYLE_SYSTEM.md. */
-
-:root {
-  font-family:
-    Inter,
-    ui-sans-serif,
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF Pro Display",
-    "Segoe UI",
-    sans-serif;
-  color: #f5f7fb;
-  background: #080a0f;
-  --bg: #080a0f;
-  --panel: #10131a;
-  --panel2: #151923;
-  --line: #232938;
-  --text: #f5f7fb;
-  --muted: #8f98aa;
-  --blue: #72a5ff;
-  --primary: var(--blue);
-  --cyan: #55d6e8;
-  --green: #67d6a2;
-  --violet: #9d7cff;
-  --rose: #ff7698;
-  --amber: #f7bb67;
-  --shadow: 0 18px 60px #0007;
-  --radius: 22px;
-}
 html {
   background: var(--bg);
   color-scheme: dark;
 }
-html[data-theme="light"] {
-  --bg: #f5f6f8;
-  --panel: #fff;
-  --panel2: #f0f2f6;
-  --line: #dfe3eb;
-  --text: #111521;
-  --muted: #697386;
-  --shadow: 0 18px 50px #3f47521f;
-  color-scheme: light;
-}
 body {
   margin: 0;
-}
-:root {
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
-  --motion-fast: 100ms;
-  --motion-ui: 160ms;
-  --motion-surface: 220ms;
-  --material: color-mix(in srgb, var(--panel) 82%, transparent);
-  --material-strong: color-mix(in srgb, var(--panel) 93%, transparent);
-  --hairline: color-mix(in srgb, var(--line) 78%, transparent);
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--blue) 24%, transparent);
 }
 html {
   scroll-behavior: smooth;
@@ -80,29 +174,14 @@ body {
   :root {
     --radius: 18px;
   }
-  html[data-theme="light"] .mobile-dock {
-    background: color-mix(in srgb, #ffffff 85%, transparent);
-  }
   html,
   body,
   #root {
     width: 100%;
   }
   body {
-    background:
-      radial-gradient(circle at 50% -5%, #24375b22, transparent 30%), var(--bg);
+    background: var(--bg);
   }
-}
-:root {
-  --content-max: 1440px;
-  --page-x: clamp(22px, 2.6vw, 42px);
-  --page-y: clamp(26px, 3vw, 44px);
-  --section-gap: clamp(16px, 1.5vw, 23px);
-  --card-pad: clamp(18px, 1.55vw, 24px);
-  --radius-card: 21px;
-  --radius-hero: 27px;
-  --control-h: 40px;
-  --copy-leading: 1.58;
 }
 html {
   scroll-padding-top: 88px;
@@ -131,6 +210,7 @@ body {
     --radius-card: 17px;
     --radius-hero: 19px;
     --control-h: 44px;
+    --control-line: color-mix(in srgb, var(--muted) 70%, var(--panel));
   }
   html {
     scroll-padding-top: 68px;
@@ -141,24 +221,6 @@ body {
     --page-x: 8px;
   }
 }
-html[data-theme="light"] .surface-card,
-html[data-theme="light"] .page-hero,
-html[data-theme="light"] .home-hero,
-html[data-theme="light"] .rpg-hero,
-html[data-theme="light"] .today-header {
-  box-shadow:
-    0 1px 0 #ffffff,
-    0 15px 42px #26344a10;
-}
-html[data-theme="light"] .calendar-grid {
-  background: #fff;
-}
-html[data-theme="light"] .calendar-day {
-  background: #fff;
-}
-html[data-theme="light"] .mobile-dock {
-  box-shadow: 0 12px 34px #26344a1a;
-}
 @media (max-width: 760px) {
   html,
   body,
@@ -167,128 +229,24 @@ html[data-theme="light"] .mobile-dock {
     overflow-x: hidden;
   }
 }
-:root {
-  --nexus-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --nexus-fast: 140ms;
-  --nexus-ui: 180ms;
-  --nexus-panel: 250ms;
-  --nexus-layout: 320ms;
-  --nexus-press: scale(0.982);
-  --n4-orbit: 16s;
-}
 body {
   letter-spacing: -0.008em;
-}
-:root {
-  --nexus-motion-fast: 140ms;
-  --nexus-motion-ui: 180ms;
-  --nexus-motion-panel: 240ms;
-  --nexus-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --nexus-ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
-  --nexus-ease-press: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --nexus-glass-border: color-mix(in srgb, var(--line) 62%, transparent);
-  --nexus-glass-sheen: rgb(255 255 255 / 6%);
-}
-:root {
-  --nexus-motion-instant: 90ms;
-  --nexus-motion-micro: 140ms;
-  --nexus-motion-control: 180ms;
-  --nexus-motion-surface: 240ms;
-  --nexus-motion-layout: 320ms;
-  --nexus-motion-emphasis: 420ms;
-  --nexus-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --nexus-motion-soft: cubic-bezier(0.16, 1, 0.3, 1);
-  --nexus-motion-spring: cubic-bezier(0.2, 0.85, 0.25, 1.15);
-  --nexus-motion-spring-soft: cubic-bezier(0.18, 0.9, 0.24, 1.04);
-  --nexus-motion-glass: cubic-bezier(0.12, 0.72, 0.2, 1);
-}
-:root {
-  --nexos-void: #03040b;
-  --nexos-deep: #070918;
-  --nexos-night: #0b0f25;
-  --nexos-nebula: #12183a;
-  --nexos-glass: rgba(13, 18, 43, 0.58);
-  --nexos-glass-strong: rgba(15, 21, 50, 0.78);
-  --nexos-line: rgba(163, 184, 255, 0.15);
-  --nexos-line-strong: rgba(185, 203, 255, 0.3);
-  --nexos-text: #f5f7ff;
-  --nexos-muted: #8f9abc;
-  --nexos-blue: #83aaff;
-  --nexos-cyan: #67e7ff;
-  --nexos-violet: #ae91ff;
-  --nexos-pink: #ed91ff;
-  --nexos-star: #edf2ff;
-  --nexos-gold: #d9c28a;
-  --nexos-shadow: 0 26px 90px rgba(0, 0, 0, 0.46);
-  --nexos-display: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
-  --nexos-body:
-    Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
 }
 html,
 body,
 #root {
-  background: var(--nexos-void);
-  color: var(--nexos-text);
+  background: var(--bg);
+  color: var(--text);
 }
 body {
   font-family: var(--nexos-body);
-  background:
-    radial-gradient(
-      ellipse 75% 45% at 76% -8%,
-      rgba(91, 91, 219, 0.24),
-      transparent 64%
-    ),
-    radial-gradient(
-      ellipse 50% 42% at 2% 24%,
-      rgba(41, 109, 210, 0.13),
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 42% 34% at 88% 82%,
-      rgba(164, 83, 221, 0.09),
-      transparent 72%
-    ),
-    linear-gradient(180deg, #03040b 0%, #07091a 48%, #04050c 100%);
+  background: var(--bg);
   background-attachment: fixed;
-}
-:root {
-  --nx-soft: cubic-bezier(0.4, 0, 0.2, 1);
-}
-:root {
-  --nx-page-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --nx-page-spring: cubic-bezier(0.16, 1.1, 0.3, 1);
-}
-:root {
-  --nx-cubic: cubic-bezier(0.22, 1, 0.36, 1);
-}
-:root {
-  --nx-display: Oxanium, "Space Grotesk", sans-serif;
-  --nx-heading: "Space Grotesk", Oxanium, sans-serif;
-  --nx-body: Inter, system-ui, sans-serif;
-  --nx-content: 68rem;
 }
 html,
 body,
 #root {
   font-family: var(--nx-body);
-}
-:root {
-  --nx-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --nx-space-line: rgba(137, 188, 255, 0.055);
-}
-:root {
-  --nx-touch: 44px;
-}
-:root {
-  --nx-safe-top: max(0px, env(safe-area-inset-top));
-  --nx-safe-right: max(0px, env(safe-area-inset-right));
-  --nx-safe-bottom: max(0px, env(safe-area-inset-bottom));
-  --nx-safe-left: max(0px, env(safe-area-inset-left));
-  --nx-content-max: 1480px;
-  --nx-gutter: clamp(14px, 2.2vw, 34px);
-  --nx-control: 44px;
-  --nx-spring: cubic-bezier(0.22, 1, 0.36, 1);
 }
 html {
   min-height: 100%;
@@ -297,29 +255,6 @@ html {
 body {
   min-width: 320px;
   overflow-x: hidden;
-}
-:root {
-  --nx-motion-fast: 150ms;
-  --nx-motion-ui: 210ms;
-  --nx-motion-panel: 330ms;
-  --nx-motion-route: 420ms;
-  --nx-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --nx-ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
-}
-:root {
-  --nx-glass-bg: rgb(10 18 34 / 58%);
-  --nx-glass-bg-strong: rgb(9 16 31 / 78%);
-  --nx-glass-border: rgb(185 220 255 / 12%);
-  --nx-glass-highlight: rgb(255 255 255 / 8%);
-  --nx-glass-shadow: rgb(0 0 0 / 42%);
-  --nx-glass-blur: 22px;
-  --nx-glass-sat: 1.32;
-}
-:root {
-  --nx-cosmic-cyan: #69e3ff;
-  --nx-cosmic-violet: #a78bfa;
-  --nx-cosmic-blue: #7299ff;
-  --nx-cosmic-star: rgb(225 244 255 / 72%);
 }
 html {
   --nexos-brand-name: "NexOS";
@@ -334,18 +269,7 @@ html {
   --nexos-green: #67d6a2;
 }
 body {
-  color: var(--nexos-ink);
-}
-:root {
-  --nx-interaction-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --nx-interaction-fast: 140ms;
-  --nx-interaction-normal: 210ms;
-}
-:root {
-  --nx-dust-cyan: 105 227 255;
-  --nx-dust-violet: 167 139 250;
-  --nx-dust-blue: 114 153 255;
-  --nx-dust-warm: 244 200 107;
+  color: var(--text);
 }
 @media (max-width: 240px), (max-height: 260px) and (max-width: 400px) {
   :root {
@@ -358,7 +282,7 @@ body {
     width: 100%;
     height: 100%;
     min-width: 0;
-    background: #050711;
+    background: var(--bg);
   }
   body {
     width: 100%;
@@ -367,8 +291,8 @@ body {
     min-height: 100%;
     margin: 0;
     overflow-x: hidden;
-    background: #050711;
-    color: #e9efff;
+    background: var(--bg);
+    color: var(--text);
     font-size: 12px;
   }
   #root {
@@ -381,37 +305,6 @@ body {
 }
 
 /* Theme values are semantic; material owners consume these tokens. */
-html[data-theme="light"] {
-  --nexos-void: #eef3fb;
-  --nexos-deep: #f6f8ff;
-  --nexos-night: #e9eef8;
-  --nexos-nebula: #e4eafa;
-  --nexos-glass: rgb(248 251 255 / 82%);
-  --nexos-glass-strong: rgb(248 251 255 / 94%);
-  --nexos-night-0: #eef3fb;
-  --nexos-night-1: #f6f8ff;
-  --nexos-night-2: #e9eef8;
-  --nexos-ink: #19243b;
-  --nexos-text: #19243b;
-  --nexos-muted: #52617c;
-  --nexos-line: rgb(54 79 120 / 18%);
-  --blue: #315fc7;
-  --cyan: #086b83;
-  --green: #18704b;
-  --violet: #7046c4;
-  --rose: #b62a56;
-  --amber: #895715;
-  --nexos-cyan: var(--cyan);
-  --nexos-violet: var(--violet);
-  --nexos-amber: var(--amber);
-  --nexos-green: var(--green);
-  --nexos-line-strong: rgb(54 79 120 / 32%);
-  --nx-glass-bg: rgb(248 251 255 / 82%);
-  --nx-glass-bg-strong: rgb(248 251 255 / 94%);
-  --nx-glass-border: rgb(54 79 120 / 20%);
-  --nx-glass-highlight: rgb(255 255 255 / 78%);
-  --nx-glass-shadow: rgb(40 57 90 / 14%);
-}
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 3px;
@@ -425,4 +318,93 @@ html[data-theme="light"] {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+html[data-theme="light"] {
+  --bg: #eef3fb;
+  --panel: #ffffff;
+  --panel2: #e7edf7;
+  --text: #17243c;
+  --muted: #51627b;
+  --line: #aab7c9;
+  --blue: #315fc7;
+  --cyan: #126a8a;
+  --violet: #664bc1;
+  --amber: #8a5c0b;
+  --green: #18704b;
+  --rose: #b62a56;
+  --on-primary: #ffffff;
+  --shadow: 0 18px 60px #2337551f;
+  --nx-glass-highlight: rgb(255 255 255 / 90%);
+  --nx-glass-shadow: rgb(35 55 85 / 12%);
+  color-scheme: light;
+}
+html[data-atmosphere="paused"] [data-ambient],
+html[data-atmosphere="paused"] [data-ambient]::before,
+html[data-atmosphere="paused"] [data-ambient]::after,
+[data-visible="false"] [data-ambient] {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ambient],
+  [data-ambient]::before,
+  [data-ambient]::after {
+    animation: none;
+  }
+}
+html[data-atmosphere="paused"] .page-hero:before,
+html[data-atmosphere="paused"] .hero-icon:after,
+html[data-atmosphere="paused"] .hero-medallion:after,
+html[data-atmosphere="paused"] .status-dot.is-live:after,
+html[data-atmosphere="paused"] .live-dot.is-live:after,
+html[data-atmosphere="paused"] .presence-dot.is-live:after,
+html[data-atmosphere="paused"] .live-dot.is-live,
+html[data-atmosphere="paused"] .presence-dot.is-live,
+html[data-atmosphere="paused"]
+  :where(.status-dot, .live-dot, .presence-dot).is-live::after,
+html[data-atmosphere="paused"] [data-live="true"],
+html[data-atmosphere="paused"] .nexos-orbit__star,
+html[data-atmosphere="paused"] .page-stack:before,
+html[data-atmosphere="paused"] .page-stack:after,
+html[data-atmosphere="paused"] .page-stack > .page-hero:before,
+html[data-atmosphere="paused"] .page-stack > .page-hero:after,
+html[data-atmosphere="paused"] .profile-preview:after,
+html[data-atmosphere="paused"] .empty-state svg,
+html[data-atmosphere="paused"] .checkin-card:before,
+html[data-atmosphere="paused"] .single-study-target:before,
+html[data-atmosphere="paused"] .life-space-note svg,
+html[data-atmosphere="paused"] .heatmap-cell--4:after,
+html[data-atmosphere="paused"] .finance-hero:before,
+html[data-atmosphere="paused"] .finance-plan__bar span:after,
+html[data-atmosphere="paused"] .finance-reserve:before,
+html[data-atmosphere="paused"] .focus-console:after,
+html[data-atmosphere="paused"] .focus-clock__ring:before,
+html[data-atmosphere="paused"] .inbox-page > .page-hero:after,
+html[data-atmosphere="paused"] .inbox-capture-card:after,
+html[data-atmosphere="paused"] .insights-page > .page-hero:before,
+html[data-atmosphere="paused"] .insights-page > .page-hero:after,
+html[data-atmosphere="paused"] .home-hero:before,
+html[data-atmosphere="paused"] .now-stage:before,
+html[data-atmosphere="paused"] .page-stack > .home-hero:before,
+html[data-atmosphere="paused"] .page-stack > .home-hero:after,
+html[data-atmosphere="paused"] .projects-page > .page-hero:after,
+html[data-atmosphere="paused"] .project-create:after,
+html[data-atmosphere="paused"] .project-progress-line .progress-bar span:after,
+html[data-atmosphere="paused"] .project-empty svg,
+html[data-atmosphere="paused"] .review-page > .page-hero:after,
+html[data-atmosphere="paused"] .routines-page > .page-hero:after,
+html[data-atmosphere="paused"] .routine-now-signal:before,
+html[data-atmosphere="paused"] .routine-progress .big-progress span:after,
+html[data-atmosphere="paused"] .rpg-hero:before,
+html[data-atmosphere="paused"] .page-stack > .rpg-hero:before,
+html[data-atmosphere="paused"] .page-stack > .rpg-hero:after,
+html[data-atmosphere="paused"] .studies-page > .page-hero:after,
+html[data-atmosphere="paused"] .academic-event-card .event-urgency:after,
+html[data-atmosphere="paused"] .academic-event-card .event-progress span:after,
+html[data-atmosphere="paused"] .today-header:before,
+html[data-atmosphere="paused"] .page-stack > .today-header:before,
+html[data-atmosphere="paused"] .page-stack > .today-header:after,
+html[data-atmosphere="paused"] .today-page .today-header:after,
+html[data-atmosphere="paused"] .today-score:before,
+html[data-atmosphere="paused"] .today-timeline .is-current i {
+  animation-play-state: paused;
 }

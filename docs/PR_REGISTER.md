@@ -22,3 +22,7 @@ Revisão: 11 de outubro de 2026. Só três PRs estavam abertos: #14, #15 e #17. 
 | #15 motion reduzido        | Estados estáticos utilizáveis                    | Política global já presente; cada lote visual valida o resultado                             |
 
 Os diffs exclusivos foram confrontados com a base atual. “Já presente” refere-se à capacidade observada, não à equivalência de cada valor CSS. A recuperação futura reimplementa a intenção no proprietário atual e registra comparação antes/depois. Não reabrir os PRs antigos para fundi-los à nova cascata.
+
+## Direção e implementação atual
+
+A [PR #19](https://github.com/Gabriel2069/Nexus-OS/pull/19) integrou D01 na main (`965c426`). V01 parte dessa base e recupera seletivamente materiais e feedback dos PRs supersedidos, mantendo os proprietários atuais. Evidência e fronteira estão em [V01_REVIEW.md](design/V01_REVIEW.md); o link da entrega corrente fica no issue #18.

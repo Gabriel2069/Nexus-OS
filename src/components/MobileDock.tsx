@@ -4,23 +4,25 @@ import {
   CalendarDays,
   ChevronRight,
   Crosshair,
-  ListChecks,
+  Focus,
   MoreHorizontal,
   Sparkles,
+  Search,
   SunMedium,
   X,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { navigation } from "../data/navigation";
+import { emitUI } from "../lib/ui-events";
 import { navigate } from "../lib/router";
 
 type Props = { pathname: string };
 const primary = [
   { path: "/", label: "Agora", icon: Crosshair },
   { path: "/hoje", label: "Hoje", icon: SunMedium },
-  { path: "/missoes", label: "Missões", icon: ListChecks },
   { path: "/calendario", label: "Agenda", icon: CalendarDays },
+  { path: "/foco", label: "Foco", icon: Focus },
 ];
 
 export function MobileDock({ pathname }: Props) {
@@ -68,6 +70,7 @@ export function MobileDock({ pathname }: Props) {
             className={pathname === path ? "active" : ""}
             onClick={() => navigate(path)}
             data-motion="dock-item"
+            aria-current={pathname === path ? "page" : undefined}
           >
             <Icon size={19} />
             <span>{label}</span>
@@ -75,12 +78,18 @@ export function MobileDock({ pathname }: Props) {
           </button>
         ))}
         <button
-          className={more ? "active" : ""}
+          className={
+            more || !primary.some((item) => item.path === pathname)
+              ? "active"
+              : ""
+          }
           onClick={() => {
             setDragY(0);
             show();
           }}
           data-motion="dock-item"
+          aria-expanded={more}
+          aria-haspopup="dialog"
         >
           <MoreHorizontal size={20} />
           <span>Mais</span>
@@ -115,9 +124,25 @@ export function MobileDock({ pathname }: Props) {
                 <Sparkles size={17} />
                 <strong>NexOS</strong>
               </div>
-              <button onClick={closeSheet} aria-label="Fechar navegação">
-                <X size={18} />
-              </button>
+              <div className="mobile-sheet__tools">
+                <button
+                  className="icon-button"
+                  aria-label="Pesquisar áreas"
+                  onClick={() => {
+                    closeSheet();
+                    emitUI("command");
+                  }}
+                >
+                  <Search size={18} />
+                </button>
+                <button
+                  className="icon-button"
+                  onClick={closeSheet}
+                  aria-label="Fechar navegação"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
             <div className="mobile-sheet__grid">
               {navigation
