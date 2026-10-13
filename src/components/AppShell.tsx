@@ -8,29 +8,11 @@ import { ProfileModal } from "./ProfileModal";
 import { QuickCaptureModal } from "./QuickCaptureModal";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { CosmicEnvironment } from "./CosmicEnvironment";
 import { emitUI } from "../lib/ui-events";
 
 type AppShellProps = PropsWithChildren<{ pathname: string }>;
 type IOSNavigator = Navigator & { standalone?: boolean };
-
-function CosmicEnvironment() {
-  return (
-    <div className="nexos-environment" aria-hidden="true">
-      <div className="nexos-environment__stars nexos-environment__stars--near" />
-      <div className="nexos-environment__stars nexos-environment__stars--far" />
-      <div className="nexos-environment__nebula nexos-environment__nebula--violet" />
-      <div className="nexos-environment__nebula nexos-environment__nebula--blue" />
-      <div className="nexos-environment__galaxy" />
-      <div className="nexos-environment__orbit nexos-environment__orbit--one">
-        <span />
-      </div>
-      <div className="nexos-environment__orbit nexos-environment__orbit--two">
-        <span />
-      </div>
-      <div className="nexos-environment__constellation" />
-    </div>
-  );
-}
 
 export function AppShell({ pathname, children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(
@@ -68,6 +50,9 @@ export function AppShell({ pathname, children }: AppShellProps) {
 
   return (
     <div className={`app-shell ${collapsed ? "app-shell--collapsed" : ""}`}>
+      <a className="skip-link" href="#nexos-content">
+        Ir para o conteúdo
+      </a>
       <CosmicEnvironment />
       <Sidebar
         pathname={pathname}
@@ -76,7 +61,12 @@ export function AppShell({ pathname, children }: AppShellProps) {
       />
       <div className="app-shell__content">
         <Topbar pathname={pathname} />
-        <main className="page-content" key={pathname}>
+        <main
+          id="nexos-content"
+          tabIndex={-1}
+          className="page-content"
+          key={pathname}
+        >
           {children}
         </main>
       </div>

@@ -1,6 +1,6 @@
 import { ModalSurface } from "./ModalSurface";
 import { useOverlay } from "../lib/use-overlay";
-import { Bell, CheckCircle2, X } from "lucide-react";
+import { AlertCircle, Bell, CheckCircle2, LoaderCircle, X } from "lucide-react";
 import { useNexus } from "../context/NexusContext";
 
 export function NotificationCenter() {
@@ -34,8 +34,16 @@ export function NotificationCenter() {
         </header>
         <div className="notification-list" data-motion="notification-list">
           <div className="notification-item">
-            <span className="notification-icon tone-green">
-              <CheckCircle2 size={16} />
+            <span
+              className={`notification-icon ${error ? "tone-amber" : "tone-green"}`}
+            >
+              {error ? (
+                <AlertCircle size={16} />
+              ) : loading ? (
+                <LoaderCircle className="spin" size={16} />
+              ) : (
+                <CheckCircle2 size={16} />
+              )}
             </span>
             <div>
               <strong>
@@ -66,7 +74,7 @@ export function NotificationCenter() {
           ))}
         </div>
         <footer>
-          <Bell size={14} /> Lembretes push entrarão na próxima camada PWA.
+          <Bell size={14} /> Seus próximos passos, reunidos em um só lugar.
         </footer>
       </aside>
     </ModalSurface>

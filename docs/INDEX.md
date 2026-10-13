@@ -22,3 +22,5 @@ Ao alterar uma decisão, atualize o proprietário e registre motivo, impacto e c
 A execução é acompanhada no [issue #18](https://github.com/Gabriel2069/Nexus-OS/issues/18); a frente de integrações permanece no [issue #16](https://github.com/Gabriel2069/Nexus-OS/issues/16).
 
 A direção D01 está em [docs/design](design/README.md), com prancheta, tokens propostos, fontes e plano de incorporação. Não copiar seus estilos como uma camada global de produção.
+
+A [revisão V01](design/V01_REVIEW.md) registra a base compartilhada e o login implementados, com capturas e limites de verificação.

@@ -4,6 +4,6 @@
 
 Abra `visual-board.html` no navegador. O arquivo funciona offline, com CSS, JavaScript e SVG embutidos; fontes usam fallback local. Tema claro/escuro, movimento opcional, tabs por teclado e diálogos demonstram a direção. Dados e horários são ilustrativos; nenhum login, persistência ou timer de produção é executado.
 
-D01 entrega uma proposta completa para guiar V01–V06, não a interface já implantada. Valores em `tokens.json` não são importados pela aplicação. Mudanças aprovadas devem ser incorporadas aos proprietários existentes, sem copiar o CSS da prancheta para produção.
+D01 entrega uma proposta completa para guiar V01–V06, não a interface já implantada. V01 incorpora sua direção no código, conforme [revisão de implementação](V01_REVIEW.md). Valores em `tokens.json` não são importados pela aplicação. Mudanças aprovadas devem ser incorporadas aos proprietários existentes, sem copiar o CSS da prancheta para produção.
 
 O estado de execução permanece no [issue #18](https://github.com/Gabriel2069/Nexus-OS/issues/18). A autoridade visual está em [DESIGN.md](../../DESIGN.md); a autoridade técnica de cascata está em [STYLE_SYSTEM.md](../STYLE_SYSTEM.md).

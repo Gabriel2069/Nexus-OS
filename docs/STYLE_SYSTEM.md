@@ -27,7 +27,7 @@ Materiais comuns ficam antes das variantes de página. Para um ajuste exclusivo 
 
 A consolidação retirou 1.373 declarações que eram sobrescritas por regras posteriores equivalentes, mantendo barreiras conservadoras para shorthands. Listas de seletores foram distribuídas entre proprietários; isso pode aumentar o número textual de declarações sem acrescentar um comportamento. Não confundir contagem de bytes com quantidade de sistemas visuais.
 
-Há ainda regras históricas e exceções responsivas dentro dos proprietários. A reorganização não promete uma cascata inteiramente minimalista: a simplificação restante deve acompanhar o refinamento de cada tela, com comparação visual. O teto inicial de 243 declarações `!important` congela a dívida existente; a meta é reduzi-lo, não usá-lo como espaço para novas exceções.
+Há ainda regras históricas e exceções responsivas dentro dos proprietários. A reorganização não promete uma cascata inteiramente minimalista: a simplificação restante deve acompanhar o refinamento de cada tela, com comparação visual. O teto atual de 103 declarações `!important` (reduzido de 243 em V01) congela a dívida existente; a meta é reduzi-lo, não usá-lo como espaço para novas exceções.
 
 ## Verificação automática
 

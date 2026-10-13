@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Mountain,
 } from "lucide-react";
+import { PageLoading } from "./components/PageLoading";
 import { AppShell } from "./components/AppShell";
 import { NexusProvider, useNexus } from "./context/NexusContext";
 const CalendarPage = lazy(() =>
@@ -290,7 +291,7 @@ function RouteContent({ pathname }: { pathname: string }) {
         <SectionPage
           eyebrow="404"
           title="Página não encontrada"
-          description="Essa rota não existe no Nexus."
+          description="Essa rota não existe no NexOS."
           tone="slate"
           icon={BookOpen}
           highlights={[]}
@@ -305,13 +306,7 @@ export function App() {
   return (
     <NexusProvider>
       <AppShell pathname={pathname}>
-        <Suspense
-          fallback={
-            <div role="status" className="page-stack">
-              Abrindo sua área…
-            </div>
-          }
-        >
+        <Suspense fallback={<PageLoading />}>
           <RouteContent key={pathname + search} pathname={pathname} />
         </Suspense>
       </AppShell>

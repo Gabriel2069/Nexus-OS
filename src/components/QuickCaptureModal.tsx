@@ -87,7 +87,7 @@ export function QuickCaptureModal() {
         <div className="modal-title">
           <div>
             <span className="eyebrow">Captura rápida</span>
-            <h2>Coloque no sistema.</h2>
+            <h2>Guarde o próximo passo.</h2>
           </div>
           <button
             aria-label="Fechar captura"
@@ -100,12 +100,14 @@ export function QuickCaptureModal() {
         <div className="segmented-control">
           <button
             className={type === "mission" ? "active" : ""}
+            aria-pressed={type === "mission"}
             onClick={() => setType("mission")}
           >
             <ListChecks size={15} /> Missão
           </button>
           <button
             className={type === "inbox" ? "active" : ""}
+            aria-pressed={type === "inbox"}
             onClick={() => setType("inbox")}
           >
             <Inbox size={15} /> Inbox
@@ -164,6 +166,7 @@ export function QuickCaptureModal() {
                     type="button"
                     key={item}
                     className={rank === item ? "active" : ""}
+                    aria-pressed={rank === item}
                     onClick={() => setRank(item)}
                   >
                     {item}

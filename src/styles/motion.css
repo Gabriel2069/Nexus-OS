@@ -31,30 +31,6 @@
     transform: none;
   }
 }
-@keyframes drawer-in {
-  from {
-    transform: translateX(24px);
-    opacity: 0.5;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
-}
-@keyframes nexus-orbit {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(-2deg);
-    opacity: 0.38;
-  }
-  50% {
-    transform: translate3d(-12px, 10px, 0) rotate(3deg);
-    opacity: 0.62;
-  }
-  100% {
-    transform: translate3d(8px, -8px, 0) rotate(-3deg);
-    opacity: 0.45;
-  }
-}
 @keyframes nexus-icon-settle {
   0% {
     transform: scale(0.92);
@@ -376,193 +352,6 @@
     transform: none;
   }
 }
-@keyframes nexus-copy-collapse {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-    max-width: 140px;
-  }
-  to {
-    opacity: 0;
-    transform: translateX(-8px);
-    max-width: 0;
-  }
-}
-@keyframes nexus-copy-expand {
-  from {
-    opacity: 0;
-    transform: translateX(-8px);
-    max-width: 0;
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    max-width: 160px;
-  }
-}
-@keyframes nexus-group-enter {
-  from {
-    opacity: 0;
-    transform: translateX(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nexus-nav-item-enter {
-  from {
-    opacity: 0;
-    transform: translateX(-7px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nexus-command-enter {
-  from {
-    opacity: 0;
-    transform: translateY(-18px) scale(0.965) rotateX(-3deg);
-    filter: blur(7px);
-  }
-  55% {
-    opacity: 1;
-    filter: blur(0);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nexus-command-search {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nexus-command-block {
-  from {
-    opacity: 0;
-    transform: translateY(7px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nexus-result-enter {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-    filter: blur(2px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-}
-@keyframes nexus-drawer-enter {
-  from {
-    opacity: 0;
-    transform: translateX(28px) scale(0.975) rotateY(-3deg);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-}
-@keyframes nexus-drawer-header {
-  from {
-    opacity: 0;
-    transform: translateX(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nexus-notification-item {
-  from {
-    opacity: 0;
-    transform: translateX(12px);
-    filter: blur(2px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-}
-@keyframes nexus-sheet-backdrop {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-@keyframes nexus-mobile-sheet-enter {
-  from {
-    opacity: 0;
-    transform: translateY(34px) scale(0.985);
-    filter: blur(3px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-}
-@keyframes nexus-sheet-item {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nexos-starfield {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(-18px, 12px, 0);
-  }
-}
-@keyframes nexos-nebula-drift {
-  from {
-    transform: translate3d(-2%, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(4%, 3%, 0) scale(1.08);
-  }
-}
-@keyframes nexos-orbit-drift-one {
-  from {
-    transform: rotate(-22deg) translate3d(0, 0, 0);
-  }
-  to {
-    transform: rotate(-17deg) translate3d(-22px, -12px, 0);
-  }
-}
-@keyframes nexos-orbit-drift-two {
-  from {
-    transform: rotate(28deg) translate3d(0, 0, 0);
-  }
-  to {
-    transform: rotate(34deg) translate3d(24px, 12px, 0);
-  }
-}
 @keyframes nexos-orbit-pulse {
   0%,
   100% {
@@ -572,75 +361,6 @@
   50% {
     transform: scale(1.35);
     opacity: 1;
-  }
-}
-@keyframes nx-drift-far {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(-35px, 24px, 0);
-  }
-}
-@keyframes nx-drift-near {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(48px, -28px, 0) scale(1.025);
-  }
-}
-@keyframes nx-nebula-a {
-  from {
-    transform: translate3d(-2%, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(7%, 5%, 0) scale(1.08);
-  }
-}
-@keyframes nx-nebula-b {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(8%, -4%, 0) scale(1.1);
-  }
-}
-@keyframes nx-galaxy {
-  from {
-    transform: rotate(-19deg) translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: rotate(-13deg) translate3d(-4%, 5%, 0) scale(1.08);
-  }
-}
-@keyframes nx-orbit {
-  from {
-    transform: rotate(-22deg);
-  }
-  to {
-    transform: rotate(338deg);
-  }
-}
-@keyframes nx-orbit-dot {
-  0%,
-  100% {
-    transform: scale(0.72);
-    opacity: 0.55;
-  }
-  50% {
-    transform: scale(1.35);
-    opacity: 1;
-  }
-}
-@keyframes nx-constellation {
-  from {
-    transform: translate3d(0, 0, 0);
-    opacity: 0.18;
-  }
-  to {
-    transform: translate3d(-8px, -5px, 0);
-    opacity: 0.34;
   }
 }
 @keyframes nx-page-in {
@@ -715,17 +435,6 @@
     transform: none;
   }
 }
-@keyframes nx-header-line {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: scaleX(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-}
 @keyframes nx-route-slide {
   from {
     opacity: 0;
@@ -738,79 +447,6 @@
     filter: none;
   }
 }
-@keyframes nx-icon-pop {
-  0% {
-    transform: scale(1) rotate(0);
-  }
-  35% {
-    transform: scale(1.22) rotate(-7deg);
-  }
-  65% {
-    transform: scale(0.94) rotate(4deg);
-  }
-  100% {
-    transform: scale(1) rotate(0);
-  }
-}
-@keyframes nx-menu-out {
-  from {
-    opacity: 1;
-    transform: none;
-  }
-  to {
-    opacity: 0;
-    transform: translate3d(0, 14px, 0) scale(0.985);
-  }
-}
-@keyframes nx-menu-item {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 10px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nx-geometry-drift {
-  from {
-    transform: rotate(-12deg) translate3d(0, 0, 0);
-  }
-  to {
-    transform: rotate(-5deg) translate3d(-28px, 18px, 0);
-  }
-}
-@keyframes nx-constellation-ring {
-  from {
-    transform: rotate(31deg);
-  }
-  to {
-    transform: rotate(391deg);
-  }
-}
-@keyframes nx-nav-icon {
-  0%,
-  100% {
-    transform: scale(1) rotate(0);
-  }
-  35% {
-    transform: scale(1.18) rotate(-5deg);
-  }
-  65% {
-    transform: scale(0.96) rotate(3deg);
-  }
-}
-@keyframes nx-plus-spin {
-  0% {
-    transform: rotate(0) scale(1);
-  }
-  55% {
-    transform: rotate(90deg) scale(1.12);
-  }
-  100% {
-    transform: rotate(90deg) scale(1);
-  }
-}
 @keyframes nx-editorial-enter {
   from {
     opacity: 0;
@@ -821,16 +457,6 @@
     opacity: 1;
     transform: none;
     filter: none;
-  }
-}
-@keyframes nx-card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 @keyframes nx-title-in {
@@ -916,37 +542,9 @@
     opacity: 1;
   }
 }
-@keyframes nx-profile-modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(22px) scale(0.975);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nx-profile-sheen {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(100%);
-  }
-}
 @keyframes nx-profile-orbit {
   to {
     transform: rotate(360deg);
-  }
-}
-@keyframes nx-profile-sheet-in {
-  from {
-    opacity: 0;
-    transform: translateY(42px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 @keyframes nx-finance-orbit {
@@ -1309,16 +907,6 @@
     transform: none;
   }
 }
-@keyframes nx-sheet-enter {
-  from {
-    opacity: 0;
-    transform: translateY(22px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 @keyframes nx-press {
   0% {
     transform: scale(1);
@@ -1343,114 +931,36 @@
     transform: none;
   }
 }
-@keyframes nx-cosmic-breathe {
+
+/* V01 observatory: one writer per moving layer. */
+@keyframes observatory-drift {
   from {
-    transform: scale(1);
-    opacity: 0.72;
+    translate: 0 0;
   }
   to {
-    transform: scale(1.04);
-    opacity: 1;
+    translate: 3% 4%;
   }
 }
-@keyframes nx-star-drift {
-  to {
-    background-position:
-      330px 300px,
-      460px 410px,
-      550px 490px,
-      710px 620px;
+@keyframes observatory-satellite {
+  from {
+    transform: rotate(0deg);
   }
-}
-@keyframes nx-orbit-drift {
-  to {
-    transform: rotate(342deg);
-  }
-}
-@keyframes nx-orbit-drift-reverse {
-  to {
-    transform: rotate(-338deg);
-  }
-}
-@keyframes nx-boot-orbit {
   to {
     transform: rotate(360deg);
   }
 }
-@keyframes nx-boot-orbit-reverse {
-  to {
-    transform: rotate(-360deg);
-  }
-}
-@keyframes nx-boot-drift {
-  from {
-    transform: scale(1) translate3d(-3px, 0, 0);
-  }
-  to {
-    transform: scale(1.04) translate3d(4px, -5px, 0);
-  }
-}
-@keyframes nx-boot-breathe {
-  0%,
-  100% {
-    transform: scale(0.92);
-    opacity: 0.72;
-  }
-  50% {
-    transform: scale(1.06);
-    opacity: 1;
-  }
-}
-@keyframes nx-boot-arrive {
+@keyframes observatory-surface-in {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.97);
-    filter: blur(5px);
+    translate: 0 12px;
   }
   to {
     opacity: 1;
-    transform: none;
-    filter: none;
+    translate: 0 0;
   }
 }
-@keyframes nx-boot-pulse {
-  0% {
-    transform: scale(0.86);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1.28);
+@keyframes observatory-boot-out {
+  to {
     opacity: 0;
-  }
-}
-@keyframes nx-boot-mark-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.9;
-  }
-  50% {
-    transform: scale(1.08);
-    opacity: 1;
-  }
-}
-@keyframes nx-boot-status {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-@keyframes nx-stellar-glow {
-  0%,
-  100% {
-    opacity: 0.65;
-  }
-  50% {
-    opacity: 1;
   }
 }

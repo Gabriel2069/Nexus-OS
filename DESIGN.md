@@ -2,7 +2,7 @@
 
 NexOS é um sistema pessoal com identidade cósmica: profundidade discreta, luz ciano e violeta, materiais de vidro e tipografia clara. O conteúdo e o próximo passo devem dominar a tela. Tempo livre continua sendo tempo livre; progressão nunca exige ocupar todo intervalo.
 
-A base foi integrada pela PR #17. A direção proposta é **Observatório pessoal**: ambiente cósmico, conteúdo estável e navegação em vidro lenticular. A [prancheta D01](docs/design/visual-board.html) demonstra desktop, mobile, login, materiais, paleta, estados e movimento. O [plano de implementação](docs/design/IMPLEMENTATION_PLAN.md) define a incorporação por lote; as [referências](docs/design/REFERENCES.md) distinguem evidência e tradução autoral. Valores propostos não estão aplicados ao runtime.
+A base foi integrada pela PR #17. A direção proposta é **Observatório pessoal**: ambiente cósmico, conteúdo estável e navegação em vidro lenticular. A [prancheta D01](docs/design/visual-board.html) demonstra desktop, mobile, login, materiais, paleta, estados e movimento. O [plano de implementação](docs/design/IMPLEMENTATION_PLAN.md) define a incorporação por lote; as [referências](docs/design/REFERENCES.md) distinguem evidência e tradução autoral. V01 incorpora a paleta e os materiais principais no runtime; o JSON da prancheta permanece um registro de proposta, não uma segunda fonte de tokens. A [revisão V01](docs/design/V01_REVIEW.md) registra escopo e evidências.
 
 ## Princípios
 
@@ -38,3 +38,7 @@ O mapa técnico está em [STYLE_SYSTEM.md](docs/STYLE_SYSTEM.md). O estado de ex
 ## Aceitação visual
 
 Texto normal ≥ 4,5:1 e grande ≥ 3:1; medir contraste composto em material translúcido e conferir foco/ícones/contornos. Validar os dois temas, teclado, reflow, movimento reduzido, estados loading/error/empty e aparelhos reais. A paleta isolada não certifica conformidade ou desempenho. A prancheta é referência visual, não substitui dados reais nem os contratos de autenticação.
+
+## V01 — estado incorporado
+
+Login e base compartilhada adotam Observatório pessoal. `AppearanceProvider` centraliza tema e atmosfera, com controle disponível antes e depois do acesso. Atmosfera inclui a pausa dos loops decorativos legados; spinners funcionais e relógio não são paralisados. Vidro tem fallback opaco e campo de acesso conserva label, ajuda, foco e erro. Dock usa Agora/Hoje/Agenda/Foco/Mais; a busca também está disponível no menu móvel. A composição das páginas segue os lotes V02–V06.

@@ -48,24 +48,28 @@ export function CommandPalette() {
         setOpen(false);
         return;
       }
-      if (event.key === "ArrowDown") {
+      if (event.key === "ArrowDown" && event.target === inputRef.current) {
         event.preventDefault();
         setSelected((value) =>
           Math.min(value + 1, Math.max(filtered.length - 1, 0)),
         );
         return;
       }
-      if (event.key === "ArrowUp") {
+      if (event.key === "ArrowUp" && event.target === inputRef.current) {
         event.preventDefault();
         setSelected((value) => Math.max(value - 1, 0));
         return;
       }
-      if (event.key === "Enter" && filtered[selected]) {
+      if (
+        event.key === "Enter" &&
+        event.target === inputRef.current &&
+        filtered[selected]
+      ) {
         event.preventDefault();
         go(filtered[selected].path);
         return;
       }
-      if (!query) {
+      if (event.altKey && !event.ctrlKey && !event.metaKey) {
         const shortcut = event.key.toLowerCase();
         if (shortcut === "n") {
           event.preventDefault();
@@ -111,7 +115,14 @@ export function CommandPalette() {
             ref={inputRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Ir para uma área ou executar uma ação…"
+            placeholder="Pesquisar uma área…"
+            role="combobox"
+            aria-expanded="true"
+            aria-autocomplete="list"
+            aria-controls="command-results"
+            aria-activedescendant={
+              filtered[selected] ? `command-option-${selected}` : undefined
+            }
             aria-label="Pesquisar destinos no NexOS"
           />
           <button onClick={() => setOpen(false)} aria-label="Fechar">
@@ -128,26 +139,27 @@ export function CommandPalette() {
             >
               <Plus size={16} />
               <span>Nova missão</span>
-              <kbd>N</kbd>
+              <kbd>Alt N</kbd>
             </button>
             <button onClick={() => go("/hoje")}>
               <Crosshair size={16} />
               <span>Abrir Hoje</span>
-              <kbd>H</kbd>
+              <kbd>Alt H</kbd>
             </button>
             <button onClick={() => go("/foco")}>
               <Focus size={16} />
               <span>Iniciar foco</span>
-              <kbd>F</kbd>
+              <kbd>Alt F</kbd>
             </button>
             <button onClick={() => go("/inbox")}>
               <Inbox size={16} />
               <span>Caixa de entrada</span>
-              <kbd>I</kbd>
+              <kbd>Alt I</kbd>
             </button>
           </div>
         )}
         <div
+          id="command-results"
           className="command-results"
           role="listbox"
           aria-label={query ? "Resultados" : "Navegação"}
@@ -161,6 +173,7 @@ export function CommandPalette() {
             return (
               <button
                 key={item.path}
+                id={`command-option-${index}`}
                 role="option"
                 aria-selected={selected === index}
                 className={selected === index ? "is-selected" : ""}
