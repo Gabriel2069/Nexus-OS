@@ -42,3 +42,7 @@ Texto normal ≥ 4,5:1 e grande ≥ 3:1; medir contraste composto em material tr
 ## V01 — estado incorporado
 
 Login e base compartilhada adotam Observatório pessoal. `AppearanceProvider` centraliza tema e atmosfera, com controle disponível antes e depois do acesso. Atmosfera inclui a pausa dos loops decorativos legados; spinners funcionais e relógio não são paralisados. Vidro tem fallback opaco e campo de acesso conserva label, ajuda, foco e erro. Dock usa Agora/Hoje/Agenda/Foco/Mais; a busca também está disponível no menu móvel. A composição das páginas segue os lotes V02–V06.
+
+## V02 — menu e dia
+
+Agora organiza próximo passo → trajetória → continuidade; Hoje organiza contexto/check-in → compromissos/estudo → rotinas/espaço livre. A órbita é um instrumento decorativo fora do texto, com os mesmos controles de movimento de V01. Menu móvel usa grupos e o catálogo único de navegação. Estados desconhecidos não viram vazios confirmados; rascunhos e falhas de escrita permanecem explícitos. A [revisão V02](docs/design/V02_REVIEW.md) registra escopo, evidências e dependência da PR #20.

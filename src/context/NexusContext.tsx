@@ -375,6 +375,10 @@ export function NexusProvider({ children }: PropsWithChildren) {
       },
       saveCheckin: async (input) => {
         if (!userId) {
+          if (!isDemoMode)
+            throw new Error(
+              "Aguarde seu perfil carregar antes de salvar o check-in.",
+            );
           setWorkspace((current) => ({
             ...current,
             checkin: {
@@ -424,7 +428,10 @@ export function NexusProvider({ children }: PropsWithChildren) {
         await refresh();
       },
       setRoutineItem: async (itemId, completed) => {
-        if (!userId) return;
+        if (!userId)
+          throw new Error(
+            "Seu perfil ainda não está disponível para atualizar rotinas.",
+          );
         await toggleRoutineCompletion(userId, itemId, completed);
         await refresh();
       },

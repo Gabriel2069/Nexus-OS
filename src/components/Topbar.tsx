@@ -1,7 +1,7 @@
 import { Bell, Command, Download, Flame, Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNexus } from "../context/NexusContext";
-import { navigation } from "../data/navigation";
+import { isCurrentDestination, navigation } from "../data/navigation";
 import { AppearanceControls } from "./AppearanceControls";
 import { emitUI } from "../lib/ui-events";
 
@@ -18,7 +18,9 @@ export function Topbar({ pathname }: TopbarProps) {
   );
   const route = useMemo(() => {
     for (const group of navigation) {
-      const item = group.items.find((candidate) => candidate.path === pathname);
+      const item = group.items.find((candidate) =>
+        isCurrentDestination(candidate.path, pathname),
+      );
       if (item) return { group: group.label, label: item.label };
     }
     return { group: "NexOS", label: "Sistema" };

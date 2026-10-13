@@ -84,9 +84,9 @@
   --nexos-blue: var(--blue);
   --nexos-cyan: var(--cyan);
   --nexos-violet: var(--violet);
-  --nexos-pink: #ed91ff;
+  --nexos-pink: var(--rose);
   --nexos-star: #edf2ff;
-  --nexos-gold: #d9c28a;
+  --nexos-gold: var(--amber);
   --nexos-shadow: var(--shadow);
   --nexos-display: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
   --nexos-body:
@@ -247,6 +247,7 @@ html,
 body,
 #root {
   font-family: var(--nx-body);
+  height: auto;
 }
 html {
   min-height: 100%;
