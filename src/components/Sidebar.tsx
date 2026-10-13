@@ -1,3 +1,4 @@
+import { CosmicTexture } from "./CosmicEnvironment";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import { isCurrentDestination, navigation } from "../data/navigation";
 import { navigate } from "../lib/router";
@@ -14,7 +15,7 @@ export function Sidebar({ pathname, collapsed, onToggle }: SidebarProps) {
       className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}
       data-motion-shell="sidebar"
     >
-      <span className="visor-texture" aria-hidden="true" />
+      <CosmicTexture />
       <div className="sidebar__brand" data-motion="brand">
         <button
           className="brand-mark"

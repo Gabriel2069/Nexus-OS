@@ -83,7 +83,7 @@ for (const file of files("src/styles")) {
   });
 }
 // Existing responsive exceptions have a fixed ceiling; new styling must resolve ownership.
-if (important > 94) errors.push(`!important budget exceeded: ${important}/94`);
+if (important > 87) errors.push(`!important budget exceeded: ${important}/87`);
 for (const file of files("src").filter((file) => /\.(tsx?|css)$/.test(file))) {
   const source = fs.readFileSync(file, "utf8");
   if (/^(<<<<<<< |=======\s*$|>>>>>>> )/m.test(source))

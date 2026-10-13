@@ -380,12 +380,48 @@ export function NexusProvider({ children }: PropsWithChildren) {
         await refresh();
       },
       addProject: async (name, options = {}) => {
-        if (!userId) return;
+        if (!userId) {
+          if (!isDemoMode)
+            throw new Error(
+              "Aguarde seu perfil carregar antes de criar o projeto.",
+            );
+          setWorkspace((current) => ({
+            ...current,
+            projects: [
+              {
+                ...demoWorkspace.projects[0],
+                id: crypto.randomUUID(),
+                name: name.trim(),
+                description: null,
+                progress: 0,
+                next_action: null,
+                xp: 0,
+                level: 1,
+                due_at: null,
+                ...options,
+              },
+              ...current.projects,
+            ],
+          }));
+          return;
+        }
         await createProject(userId, { name, ...options });
         await refresh();
       },
       editProject: async (id, patch) => {
-        if (!userId) return;
+        if (!userId) {
+          if (!isDemoMode)
+            throw new Error(
+              "Aguarde seu perfil carregar antes de salvar o projeto.",
+            );
+          setWorkspace((current) => ({
+            ...current,
+            projects: current.projects.map((project) =>
+              project.id === id ? { ...project, ...patch } : project,
+            ),
+          }));
+          return;
+        }
         await updateProject(userId, id, patch);
         await refresh();
       },
@@ -444,10 +480,34 @@ export function NexusProvider({ children }: PropsWithChildren) {
         await refresh();
       },
       setRoutineItem: async (itemId, completed) => {
-        if (!userId)
-          throw new Error(
-            "Seu perfil ainda não está disponível para atualizar rotinas.",
-          );
+        if (!userId) {
+          if (!isDemoMode)
+            throw new Error(
+              "Seu perfil ainda não está disponível para atualizar rotinas.",
+            );
+          setWorkspace((current) => ({
+            ...current,
+            routineCompletions: [
+              ...current.routineCompletions.filter(
+                (item) =>
+                  !(
+                    item.routine_item_id === itemId &&
+                    item.completion_date === dateKey()
+                  ),
+              ),
+              ...(completed
+                ? [
+                    {
+                      id: crypto.randomUUID(),
+                      routine_item_id: itemId,
+                      completion_date: dateKey(),
+                    },
+                  ]
+                : []),
+            ],
+          }));
+          return;
+        }
         await toggleRoutineCompletion(userId, itemId, completed);
         await refresh();
       },

@@ -1,3 +1,4 @@
+import { StellarSpark } from "../components/CosmicEnvironment";
 import {
   ArrowRight,
   Beaker,
@@ -158,7 +159,10 @@ export function StudiesPage() {
       <section className="orbital-heading academic-hero">
         <div>
           <span className="eyebrow">Escola e estudos</span>
-          <h1>Estudos</h1>
+          <h1>
+            Estudos
+            <StellarSpark />
+          </h1>
           <p>
             Consulte o dia, abra provas e simulados, veja o que já está ligado a
             eles e crie preparação sem sair da tela.

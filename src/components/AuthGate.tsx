@@ -1,3 +1,4 @@
+import { CosmicTexture, StellarSpark } from "./CosmicEnvironment";
 import { KeyRound, LoaderCircle, LockKeyhole, ShieldCheck } from "lucide-react";
 import type { FormEvent, PropsWithChildren } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -244,6 +245,7 @@ export function AuthGate({ children }: AuthGateProps) {
             Seu espaço,
             <br />
             em órbita.
+            <StellarSpark />
           </h1>
           <p>
             Um lugar para cuidar do seu tempo,
@@ -254,6 +256,7 @@ export function AuthGate({ children }: AuthGateProps) {
           <span className="auth-coordinate">NEXOS / SISTEMA PESSOAL</span>
         </section>
         <form className="auth-card nexus-lock-card" onSubmit={unlock}>
+          <CosmicTexture />
           <div className="nexus-lock-icon">
             <LockKeyhole size={27} />
           </div>

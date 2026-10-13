@@ -271,23 +271,6 @@ h3 {
   width: 100%;
   accent-color: var(--amber);
 }
-.rank-filter {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 14px 0;
-}
-.rank-filter button {
-  border: 1px solid var(--line);
-  background: var(--panel2);
-  border-radius: 99px;
-  padding: 7px 10px;
-  font-size: 0.68rem;
-}
-.rank-filter button.active {
-  background: #ffffff16;
-  border-color: #ffffff35;
-}
 .day-close {
   border: 1px solid var(--line);
   background: linear-gradient(135deg, var(--panel), var(--panel));
@@ -310,18 +293,6 @@ textarea {
   border: 0;
   background: transparent;
   color: var(--text);
-}
-.rank-filter {
-  margin: 0;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  border-radius: 12px;
-  padding: 4px 8px;
-  align-items: center;
-}
-.kanban-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .sparkline-wrap {
   color: var(--cyan);
@@ -462,7 +433,6 @@ textarea {
 }
 .empty-state,
 .empty-state-modern,
-.empty-column,
 .empty-compact {
   color: var(--muted);
   text-align: center;
@@ -503,10 +473,6 @@ textarea {
   .split-grid,
   .split-grid--wide {
     grid-template-columns: 1fr;
-  }
-  .kanban-grid {
-    overflow: auto;
-    scroll-snap-type: x mandatory;
   }
   .mobile-sheet__handle {
     width: 42px;
@@ -651,15 +617,6 @@ p {
   .view-switcher {
     order: 1;
     flex: 1;
-  }
-  .rank-filter {
-    order: 2;
-    flex-basis: 100%;
-    overflow: auto;
-    white-space: nowrap;
-  }
-  .kanban-grid {
-    scroll-padding-inline: 2px;
   }
 }
 .activity-heatmap {
@@ -814,12 +771,6 @@ p {
   .view-switcher button {
     padding: 0 6px;
   }
-  .rank-filter::-webkit-scrollbar {
-    display: none;
-  }
-  .kanban-grid {
-    padding-bottom: 3px;
-  }
   .day-close > div {
     flex-wrap: wrap;
   }
@@ -894,8 +845,7 @@ p,
 .surface-card__header > .surface-chip {
   flex: 0 0 auto;
 }
-.surface-chip,
-.column-count {
+.surface-chip {
   display: inline-grid;
   place-items: center;
   min-width: 30px;
@@ -1037,8 +987,7 @@ p,
 .day-close > button {
   flex: 0 0 auto;
 }
-.view-switcher,
-.rank-filter {
+.view-switcher {
   margin: 0;
   min-height: 42px;
 }
@@ -1047,14 +996,6 @@ p,
 }
 .view-switcher button {
   height: 32px;
-}
-.rank-filter {
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-.kanban-grid {
-  gap: 14px;
-  align-items: start;
 }
 .agenda-list {
   gap: 8px;
@@ -1134,7 +1075,6 @@ p,
 }
 .empty-state,
 .empty-state-modern,
-.empty-column,
 .empty-compact {
   line-height: 1.5;
 }
@@ -1167,11 +1107,6 @@ p,
   }
   .page-hero {
     min-height: auto;
-  }
-  .rank-filter {
-    min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
 }
 @media (max-width: 760px) {
@@ -1300,24 +1235,6 @@ p,
   .view-switcher button span {
     font-size: 0.62rem;
   }
-  .rank-filter {
-    width: 100%;
-    min-height: 40px;
-    padding: 3px;
-    gap: 4px;
-  }
-  .rank-filter button {
-    flex: 0 0 auto;
-    padding: 6px 9px;
-  }
-  .kanban-grid {
-    display: flex;
-    overflow-x: auto;
-    gap: 8px;
-    scroll-snap-type: x mandatory;
-    padding: 1px 1px 5px;
-    scroll-padding-inline: 1px;
-  }
   .agenda-item {
     min-height: 58px;
   }
@@ -1383,9 +1300,7 @@ p,
     grid-template-columns: 1fr;
   }
 }
-.rank-filter,
-.activity-heatmap,
-.kanban-grid {
+.activity-heatmap {
   scrollbar-color: color-mix(in srgb, var(--muted) 28%, transparent) transparent;
   scrollbar-width: thin;
 }
@@ -1773,7 +1688,6 @@ html.nexus-standalone body {
 }
 .page-hero__badge,
 .surface-chip,
-.column-count,
 .player-coins {
   display: inline-flex;
   align-items: center;
@@ -1963,17 +1877,6 @@ textarea {
   }
   .day-close {
     display: grid;
-  }
-  .rank-filter {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    scrollbar-width: none;
-  }
-  .rank-filter > button {
-    flex: 0 0 auto;
-  }
-  .kanban-grid {
-    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 390px) {
@@ -4534,14 +4437,6 @@ button:active svg {
 .surface-card [role="button"]:active {
   transform: translate3d(1px, 1px, 0) scale(0.975);
 }
-.projects-page .project-card {
-  transition:
-    transform 270ms var(--nx-page-spring),
-    box-shadow 300ms ease;
-}
-.projects-page .project-card:hover {
-  transform: translate3d(0, -4px, 0) scale(1.008);
-}
 .life-rpg-page .stat-card:hover,
 .life-rpg-page .metric-card:hover {
   transform: translateY(-4px) scale(1.008);
@@ -4796,7 +4691,6 @@ h3,
 }
 .eyebrow,
 .surface-chip,
-.column-count,
 .rank-chip,
 .page-hero__badge {
   font-family: "Oxanium", ui-monospace, sans-serif;
@@ -4997,8 +4891,7 @@ select {
   font-size: 0.78rem;
   opacity: 0.72;
 }
-.view-switcher,
-.rank-filter {
+.view-switcher {
   display: flex;
   align-items: center;
   gap: 3px;
@@ -5007,8 +4900,7 @@ select {
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(157, 190, 255, 0.06);
 }
-.view-switcher button,
-.rank-filter button {
+.view-switcher button {
   min-height: 32px;
   padding: 0 9px;
   border: 0;
@@ -5023,35 +4915,10 @@ select {
   align-items: center;
   gap: 5px;
 }
-.view-switcher button.active,
-.rank-filter button.active {
+.view-switcher button.active {
   background: rgba(251, 113, 133, 0.1);
   opacity: 1;
   color: var(--text);
-}
-.kanban-grid--advanced {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-.column-count {
-  font:
-    600 0.65rem "Oxanium",
-    sans-serif;
-  opacity: 0.5;
-}
-.empty-column {
-  min-height: 150px;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 8px;
-  text-align: center;
-  opacity: 0.4;
-  font-size: 0.7rem;
-}
-.empty-column svg {
-  color: #fb7185;
 }
 .entity-inspector {
   overflow: hidden;
@@ -5159,28 +5026,12 @@ select {
 .inspector-calendar-link {
   margin-top: 12px;
 }
-@media (max-width: 900px) {
-  .kanban-grid--advanced {
-    grid-template-columns: 1fr;
-  }
-}
 @media (max-width: 760px) {
-  .view-switcher,
-  .rank-filter {
+  .view-switcher {
     width: 100%;
     justify-content: space-between;
   }
-  .view-switcher button,
-  .rank-filter button {
-    flex: 1;
-  }
-  .kanban-grid--advanced {
-    display: block;
-  }
-  .mission-focus-hero .now-actions {
-    flex-wrap: wrap;
-  }
-  .mission-focus-hero .now-actions > * {
+  .view-switcher button {
     flex: 1;
   }
   .inspector-form-grid {
@@ -6243,17 +6094,20 @@ select:focus-visible {
 .quick-add-top {
   background: var(--cyan);
   color: var(--on-primary);
-  border-color: transparent;
+  border-color: color-mix(in srgb, var(--nx-photon) 55%, var(--cyan));
   font-weight: 600;
   box-shadow:
-    inset 0 1px #ffffff44,
+    inset 0 1px #ffffffb3,
+    0 0 12px var(--nx-photon-glow),
     0 6px 16px color-mix(in srgb, var(--cyan) 10%, transparent);
 }
 .primary-button:hover:not(:disabled),
 .quick-add-top:hover:not(:disabled) {
   background: color-mix(in srgb, var(--cyan) 92%, var(--text));
   box-shadow:
-    inset 0 1px #ffffff77,
+    inset 0 1px #ffffffd9,
+    0 0 0 1px color-mix(in srgb, var(--nx-photon) 35%, transparent),
+    0 0 18px var(--nx-photon-glow),
     0 10px 24px color-mix(in srgb, var(--cyan) 16%, transparent);
 }
 .secondary-button,
@@ -6264,7 +6118,10 @@ select:focus-visible {
 }
 .secondary-button:hover:not(:disabled),
 .icon-button:hover:not(:disabled) {
-  border-color: var(--cyan);
+  border-color: var(--nx-photon);
+  box-shadow:
+    inset 0 1px var(--nx-glass-highlight),
+    0 0 16px var(--nx-photon-glow);
   background: color-mix(in srgb, var(--cyan) 5%, var(--panel));
 }
 .icon-button {
@@ -6972,12 +6829,12 @@ select:focus-visible {
       calc(100% - 16px) / 1px 18px no-repeat,
     radial-gradient(
       ellipse at 100% 0%,
-      color-mix(in srgb, var(--violet) 10%, transparent),
+      color-mix(in srgb, var(--violet) 17%, transparent),
       transparent 55%
     ),
     radial-gradient(
       ellipse at 0% 100%,
-      color-mix(in srgb, var(--cyan) 5%, transparent),
+      color-mix(in srgb, var(--cyan) 9%, transparent),
       transparent 48%
     ),
     radial-gradient(
@@ -7076,4 +6933,74 @@ select:focus-visible {
   .orbital-heading > .primary-button {
     max-width: 100%;
   }
+}
+
+.visor-constellation {
+  opacity: 0.65;
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  width: 140px;
+  height: 86px;
+  stroke: color-mix(in srgb, var(--nx-photon) 20%, transparent);
+  stroke-width: 0.8;
+}
+.visor-constellation circle {
+  fill: var(--nx-photon);
+  stroke: none;
+  opacity: 0.5;
+}
+.visor-constellation__arc {
+  stroke: color-mix(in srgb, var(--violet) 25%, transparent);
+}
+.visor-constellation__star {
+  fill: var(--nx-photon);
+  stroke: none;
+  opacity: 0.35;
+  filter: drop-shadow(0 0 5px var(--nx-photon-glow));
+}
+.stellar-spark {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-left: 14px;
+  vertical-align: middle;
+  background: var(--nx-photon);
+  clip-path: polygon(
+    50% 0,
+    61% 39%,
+    100% 50%,
+    61% 61%,
+    50% 100%,
+    39% 61%,
+    0 50%,
+    39% 39%
+  );
+  filter: drop-shadow(0 0 5px var(--nx-photon-glow));
+}
+.stellar-decision fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.stellar-decision label > span {
+  font-size: 12px;
+  color: var(--muted);
+  opacity: 1;
+}
+.stellar-decision input,
+.stellar-decision select,
+.stellar-decision textarea {
+  font-size: 14px;
+  min-height: 44px;
+  width: 100%;
+}
+.stellar-decision fieldset > button {
+  margin-top: 20px;
+}
+.stellar-decision > p {
+  font-size: 12px;
+  color: var(--green);
+  margin-top: 12px;
 }

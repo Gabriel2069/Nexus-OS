@@ -367,3 +367,11 @@
     display: none;
   }
 }
+
+.auth-card > :not(.visor-texture) {
+  position: relative;
+  z-index: 1;
+}
+.auth-intro h1 {
+  text-shadow: 0 0 28px var(--nx-photon-glow);
+}

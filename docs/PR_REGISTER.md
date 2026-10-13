@@ -30,3 +30,5 @@ A [PR #19](https://github.com/Gabriel2069/Nexus-OS/pull/19) integrou D01 na main
 V02 (`feat/v02-daily-observatory`) é dependente de V01 (`feat/v01-cosmic-shell`, PR #20); seu PR aponta para essa branch até a integração de V01. Não mesclar V02 antes da base. Após integrar V01, retarget para main e verificar novo merge/head/CI. Registro corrente no issue #18.
 
 A próxima entrega (`feat/v03-orbital-workspace`) depende da PR #21 (`01129e4`). Contém V07 e fases de V03/V04, conforme a prioridade do usuário; não representa conclusão de Foco ou dos demais domínios. Ordem de integração: #20 → #21 → entrega de visor/Calendário/Inbox/Estudos. Retarget e CI devem ser revistos após cada integração. Revisão em [V03_REVIEW.md](design/V03_REVIEW.md); links correntes ficam no issue #18.
+
+V04 (`feat/v04-stellar-actions`) depende da [PR #22](https://github.com/Gabriel2069/Nexus-OS/pull/22), head `aa94121`. Integra a assinatura estelar e os recortes restantes de Missões/Rotinas/Foco/Projetos; não incorpora validação autenticada nem reconciliação entre dispositivos. Evidências em [V04_REVIEW.md](design/V04_REVIEW.md).
