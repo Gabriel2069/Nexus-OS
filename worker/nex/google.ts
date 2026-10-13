@@ -1,3 +1,4 @@
+import type { NexOperation } from "../../src/lib/nex-tools.ts";
 import {
   authenticate,
   body,
@@ -15,6 +16,8 @@ import {
 } from "./core.ts";
 import { reserve } from "./providers.ts";
 export const scopes = {
+  calendar_write: "https://www.googleapis.com/auth/calendar.events",
+  tasks_write: "https://www.googleapis.com/auth/tasks",
   calendar: "https://www.googleapis.com/auth/calendar.events.readonly",
   tasks: "https://www.googleapis.com/auth/tasks.readonly",
   drive: "https://www.googleapis.com/auth/drive.file",
@@ -276,17 +279,47 @@ export async function disconnect(env: Env, who: Identity) {
   return json({ disconnected: true, revoked });
 }
 export async function readGoogle(request: Request, env: Env, who: Identity) {
-  const input = (await body(request)) as { service?: unknown; id?: unknown };
+  return json(
+    await readGoogleData(
+      env,
+      who,
+      (await body(request)) as {
+        service?: unknown;
+        id?: unknown;
+        range?: unknown;
+      },
+    ),
+  );
+}
+export async function readGoogleData(
+  env: Env,
+  who: Identity,
+  input: { service?: unknown; id?: unknown; range?: unknown },
+) {
   const service = text(input.service, 20) as Service;
-  if (!Object.hasOwn(scopes, service))
-    throw new Fault(400, "Serviço inválido.");
+  if (
+    !["calendar", "tasks", "drive", "docs", "sheets", "slides"].includes(
+      service,
+    )
+  )
+    throw new Fault(400, "Serviço de consulta inválido.");
   const tokens = await load(env, who);
-  if (!tokens.scope.split(" ").includes(scopes[service]))
+  if (
+    !tokens.scope.split(" ").includes(scopes[service]) &&
+    !(
+      service === "calendar" &&
+      tokens.scope.split(" ").includes(scopes.calendar_write)
+    ) &&
+    !(
+      service === "tasks" &&
+      tokens.scope.split(" ").includes(scopes.tasks_write)
+    )
+  )
     throw new Fault(409, "Autorize este serviço no N.E.X.");
   const id = typeof input.id === "string" ? input.id : "";
   if (id && !/^[\w-]{1,200}$/.test(id))
     throw new Fault(400, "Identificador inválido.");
-  let url: string;
+  let url = "";
   switch (service) {
     case "calendar":
       url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=20&singleEvents=true&orderBy=startTime&timeMin=${encodeURIComponent(new Date().toISOString())}`;
@@ -297,7 +330,7 @@ export async function readGoogle(request: Request, env: Env, who: Identity) {
       break;
     case "drive":
       url =
-        "https://www.googleapis.com/drive/v3/files?pageSize=20&fields=files(id,name,mimeType,webViewLink)";
+        "https://www.googleapis.com/drive/v3/files?q=trashed%3Dfalse&pageSize=20&fields=files(id,name,mimeType,webViewLink)";
       break;
     case "docs":
       if (!id)
@@ -307,7 +340,25 @@ export async function readGoogle(request: Request, env: Env, who: Identity) {
     case "sheets":
       if (!id)
         throw new Fault(400, "Informe o ID de uma planilha autorizada ao app.");
-      url = `https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=spreadsheetId,properties,sheets.properties`;
+      if (input.range) {
+        if (
+          typeof input.range !== "string" ||
+          input.range.length > 100 ||
+          !/^([\w \-]+!)?[A-Z]{1,3}\d{1,6}(:[A-Z]{1,3}\d{1,6})?$/.test(
+            input.range,
+          )
+        )
+          throw new Fault(400, "Intervalo A1 inválido.");
+        url =
+          "https://sheets.googleapis.com/v4/spreadsheets/" +
+          id +
+          "/values/" +
+          encodeURIComponent(input.range);
+      } else
+        url =
+          "https://sheets.googleapis.com/v4/spreadsheets/" +
+          id +
+          "?fields=spreadsheetId,properties,sheets.properties";
       break;
     case "slides":
       if (!id)
@@ -315,7 +366,7 @@ export async function readGoogle(request: Request, env: Env, who: Identity) {
           400,
           "Informe o ID de uma apresentação autorizada ao app.",
         );
-      url = `https://slides.googleapis.com/v1/presentations/${id}?fields=presentationId,title,slides.objectId`;
+      url = `https://slides.googleapis.com/v1/presentations/${id}?fields=presentationId,title,slides(objectId,pageElements(shape(text(textElements(textRun(content))))))`;
       break;
   }
   await reserve(env, who, "google", 1);
@@ -327,5 +378,159 @@ export async function readGoogle(request: Request, env: Env, who: Identity) {
       r.status === 401 ? 409 : 503,
       "Consulta Google recusada. Confira permissões, arquivo autorizado e conexão.",
     );
-  return json({ service, data: await r.json(), limited: true });
+  return { service, data: await r.json(), limited: true };
+}
+
+export async function createGoogle(
+  env: Env,
+  who: Identity,
+  id: string,
+  op: NexOperation,
+) {
+  const tokens = await load(env, who);
+  const service =
+    op.kind === "google.calendar.create"
+      ? "calendar_write"
+      : op.kind === "google.task.create"
+        ? "tasks_write"
+        : op.kind === "google.docs.create"
+          ? "docs"
+          : op.kind === "google.sheets.create"
+            ? "sheets"
+            : op.kind === "google.slides.create"
+              ? "slides"
+              : null;
+  if (!service) throw new Fault(400, "Ferramenta Google inválida.");
+  if (!tokens.scope.split(" ").includes(scopes[service]))
+    throw new Fault(409, "Autorize a escrita deste serviço primeiro.");
+  // An uncertain write is never retried automatically.
+  const history = (await db(env, who, "rpc/nex_operation_history", {
+    method: "POST",
+    body: "{}",
+  })) as { id: string; state: string }[];
+  if (history.some((x) => x.id === id && x.state === "pending"))
+    throw new Fault(
+      409,
+      "Resultado pendente. Confira no Google antes de tentar outra operação.",
+    );
+  await reserve(env, who, "google", 1);
+  const claim = (await db(env, who, "rpc/nex_claim_operation", {
+    method: "POST",
+    body: JSON.stringify({ p_id: id, p_kind: op.kind, p_payload: op.payload }),
+  })) as { claimed?: boolean };
+  if (!claim.claimed) return claim;
+  const p = op.payload;
+  let url: string, payload: unknown;
+  if (service === "calendar_write") {
+    url =
+      "https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=none";
+    payload = {
+      id: id.replaceAll("-", ""),
+      summary: p.title,
+      description: p.note,
+      start: { dateTime: p.starts_at, timeZone: "America/Sao_Paulo" },
+      end: { dateTime: p.ends_at, timeZone: "America/Sao_Paulo" },
+    };
+  } else if (service === "tasks_write") {
+    url = "https://tasks.googleapis.com/tasks/v1/lists/@default/tasks";
+    payload = { title: p.title, notes: p.note };
+  } else if (service === "docs") {
+    url = "https://docs.googleapis.com/v1/documents";
+    payload = { title: p.title };
+  } else if (service === "sheets") {
+    url = "https://sheets.googleapis.com/v4/spreadsheets";
+    payload = { properties: { title: p.title } };
+  } else {
+    url = "https://slides.googleapis.com/v1/presentations";
+    payload = { title: p.title };
+  }
+  try {
+    const r = await external(url, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + tokens.access_token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) throw Error();
+    const data = (await r.json()) as {
+      id?: string;
+      documentId?: string;
+      spreadsheetId?: string;
+      presentationId?: string;
+    };
+    const created =
+      data.id ?? data.documentId ?? data.spreadsheetId ?? data.presentationId;
+    if (!created || !/^[\w-]{1,200}$/.test(created)) throw Error();
+    const href =
+      service === "calendar_write"
+        ? "https://calendar.google.com/calendar/u/0/r"
+        : service === "tasks_write"
+          ? "https://tasks.google.com/"
+          : service === "docs"
+            ? "https://docs.google.com/document/d/" + created + "/edit"
+            : service === "sheets"
+              ? "https://docs.google.com/spreadsheets/d/" + created + "/edit"
+              : "https://docs.google.com/presentation/d/" + created + "/edit";
+    return await db(env, who, "rpc/nex_finish_operation", {
+      method: "POST",
+      body: JSON.stringify({
+        p_id: id,
+        p_receipt: {
+          applied: true,
+          id: created,
+          kind: op.kind,
+          area: "geral",
+          href,
+        },
+      }),
+    });
+  } catch {
+    throw new Fault(
+      409,
+      "Resultado Google não confirmado. Confira o destino; a operação ficou pendente e não será repetida automaticamente.",
+    );
+  }
+}
+export async function importCalendar(env: Env, who: Identity, id: string) {
+  const result = await readGoogleData(env, who, { service: "calendar" });
+  const data = result.data as {
+    items?: {
+      id?: string;
+      summary?: string;
+      start?: { date?: string; dateTime?: string };
+      end?: { date?: string; dateTime?: string };
+    }[];
+  };
+  const events = (data.items ?? []).slice(0, 20).flatMap((e) => {
+    const starts =
+      e.start?.dateTime ??
+      (e.start?.date ? e.start.date + "T00:00:00-03:00" : "");
+    const ends =
+      e.end?.dateTime ?? (e.end?.date ? e.end.date + "T00:00:00-03:00" : "");
+    if (
+      !e.id ||
+      e.id.length > 230 ||
+      !Number.isFinite(Date.parse(starts)) ||
+      !(Date.parse(ends) > Date.parse(starts))
+    )
+      return [];
+    return [
+      {
+        external_id: "google:" + e.id,
+        title: (e.summary ?? "Compromisso Google").slice(0, 200),
+        starts_at: starts,
+        ends_at: ends,
+      },
+    ];
+  });
+  return db(env, who, "rpc/nex_apply_operation", {
+    method: "POST",
+    body: JSON.stringify({
+      p_id: id,
+      p_kind: "google.calendar.import",
+      p_payload: { events },
+    }),
+  });
 }

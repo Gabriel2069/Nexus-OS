@@ -54,3 +54,7 @@ Início concentra direção, acesso, retomada e trabalho real. A central é úni
 ## N.E.X — núcleo e diálogo
 
 Painel de vidro cósmico com núcleo orbital, estados verificáveis de escuta/processamento/ação/resposta, conversa e instrumentos de contexto. Consultas abrem sobre o painel; links conduzem ao registro certo. Controles e permissões são explícitos, com opt-in para compartilhar dados. Não usar decoração para sugerir integração ativa, ferramenta executada ou escuta permanente. [Contrato A01](docs/NEX_INTELLIGENCE.md).
+
+## A02 — instrumentos ao redor do núcleo
+
+N.E.X ocupa uma central orbital com a estrela NexOS refratada, mapa de órbitas e emissão branca sem trocar a identidade. Seleção de setores tem rolagem própria; conexão/memória ficam recolhidas até serem necessárias. Núcleo, lente e órbitas têm camadas distintas para não disputar transform. components mantém todo o material; shell mantém dock/toggle; motion mantém a nova animação nex-core-orbit (68 nomes únicos). Redução de movimento e pausa de atmosfera continuam aplicadas. ModalSurface inclui summary na contenção de foco; inspector único impede modais simultâneos. Nenhuma folha nova ou aumento de important. Cronômetro aprovado de Foco preservado.

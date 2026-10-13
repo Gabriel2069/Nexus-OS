@@ -35,4 +35,4 @@ A [revisão V05/V06](design/V05_REVIEW.md) registra as onze áreas restantes e o
 
 A [revisão N01](design/N01_REVIEW.md) registra início, central de navegação, atalhos, relações entre itens, rascunhos e retomada local de Foco.
 
-[NEX_INTELLIGENCE.md](NEX_INTELLIGENCE.md): A01, arquitetura, variáveis, cotas, OAuth, testes e limites reais.
+[NEX_INTELLIGENCE.md](NEX_INTELLIGENCE.md): A01/A02, arquitetura, variáveis, cotas, OAuth, testes e limites reais.

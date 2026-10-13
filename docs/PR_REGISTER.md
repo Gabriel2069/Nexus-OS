@@ -38,3 +38,5 @@ V05/V06 (`feat/v05-complete-observatory`) depende da [PR #23](https://github.com
 N01 (`feat/n01-connected-observatory`) parte da [PR #24](https://github.com/Gabriel2069/Nexus-OS/pull/24), head `9a9b441`. Reorganiza início e navegação e conecta entidades, com drafts em memória e indicador local de Foco. Mantém a fila anterior e não abre uma base concorrente. [Revisão](design/N01_REVIEW.md); link/status corrente no issue #18. Retarget e novo head/merge/CI após cada integração.
 
 A01 (`feat/nex-intelligence`) depende da [PR #25](https://github.com/Gabriel2069/Nexus-OS/pull/25), head `ecd3b2a`, e preserva a fila #20 → #21 → #22 → #23 → #24 → #25. Backend/SQL próprios de N.E.X não certificam ativação remota. [Contrato e evidências](NEX_INTELLIGENCE.md); PR/CI corrente no #18. Retarget e verificar novo head/merge/CI após integrar cada base.
+
+A02 — feat/nex-orbital-command, base main 0889060. Central orbital, dock recolhível e ferramentas confirmadas/Google incremental. O SQL remoto existente é versionado sem reaplicação. Provedores/OAuth reais continuam com limites explícitos em NEX_INTELLIGENCE.md; não encerra I01/B02 integralmente.

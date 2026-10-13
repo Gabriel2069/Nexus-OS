@@ -1,3 +1,4 @@
+import type { NexOperation, NexPanel } from "../lib/nex-tools";
 import {
   createContext,
   useContext,
@@ -20,12 +21,20 @@ type Message = {
   content: string;
   provider?: string;
   proposal?: Proposal;
+  operation?: NexOperation;
+  operationId?: string;
+  panels?: NexPanel[];
 };
 function useOwner() {
   const { refresh } = useNexus();
   const [messages, setMessages] = useState<Message[]>([]);
   const [module, setModule] = useState<NexModule>("geral");
   const [share, setShare] = useState(false);
+  const [googleContext, setGoogleContext] = useState<{
+    service: string;
+    id: string;
+    range: string;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   const [phase, setPhase] = useState("Em espera");
   const [error, setError] = useState("");
@@ -89,6 +98,7 @@ function useOwner() {
           message: input,
           module,
           shareContext: share,
+          googleContext,
           history: messages
             .slice(-4)
             .map((m) => ({ role: m.role, content: m.content })),
@@ -104,6 +114,9 @@ function useOwner() {
             role: "assistant" as const,
             content: answer.reply,
             provider: answer.provider,
+            operation: answer.operation ?? undefined,
+            operationId: answer.operation ? crypto.randomUUID() : undefined,
+            panels: answer.panels,
             proposal: answer.proposal
               ? { ...answer.proposal, id: crypto.randomUUID() }
               : undefined,
@@ -186,6 +199,9 @@ function useOwner() {
     setModule,
     share,
     setShare,
+    googleContext,
+    setGoogleContext,
+    refreshWorkspace: refresh,
     busy,
     phase,
     error,

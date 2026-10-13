@@ -32,11 +32,15 @@ export function ModalSurface({
     const focusable = () =>
       Array.from(
         surface.current?.querySelectorAll<HTMLElement>(
-          'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]',
+          'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], summary, [tabindex="0"]',
         ) ?? [],
-      ).filter(
-        (el) => el.getClientRects().length && !el.closest("[hidden], [inert]"),
-      );
+      ).filter((el) => {
+        if (!el.getClientRects().length || el.closest("[hidden], [inert]"))
+          return false;
+        return Array.from(
+          el.closest("details") ? [el.closest("details")!] : [],
+        ).every((d) => d.open || d.querySelector(":scope > summary") === el);
+      });
     const frame = requestAnimationFrame(() =>
       (initialFocus?.current ?? focusable()[0] ?? surface.current)?.focus(),
     );

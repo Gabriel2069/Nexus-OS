@@ -125,3 +125,61 @@ Projeto confirmado pelo conector Supabase: **NexOS**, ref `emewxqxmgqybojibpbjt`
 Histórico das duas migrations N.E.X alinhado ao repositório. Há uma divergência **anterior** nas onze migrations de agosto: nomes correspondem, mas timestamps locais e remotos diferem; alguns arquivos também diferem do SQL registrado. Não usar um `db push` geral antes de reconciliar essa linha de base: poderia tentar reaplicar estruturas já existentes. Entradas antigas e arquivos históricos foram preservados, sem marcá-los falsamente como equivalentes nem reexecutá-los. A reconciliação dessa dívida é separada de A01.
 
 Nenhum projeto, branch de banco, extensão paga ou serviço foi provisionado. Secrets e planos dos provedores não foram lidos nem alterados. Chat, Whisper e consentimento Google reais continuam exigindo testes pelo Worker; banco aplicado não prova integração externa funcional.
+
+## A02 — central orbital e execução guiada
+
+Entrega construída sobre main `08890600aa3f50b12c826d957a175b82a5407040`. Após reinicialização do ambiente temporário, o código A02 não publicado foi reconstruído sobre essa base. A migração existente foi recuperada do histórico remoto, sem reexecutar SQL; seu MD5 é `e159ec69f97e1bb074537115ceed72d3`. Estado corrente no issue #18; conexões no #16.
+
+Núcleo no centro, instrumento de seleção à esquerda e diálogo/painéis à direita. No celular, núcleo e conversa vêm primeiro. Órbitas e estrela de quatro pontas expressam a identidade existente; escuta usa amplitude do microfone, processamento muda ritmo e ação muda emissão. Resposta falada continua usando voz local disponível. O menu inferior pode ser recolhido/expandido; só essa preferência é persistida no dispositivo. As telas e o cronômetro existentes foram preservados.
+
+### Ferramentas e fronteiras
+
+| Ferramenta                                                           | Resultado e limite                                                                                                       |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Missão/Inbox (A01)                                                   | Criar registro após confirmação                                                                                          |
+| `project.create`, `project.edit`                                     | Criar/editar nome, descrição, próxima ação e estado                                                                      |
+| `mission.edit`, `mission.complete`                                   | Editar ou concluir pelo motor existente; sem reabrir concluídas e sem recompensa duplicada                               |
+| `calendar.create`                                                    | Compromisso local com início/fim validados                                                                               |
+| `routine.create`                                                     | Rotina com 1–8 etapas em transação atômica                                                                               |
+| `study.create`                                                       | Bloco semanal, dia 0–6 e intervalo HH:mm                                                                                 |
+| `checkin.save`, `review.save`                                        | Hoje/semana civil de São Paulo; prévia da versão atual antes de sobrescrever                                             |
+| `finance.create`                                                     | Lançamento em centavos, planejado/realizado; não faz pagamentos                                                          |
+| `memory.save`                                                        | Memória explícita de perfil/módulo; exclusão continua disponível com confirmação                                         |
+| `google.calendar.create`, `google.task.create`                       | Evento na agenda principal ou tarefa na lista padrão; sem convidados                                                     |
+| `google.docs.create`, `google.sheets.create`, `google.slides.create` | Arquivo vazio com título, sob `drive.file`; não gera conteúdo nestes arquivos                                            |
+| `google.calendar.import`                                             | Até 20 eventos consultados; snapshot local por ID estável, preserva registros existentes; sem sincronização bidirecional |
+
+`src/lib/nex-tools.ts` é o contrato único de áreas e operações. O modelo só propõe JSON validado; não executa SQL, URLs arbitrárias nem comandos do dispositivo. 17 operações novas, além das duas criações A01. O controle de Foco nesta etapa é consulta/navegação; iniciar/pausar o relógio continua no módulo existente.
+
+### Rotas adicionais
+
+- `POST /api/nex/operations/preview`: confere ownership, captura estado/versionamento atual, retorna proposta e aviso.
+- `POST /api/nex/operations/execute`: exige confirmação explícita e UUID; operação local por RPC invoker, externa pelo conector allowlisted.
+- `GET /api/nex/operations/history`: últimas 20 operações do usuário, sem corpos de mensagens/tokens.
+- `POST /api/nex/weather`: cidade explícita; geocodificação e previsão Open-Meteo, coordenadas aproximadas do centro da cidade, sem GPS/IP. Usa duas unidades do orçamento de conectores já existente antes da rede. Serviço gratuito de uso pessoal não comercial, com atribuição Open-Meteo/GeoNames e CC BY 4.0.
+- `/api/nex/status` autenticado: capacidades e diagnóstico booleano de presença/habilitação. Não retorna valores dos segredos.
+
+Contexto consulta as 21 áreas existentes com limite 12. Geral combina Agora, Calendário, Projetos e Hoje; falhas parciais ficam explícitas. Painéis sugeridos pelo modelo consultam dados do próprio usuário, podem abrir sobre o núcleo e encaminhar à área correspondente. Compartilhar dados locais e compartilhar uma consulta Google com a IA têm consentimentos separados. Histórico de conversa é efêmero e isolado por identidade. Payload ao provedor continua limitado; conteúdo excessivo é reduzido com aviso, sem JSON truncado.
+
+### Google incremental
+
+Escrita em Calendar usa `calendar.events`; Tasks usa `tasks`. Ambos exigem ação explícita de autorização adicional. Drive/Docs/Sheets/Slides mantêm `drive.file` e acessam apenas arquivos criados/autorizados ao app: informar um ID não concede acesso. Sheets aceita um intervalo A1 opcional; Slides/Docs retornam texto disponível. Picker, escrita de conteúdo, edição/exclusão remota e sync bidirecional permanecem pendentes. PKCE/state/callback e AES-GCM continuam os mesmos de A01.
+
+Nenhuma chave adicional é exigida por A02. Permanecem secrets `GROQ_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` e `NEX_TOKEN_ENCRYPTION_KEY` (32 bytes base64), mais flags `NEX_GROQ_FREE_ONLY`, `NEX_GEMINI_FREE_ONLY`, `NEX_WORKERS_FREE_ONLY` e binding AI opcional. Callback deve corresponder a `https://nexos.gtadeusz.workers.dev/api/nex/google/callback`. As APIs Google correspondentes e escopos precisam estar habilitados na conta do operador; nenhuma conta/plano pago foi configurado.
+
+### Persistência, conflitos e cotas
+
+`20261013170035_nex_orbital_tools.sql` já consta no histórico do NexOS `emewxqxmgqybojibpbjt`. Não reaplicar. A02 adiciona ledger privado com RLS sem grants diretos, índice usuário/data, três funções privadas definer controladas por `auth.uid()` e quatro públicas invoker; todas têm search_path vazio e anon sem EXECUTE. Não altera policies/domínios de recompensa existentes. Expande apenas a enumeração de áreas da memória.
+
+Prévia usa versão `updated_at` exata, incluindo microsegundos; atualizações concorrentes exigem nova revisão. UUID + hash do payload impedem duplicação e reutilização com proposta diferente. Operações internas são atômicas. Operações externas ficam pendentes quando rede/resposta/registro do recibo têm resultado incerto; não há repetição automática. Histórico é recibo operacional do usuário, não auditoria forense imutável contra o próprio usuário que pode invocar RPCs autorizadas. Até 100 operações por usuário/janela de 24 h; chamadas externas ainda passam pelas cotas gratuitas globais de A01, inclusive falhas.
+
+As operações não têm desfazer automático geral; criações podem ser administradas nos módulos/Google. Conclusão de missão informa efeito de recompensa e não pode ser reaberta pelo N.E.X. Nenhuma rotina de exclusão automática foi acrescentada.
+
+### Verificação e limites reais
+
+- 22 testes Node/Postgres WASM: contratos/allowlists/centavos/datas/microsegundos, ownership, anon/cross-user, ledger privado, edição obsoleta, deduplicação/conflito, rotina atômica, memória, check-in/revisão, import preservado, conclusão repetida sem XP extra, escopos Google, escrita pendente e cota do clima. Testes HTTP usam respostas simuladas explicitamente.
+- Migração remota já foi testada transacionalmente com rollback na execução anterior. Nesta retomada, versão/MD5, sete funções, grants/search_path/RLS e ausência de operações persistidas foram reconferidos; nove missões existentes preservadas. Não há migração nova nem alterações no Tadeon Nexus.
+- Login real passou na execução anterior, mas o chat retornou “Configure um provedor gratuito no Worker antes de conversar”. A sessão do navegador temporário não persistiu na retomada. Diagnóstico novo ajuda distinguir chave ausente de flag desabilitada. Inferência, Whisper, voz real do dispositivo e consentimento/escrita Google reais não são certificados por mocks.
+- Advisors anteriores: RLS sem policy em ledgers privados é intencional; proteção Auth contra senha vazada desativada era aviso preexistente e não foi modificada. Divergência do histórico antigo de agosto permanece registrada, sem repair/reaplicação indiscriminada.
+
+Fontes oficiais consultadas: [Calendar insert](https://developers.google.com/workspace/calendar/api/v3/reference/events/insert), [Tasks insert](https://developers.google.com/workspace/tasks/reference/rest/v1/tasks/insert), [Drive scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth), [Open-Meteo](https://open-meteo.com/en/docs). Modelo/limites de IA seguem os verificados em A01; nenhum modelo pago foi acrescentado.
