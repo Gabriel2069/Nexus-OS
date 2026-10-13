@@ -46,3 +46,7 @@ V05/V06 consolida os proprietários de Insights, Finanças, Life e Revisão; con
 ## V05/V06 — completar a consulta e o acabamento
 
 As onze áreas restantes adotam a assinatura estelar aprovada, com hierarquia própria para progressão, dados, revisões e contexto. Biblioteca e Conhecimento têm consultas distintas sobre os registros existentes; nenhum cadastro ausente é sugerido por decoração. Pop-ups usam a textura e o material compartilhados, e seletores têm uma fonte de estilo para emissão/seleção. Rótulos de dias seguem São Paulo mesmo em outro fuso do navegador. Cronômetro de Foco preservado. Evidências e limites em [V05_REVIEW.md](docs/design/V05_REVIEW.md).
+
+## N01 — navegação como instrumento
+
+Início concentra direção, acesso, retomada e trabalho real. A central é única no desktop e celular, com busca por itens e áreas; atalhos ficam disponíveis sem reabrir a lista inteira. Menus têm agrupamento e seleção óptica legível, com os materiais e preferências existentes. Conexões abrem o item certo, e rascunhos sobrevivem à troca de área enquanto o app permanece aberto. O indicador de Foco apenas consulta a sessão local, sem outro cronômetro ou recompensa automática. Evidências em [N01_REVIEW.md](docs/design/N01_REVIEW.md).

@@ -1,216 +1,346 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Search,
+  X,
+  Plus,
+  Pin,
+  Clock3,
+  ArrowUpRight,
+  ListChecks,
+  BriefcaseBusiness,
+  Focus,
+  Inbox,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { CosmicTexture } from "./CosmicEnvironment";
 import { ModalSurface } from "./ModalSurface";
 import { useOverlay } from "../lib/use-overlay";
-import {
-  Command,
-  Crosshair,
-  Focus,
-  Inbox,
-  Plus,
-  Search,
-  X,
-} from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { destinations, useNavigation } from "../context/NavigationContext";
+import { useNexus } from "../context/NexusContext";
+import { entityPath, normalizeSearch } from "../lib/navigation-state";
 import { navigation } from "../data/navigation";
 import { navigate } from "../lib/router";
-import { emitUI } from "../lib/ui-events";
-
+import { emitUI, UI_EVENTS } from "../lib/ui-events";
+type Result = {
+  id: string;
+  label: string;
+  detail: string;
+  path: string;
+  icon: LucideIcon;
+  tone: string;
+  terms: string;
+};
 export function CommandPalette() {
   const { open, setOpen } = useOverlay("command");
+  const { pinned, recent, togglePin, message, clearRecent } = useNavigation();
+  const { workspace, loading, error } = useNexus();
   const [query, setQuery] = useState("");
+  const [group, setGroup] = useState("Todas");
   const [selected, setSelected] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const items = useMemo(
-    () =>
-      navigation.flatMap((group) =>
-        group.items.map((item) => ({ ...item, group: group.label })),
-      ),
-    [],
-  );
-  const normalize = (value: string) =>
-    value
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase();
-  const filtered = items.filter((item) =>
-    normalize(`${item.label} ${item.group}`).includes(normalize(query)),
-  );
-  function go(path: string) {
+  const input = useRef<HTMLInputElement>(null);
+  const results = useMemo(() => {
+    const pages: Result[] = destinations
+      .filter((d) => group === "Todas" || d.group === group)
+      .map((d) => ({
+        id: d.path,
+        label: d.label,
+        detail: pinned.includes(d.path) ? "Área fixada" : d.group,
+        path: d.path,
+        icon: d.icon,
+        tone: d.tone,
+        terms: `${d.label} ${d.group}`,
+      }));
+    if (!query.trim())
+      return pages.sort(
+        (a, b) =>
+          Number(pinned.includes(b.path)) - Number(pinned.includes(a.path)),
+      );
+    const entities: Result[] =
+      loading || error
+        ? []
+        : [
+            ...workspace.missions.map((m) => ({
+              id: `mission-${m.id}`,
+              label: m.title,
+              detail: `Missão · ${m.status}`,
+              path: entityPath("mission", m.id),
+              icon: ListChecks,
+              tone: "rose",
+              terms: `${m.title} ${m.notes ?? ""} missão tarefa`,
+            })),
+            ...workspace.projects.map((p) => ({
+              id: `project-${p.id}`,
+              label: p.name,
+              detail: `Projeto · ${p.status}`,
+              path: entityPath("project", p.id),
+              icon: BriefcaseBusiness,
+              tone: "violet",
+              terms: `${p.name} ${p.next_action ?? ""} ${p.description ?? ""} projeto`,
+            })),
+          ];
+    const words = normalizeSearch(query).split(/\s+/);
+    return [...pages, ...(group === "Todas" ? entities : [])]
+      .filter((item) =>
+        words.every((w) => normalizeSearch(item.terms).includes(w)),
+      )
+      .slice(0, 40);
+  }, [
+    query,
+    group,
+    pinned,
+    workspace.missions,
+    workspace.projects,
+    loading,
+    error,
+  ]);
+  const active = Math.min(selected, Math.max(0, results.length - 1));
+  function close() {
     setOpen(false);
-    setQuery("");
+  }
+  function go(path: string) {
+    close();
     navigate(path);
+    if (path.startsWith("/missoes?"))
+      emitUI("inspect", {
+        kind: "mission",
+        id: new URLSearchParams(path.split("?")[1]).get("mission"),
+      });
+    if (path.startsWith("/projetos?"))
+      emitUI("inspect", {
+        kind: "project",
+        id: new URLSearchParams(path.split("?")[1]).get("project"),
+      });
   }
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        open ? setOpen(false) : emitUI("command");
-        return;
-      }
-      if (!open) return;
-      if (event.key === "Escape") {
-        setOpen(false);
-        return;
-      }
-      if (event.key === "ArrowDown" && event.target === inputRef.current) {
-        event.preventDefault();
-        setSelected((value) =>
-          Math.min(value + 1, Math.max(filtered.length - 1, 0)),
-        );
-        return;
-      }
-      if (event.key === "ArrowUp" && event.target === inputRef.current) {
-        event.preventDefault();
-        setSelected((value) => Math.max(value - 1, 0));
-        return;
-      }
-      if (
-        event.key === "Enter" &&
-        event.target === inputRef.current &&
-        filtered[selected]
-      ) {
-        event.preventDefault();
-        go(filtered[selected].path);
-        return;
-      }
-      if (event.altKey && !event.ctrlKey && !event.metaKey) {
-        const shortcut = event.key.toLowerCase();
-        if (shortcut === "n") {
-          event.preventDefault();
-          setOpen(false);
-          emitUI("quickAdd");
-        }
-        if (shortcut === "h") {
-          event.preventDefault();
-          go("/hoje");
-        }
-        if (shortcut === "f") {
-          event.preventDefault();
-          go("/foco");
-        }
-        if (shortcut === "i") {
-          event.preventDefault();
-          go("/inbox");
-        }
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open, query, selected, filtered]);
+    const legacy = () => emitUI("command");
+    window.addEventListener(UI_EVENTS.navigation, legacy);
+    return () => window.removeEventListener(UI_EVENTS.navigation, legacy);
+  }, []);
   useEffect(() => {
-    if (open) window.setTimeout(() => inputRef.current?.focus(), 20);
+    const key = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        open ? close() : emitUI("command");
+      }
+      if (!open || e.target !== input.current) return;
+      if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+        e.preventDefault();
+        setSelected((n) =>
+          e.key === "Home"
+            ? 0
+            : e.key === "End"
+              ? Math.max(0, results.length - 1)
+              : Math.max(
+                  0,
+                  Math.min(
+                    results.length - 1,
+                    n + (e.key === "ArrowDown" ? 1 : -1),
+                  ),
+                ),
+        );
+      }
+      if (e.key === "Enter" && results[active]) {
+        e.preventDefault();
+        go(results[active].path);
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [open, results, active]);
+  useEffect(() => {
+    if (open) {
+      setQuery("");
+      setGroup("Todas");
+      setSelected(0);
+    }
   }, [open]);
   useEffect(() => {
     setSelected(0);
-  }, [query, open]);
+  }, [query, group]);
   useEffect(() => {
     if (open)
       document
-        .getElementById(`command-option-${selected}`)
+        .getElementById(`navigator-option-${active}`)
         ?.scrollIntoView({ block: "nearest" });
-  }, [selected, open]);
+  }, [active, open]);
   if (!open) return null;
   return (
     <ModalSurface
       className="overlay nexus-command-overlay"
-      label="Central de comandos"
-      onClose={() => setOpen(false)}
+      initialFocus={input}
+      label="Explorar NexOS"
+      onClose={close}
     >
-      <section className="command-palette" data-motion-surface="command">
+      <section className="command-palette navigator">
         <CosmicTexture />
-        <div className="command-palette__search" data-motion="command-search">
-          <Search size={17} />
+        <header className="navigator-heading">
+          <div>
+            <span className="eyebrow">Central de navegação</span>
+            <h2>Seu universo, conectado.</h2>
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Fechar navegação"
+            onClick={close}
+          >
+            <X size={18} />
+          </button>
+        </header>
+        <div className="command-palette__search">
+          <Search size={20} />
           <input
-            ref={inputRef}
+            ref={input}
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Pesquisar uma área…"
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Área, missão ou projeto…"
+            aria-label="Pesquisar no NexOS"
             role="combobox"
             aria-expanded="true"
-            aria-autocomplete="list"
             aria-controls="command-results"
+            aria-autocomplete="list"
             aria-activedescendant={
-              filtered[selected] ? `command-option-${selected}` : undefined
+              results[active] ? `navigator-option-${active}` : undefined
             }
-            aria-label="Pesquisar destinos no NexOS"
           />
-          <button onClick={() => setOpen(false)} aria-label="Fechar">
-            <X size={16} />
+        </div>
+        <div className="navigator-actions">
+          <button
+            onClick={() => {
+              close();
+              emitUI("quickAdd");
+            }}
+          >
+            <Plus size={17} />
+            Capturar
+          </button>
+          <button onClick={() => go("/foco")}>
+            <Focus size={17} />
+            Foco
+          </button>
+          <button onClick={() => go("/inbox")}>
+            <Inbox size={17} />
+            Organizar entradas
           </button>
         </div>
-        {!query && (
-          <div className="command-quick" data-motion="quick-actions">
-            <button
-              onClick={() => {
-                setOpen(false);
-                emitUI("quickAdd");
-              }}
-            >
-              <Plus size={16} />
-              <span>Nova missão</span>
-              <kbd>Alt N</kbd>
-            </button>
-            <button onClick={() => go("/hoje")}>
-              <Crosshair size={16} />
-              <span>Abrir Hoje</span>
-              <kbd>Alt H</kbd>
-            </button>
-            <button onClick={() => go("/foco")}>
-              <Focus size={16} />
-              <span>Iniciar foco</span>
-              <kbd>Alt F</kbd>
-            </button>
-            <button onClick={() => go("/inbox")}>
-              <Inbox size={16} />
-              <span>Caixa de entrada</span>
-              <kbd>Alt I</kbd>
-            </button>
-          </div>
+        {!query && recent.length > 0 && (
+          <section className="navigator-recents" aria-label="Áreas recentes">
+            <div>
+              <span>
+                <Clock3 size={14} />
+                Recentes
+              </span>
+              <button className="text-button" onClick={clearRecent}>
+                Limpar
+              </button>
+            </div>
+            <nav>
+              {recent.map((path) => {
+                const d = destinations.find((d) => d.path === path)!;
+                return (
+                  <button key={path} onClick={() => go(path)}>
+                    {d.label}
+                    <ArrowUpRight size={13} />
+                  </button>
+                );
+              })}
+            </nav>
+          </section>
         )}
-        <div
-          id="command-results"
-          className="command-results"
-          role="listbox"
-          aria-label={query ? "Resultados" : "Navegação"}
-          data-motion="results"
-        >
-          <span className="command-section-label">
-            {query ? "Resultados" : "Navegação"}
+        <nav className="navigator-groups" aria-label="Filtrar áreas">
+          {["Todas", ...navigation.map((g) => g.label)].map((label) => (
+            <button
+              key={label}
+              aria-pressed={group === label}
+              className={group === label ? "active" : ""}
+              onClick={() => setGroup(label)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+        <div className="navigator-results-label">
+          <span>
+            {query ? "Resultados nos dados carregados" : "Áreas do seu espaço"}
           </span>
-          {filtered.map((item, index) => {
+          <span>
+            {results.length}
+            {query && results.length === 40 ? " primeiros" : ""}
+          </span>
+        </div>
+        <div
+          className="command-results"
+          id="command-results"
+          role="listbox"
+          aria-label="Resultados da navegação"
+        >
+          {results.map((item, index) => {
             const Icon = item.icon;
             return (
               <button
-                key={item.path}
-                id={`command-option-${index}`}
+                key={item.id}
+                id={`navigator-option-${index}`}
                 role="option"
-                aria-selected={selected === index}
-                className={selected === index ? "is-selected" : ""}
+                aria-selected={active === index}
+                className={active === index ? "is-selected" : ""}
                 onMouseEnter={() => setSelected(index)}
                 onClick={() => go(item.path)}
-                data-motion="result"
               >
                 <span className={`nav-item__icon tone-${item.tone}`}>
-                  <Icon size={16} />
+                  <Icon size={19} />
                 </span>
                 <div>
                   <strong>{item.label}</strong>
-                  <small>{item.group}</small>
+                  <small>{item.detail}</small>
                 </div>
-                <Command size={12} />
+                {pinned.includes(item.path) ? (
+                  <Pin size={14} />
+                ) : (
+                  <ArrowUpRight size={14} />
+                )}
               </button>
             );
           })}
-          {!filtered.length && (
-            <div className="command-empty">Nenhum destino encontrado.</div>
+          {!results.length && (
+            <p className="command-empty">
+              Nenhum resultado. Tente outro nome ou outra área.
+            </p>
           )}
         </div>
+        {(loading || error) && query && (
+          <p className="navigator-note">
+            {loading
+              ? "Seus itens ainda estão carregando. Áreas continuam disponíveis."
+              : "Não foi possível consultar seus itens. A busca mostra apenas áreas."}
+          </p>
+        )}
+        {!query && (
+          <details className="navigator-preferences">
+            <summary>
+              <Pin size={15} />
+              Personalizar atalhos<span>{pinned.length}/6</span>
+            </summary>
+            <p>Fixe até seis áreas para abrir de qualquer tela.</p>
+            <div>
+              {destinations
+                .filter((d) => d.path !== "/")
+                .map((d) => (
+                  <label key={d.path}>
+                    <input
+                      type="checkbox"
+                      checked={pinned.includes(d.path)}
+                      disabled={!pinned.includes(d.path) && pinned.length >= 6}
+                      onChange={() => togglePin(d.path)}
+                    />
+                    <span>{d.label}</span>
+                  </label>
+                ))}
+            </div>
+            <p role="status">{message}</p>
+          </details>
+        )}
         <footer className="command-palette__footer">
-          <span>↑↓ navegar</span>
-          <span>↵ abrir</span>
-          <span>esc fechar</span>
+          <span>↑↓ escolher · Enter abrir</span>
+          <span>Esc fechar</span>
         </footer>
       </section>
     </ModalSurface>

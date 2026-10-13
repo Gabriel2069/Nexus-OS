@@ -1,4 +1,9 @@
-import { useEffect, useRef, type PropsWithChildren } from "react";
+import {
+  useEffect,
+  useRef,
+  type RefObject,
+  type PropsWithChildren,
+} from "react";
 import { createPortal } from "react-dom";
 
 /** One owner for dismissal, focus containment and background isolation. */
@@ -7,10 +12,12 @@ export function ModalSurface({
   className,
   label,
   onClose,
+  initialFocus,
 }: PropsWithChildren<{
   className: string;
   label: string;
   onClose: () => void;
+  initialFocus?: RefObject<HTMLElement | null>;
 }>) {
   const surface = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
@@ -31,7 +38,7 @@ export function ModalSurface({
         (el) => el.getClientRects().length && !el.closest("[hidden], [inert]"),
       );
     const frame = requestAnimationFrame(() =>
-      (focusable()[0] ?? surface.current)?.focus(),
+      (initialFocus?.current ?? focusable()[0] ?? surface.current)?.focus(),
     );
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {

@@ -43,9 +43,6 @@ export function QuickCaptureModal() {
     return () => window.removeEventListener(UI_EVENTS.quickAdd, show);
   }, []);
 
-  useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 40);
-  }, [open]);
   if (!open) return null;
 
   async function submit(event: FormEvent) {
@@ -84,6 +81,7 @@ export function QuickCaptureModal() {
   return (
     <ModalSurface
       className="overlay"
+      initialFocus={inputRef}
       label="Captura rápida"
       onClose={() => setOpen(false)}
     >

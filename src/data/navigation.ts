@@ -120,5 +120,8 @@ export const mobileNavigation = ["/", "/hoje", "/calendario", "/foco"].map(
     return item;
   },
 );
+const aliases: Record<string, string> = { "/guia": "/tutorial" };
+export const canonicalDestination = (pathname: string) =>
+  aliases[pathname] ?? pathname;
 export const isCurrentDestination = (path: string, pathname: string) =>
-  path === pathname || (path === "/tutorial" && pathname === "/guia");
+  path === canonicalDestination(pathname);

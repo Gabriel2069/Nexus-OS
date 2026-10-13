@@ -1,3 +1,4 @@
+import { useEntityDraft, useNavigation } from "../context/NavigationContext";
 import { PageLoading } from "../components/PageLoading";
 import { WorkspaceFeedback } from "../components/WorkspaceFeedback";
 import { dateKey } from "../lib/dates";
@@ -14,10 +15,12 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SurfaceCard } from "../components/SurfaceCard";
 import { useNexus } from "../context/NexusContext";
-import { emitUI } from "../lib/ui-events";
+import { emitUI, UI_EVENTS } from "../lib/ui-events";
+import { navigate } from "../lib/router";
+import { entityPath } from "../lib/navigation-state";
 import type { NexusProject } from "../types/nexus";
 
 const priorityWeight: Record<NexusProject["priority"], number> = {
@@ -30,6 +33,7 @@ const isoDate = (value: string | null) =>
   value ? dateKey(new Date(value)) : "";
 
 export function ProjectsPage() {
+  const { drafts } = useNavigation();
   const {
     workspace,
     addProject,
@@ -42,8 +46,24 @@ export function ProjectsPage() {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get("project"),
+  );
   const pending = useRef(false);
+
+  useEffect(() => {
+    const open = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (
+        detail?.kind === "project" &&
+        typeof detail.id === "string" &&
+        !pending.current
+      )
+        setSelectedId(detail.id);
+    };
+    window.addEventListener(UI_EVENTS.inspect, open);
+    return () => window.removeEventListener(UI_EVENTS.inspect, open);
+  }, []);
   const [actionError, setActionError] = useState<string | null>(null);
   const active = useMemo(
     () =>
@@ -60,7 +80,7 @@ export function ProjectsPage() {
     ? Math.round(active.reduce((sum, p) => sum + p.progress, 0) / active.length)
     : 0;
   const withoutAction = active.filter((p) => !p.next_action).length;
-  const selected = active.find((p) => p.id === selectedId) ?? null;
+  const selected = workspace.projects.find((p) => p.id === selectedId) ?? null;
   const linkedMissions = selected
     ? workspace.missions.filter((m) => m.project_id === selected.id)
     : [];
@@ -68,6 +88,22 @@ export function ProjectsPage() {
     (m) => !["Feita", "Cancelada"].includes(m.status),
   );
 
+  useEffect(() => {
+    if (!selected) return;
+    const frame = requestAnimationFrame(() => {
+      const element = document.querySelector<HTMLElement>(".project-inspector");
+      element?.focus({ preventScroll: true });
+      if (window.matchMedia("(max-width:920px)").matches)
+        element?.scrollIntoView({
+          block: "start",
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "instant"
+            : "smooth",
+        });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [selected?.id]);
   async function submit() {
     if (!name.trim() || pending.current) return;
     pending.current = true;
@@ -130,6 +166,7 @@ export function ProjectsPage() {
     setActionError(null);
     try {
       await completeMission(id);
+      drafts.delete(JSON.stringify(["mission", id]));
     } catch (err) {
       setActionError(
         err instanceof Error
@@ -175,6 +212,11 @@ export function ProjectsPage() {
       </section>
 
       {error && <WorkspaceFeedback error={error} retry={refresh} />}
+      {selectedId && !selected && !loading && !error && (
+        <p className="orbital-action-error" role="status">
+          O projeto solicitado não está nos dados carregados.
+        </p>
+      )}
       {actionError && (
         <p className="orbital-action-error" role="alert">
           {actionError}
@@ -389,7 +431,13 @@ export function ProjectsPage() {
                       {m.rank}
                     </span>
                     <div>
-                      <strong>{m.title}</strong>
+                      <button
+                        className="text-button project-mission-open"
+                        onClick={() => navigate(entityPath("mission", m.id))}
+                        aria-label={`Abrir missão ${m.title}`}
+                      >
+                        {m.title}
+                      </button>
                       <small>
                         {m.status} · {m.duration_minutes ?? 45} min
                       </small>
@@ -435,13 +483,16 @@ function ProjectDecision({
     >,
   ) => Promise<boolean>;
 }) {
-  const [draft, setDraft] = useState({
-    status: project.status,
-    priority: project.priority,
-    progress: project.progress,
-    action: project.next_action ?? "",
-    date: isoDate(project.due_at),
-  });
+  const [draft, setDraft, clearDraft] = useEntityDraft(
+    ["project", project.id],
+    {
+      status: project.status,
+      priority: project.priority,
+      progress: project.progress,
+      action: project.next_action ?? "",
+      date: isoDate(project.due_at),
+    },
+  );
   const [saved, setSaved] = useState(false);
   const field = <K extends keyof typeof draft>(
     key: K,
@@ -456,17 +507,20 @@ function ProjectDecision({
       onSubmit={async (e) => {
         e.preventDefault();
         if (busy) return;
-        setSaved(
-          await save({
-            status: draft.status,
-            priority: draft.priority,
-            progress: draft.progress,
-            next_action: draft.action.trim() || null,
-            due_at: draft.date ? `${draft.date}T23:59:00-03:00` : null,
-          }),
-        );
+        const success = await save({
+          status: draft.status,
+          priority: draft.priority,
+          progress: draft.progress,
+          next_action: draft.action.trim() || null,
+          due_at: draft.date ? `${draft.date}T23:59:00-03:00` : null,
+        });
+        if (success) clearDraft();
+        setSaved(success);
       }}
     >
+      <p className="entity-draft-hint">
+        Troque de área sem perder o rascunho. Salve antes de atualizar a página.
+      </p>
       <fieldset disabled={busy}>
         <label className="project-next-editor">
           <span>Próxima ação</span>

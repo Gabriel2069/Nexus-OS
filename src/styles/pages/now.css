@@ -42,7 +42,7 @@
   -webkit-backdrop-filter: blur(12px);
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--nx-visor-rim);
   border-radius: 28px;
   background: linear-gradient(
     115deg,
@@ -55,7 +55,7 @@
 }
 .now-stage__main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 230px;
+  grid-template-columns: minmax(0, 1fr) 250px;
   gap: 32px;
   align-items: center;
   padding: 36px;
@@ -122,14 +122,9 @@
 }
 .now-support-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-columns: 1fr;
   gap: 24px;
   align-items: stretch;
-}
-.now-side-stack {
-  display: grid;
-  gap: 24px;
-  min-width: 0;
 }
 .now-page .surface-card {
   border-radius: 20px;
@@ -361,10 +356,7 @@
     padding: 28px;
   }
   .now-support-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
-  }
-  .now-side-stack {
+    grid-template-columns: 1fr;
     gap: 18px;
   }
   .now-bottom-grid {
@@ -432,9 +424,6 @@
   .now-page .surface-card {
     padding: 22px;
   }
-  .now-side-stack {
-    gap: 18px;
-  }
   .now-stage__action {
     max-width: 100%;
   }
@@ -474,4 +463,160 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
+}
+
+/* Inicio combines direction, launch and live work without fabricated activity. */
+.now-launchpad {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+  gap: 20px;
+  align-items: stretch;
+}
+.now-shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.now-shortcut-grid button {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+  min-height: 128px;
+  padding: 18px;
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  background: var(--nx-glass-bg);
+  color: var(--text);
+  text-align: left;
+}
+.now-shortcut-grid button > span {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--nx-visor-rim);
+  border-radius: 13px;
+  background: var(--nx-visor-bg);
+  box-shadow: 0 0 18px var(--nx-photon-glow);
+}
+.now-shortcut-grid strong {
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.now-shortcut-grid small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.now-shortcut-grid button > svg {
+  position: absolute;
+  right: 14px;
+  top: 16px;
+  color: var(--nx-photon);
+}
+.now-launchpad-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.now-resume-list,
+.now-work-list {
+  display: grid;
+  gap: 12px;
+}
+.now-resume-list button,
+.now-work-list button,
+.now-inbox-signal {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  width: 100%;
+  min-height: 72px;
+  padding: 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 15px;
+  background: var(--nx-glass-bg);
+  color: var(--text);
+  text-align: left;
+}
+.now-resume-list button > span,
+.now-work-list button > span,
+.now-inbox-signal > span {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.now-resume-list strong,
+.now-work-list strong,
+.now-inbox-signal strong {
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.now-resume-list small,
+.now-work-list small,
+.now-inbox-signal small {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.now-inbox-signal {
+  margin-top: 16px;
+  border-color: color-mix(in srgb, var(--amber) 35%, var(--hairline));
+}
+.now-workbench {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+@media (hover: hover) {
+  .now-shortcut-grid button:hover,
+  .now-resume-list button:hover,
+  .now-work-list button:hover,
+  .now-inbox-signal:hover {
+    border-color: var(--nx-photon);
+    box-shadow:
+      inset 0 1px var(--nx-glass-highlight),
+      0 0 24px var(--nx-photon-glow);
+  }
+}
+@media (max-width: 920px) {
+  .now-launchpad {
+    grid-template-columns: 1fr;
+  }
+  .now-shortcut-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .now-shortcut-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .now-shortcut-grid button {
+    padding: 14px;
+    min-height: 124px;
+  }
+  .now-workbench {
+    grid-template-columns: 1fr;
+  }
+  .now-launchpad-actions > button {
+    flex: 1;
+  }
+  .now-heading h1 {
+    font-size: 30px;
+  }
+}
+
+.now-resume-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  margin: 22px 0 12px;
 }

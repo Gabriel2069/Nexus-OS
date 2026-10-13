@@ -15,6 +15,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { SurfaceCard } from "../components/SurfaceCard";
 import { useNexus } from "../context/NexusContext";
+import { entityPath } from "../lib/navigation-state";
 import { navigate } from "../lib/router";
 import type { FocusSession } from "../types/nexus";
 
@@ -118,6 +119,7 @@ export function FocusPage() {
           }),
         );
       else sessionStorage.removeItem(storageKey);
+      window.dispatchEvent(new Event("nexos:focus-checkpoint"));
     } catch {
       /* Storage availability does not block the timer. */
     }
@@ -337,6 +339,34 @@ export function FocusPage() {
           </div>
         </SurfaceCard>
         <div className="focus-side">
+          {linkedMission && (
+            <SurfaceCard
+              tone="violet"
+              eyebrow="Contexto"
+              title={linkedMission.title}
+            >
+              <div className="button-row">
+                <button
+                  className="secondary-button"
+                  onClick={() =>
+                    navigate(entityPath("mission", linkedMission.id))
+                  }
+                >
+                  Abrir missão
+                </button>
+                {linkedMission.project_id && (
+                  <button
+                    className="text-button"
+                    onClick={() =>
+                      navigate(entityPath("project", linkedMission.project_id!))
+                    }
+                  >
+                    Ver projeto
+                  </button>
+                )}
+              </div>
+            </SurfaceCard>
+          )}
           <SurfaceCard eyebrow="Hoje" title="Tempo em foco">
             <div className="focus-stat-big">
               <strong>{todayMinutes}</strong>

@@ -1,3 +1,4 @@
+import { entityPath } from "../lib/navigation-state";
 import { StellarSpark } from "../components/CosmicEnvironment";
 import { PageLoading } from "../components/PageLoading";
 import { WorkspaceFeedback } from "../components/WorkspaceFeedback";
@@ -296,7 +297,7 @@ function buildContext(
             label: p.name,
             detail: p.next_action || "Próxima ação ainda não definida",
             meta: `${p.progress}% · ${p.priority}`,
-            action: () => navigate("/projetos"),
+            action: () => navigate(entityPath("project", p.id)),
           })),
           empty: "Nenhum projeto ativo.",
         },
@@ -309,7 +310,7 @@ function buildContext(
               label: m.title,
               detail: "Missão atrasada",
               meta: dateLabel(m.due_at),
-              action: () => navigate("/missoes"),
+              action: () => navigate(entityPath("mission", m.id)),
             })),
             ...(nextExam
               ? [
@@ -439,7 +440,7 @@ function buildContext(
               id: m.id,
               label: m.title,
               detail: m.notes || "",
-              action: () => navigate("/missoes"),
+              action: () => navigate(entityPath("mission", m.id)),
             })),
             empty: "Nenhuma nota preservada em missões.",
           },
@@ -508,7 +509,7 @@ function buildContext(
             label: m.title,
             detail: m.notes || "",
             meta: m.project_id ? "ligada a projeto" : "missão",
-            action: () => navigate("/missoes"),
+            action: () => navigate(entityPath("mission", m.id)),
           })),
           empty: "Nenhuma nota contextual recente.",
         },
@@ -577,14 +578,14 @@ function buildContext(
               label: m.title,
               detail: "Atrasada — reagende, conclua ou cancele",
               meta: dateLabel(m.due_at),
-              action: () => navigate("/missoes"),
+              action: () => navigate(entityPath("mission", m.id)),
             })),
             ...stale.slice(0, 3).map((p) => ({
               id: p.id,
               label: p.name,
               detail: "Defina a próxima ação",
               meta: `${p.progress}%`,
-              action: () => navigate("/projetos"),
+              action: () => navigate(entityPath("project", p.id)),
             })),
           ],
           empty: "Nenhuma pendência estrutural.",

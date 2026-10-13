@@ -1,3 +1,4 @@
+import { useEntityDraft, useNavigation } from "../context/NavigationContext";
 import { PageLoading } from "../components/PageLoading";
 import { WorkspaceFeedback } from "../components/WorkspaceFeedback";
 import { civilDate, dateKey } from "../lib/dates";
@@ -21,7 +22,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { SurfaceCard } from "../components/SurfaceCard";
 import { useNexus } from "../context/NexusContext";
 import { navigate } from "../lib/router";
-import { emitUI } from "../lib/ui-events";
+import { emitUI, UI_EVENTS } from "../lib/ui-events";
+import { entityPath } from "../lib/navigation-state";
 import type { NexusMission } from "../types/nexus";
 
 type MissionView = "board" | "list" | "focus";
@@ -62,6 +64,7 @@ function dueLabel(value: string | null) {
 }
 
 export function MissionsPage() {
+  const { drafts } = useNavigation();
   const {
     workspace,
     completeMission,
@@ -75,9 +78,25 @@ export function MissionsPage() {
   const [view, setView] = useState<MissionView>(() =>
     window.matchMedia("(max-width:760px)").matches ? "list" : "board",
   );
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get("mission"),
+  );
   const [saving, setSaving] = useState(false);
   const pending = useRef(false);
+
+  useEffect(() => {
+    const open = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (
+        detail?.kind === "mission" &&
+        typeof detail.id === "string" &&
+        !pending.current
+      )
+        setSelectedId(detail.id);
+    };
+    window.addEventListener(UI_EVENTS.inspect, open);
+    return () => window.removeEventListener(UI_EVENTS.inspect, open);
+  }, []);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const filtered = useMemo(
@@ -138,9 +157,21 @@ export function MissionsPage() {
   ).length;
 
   useEffect(() => {
-    if (selectedId && !workspace.missions.some((m) => m.id === selectedId))
-      setSelectedId(null);
-  }, [workspace.missions, selectedId]);
+    if (!selected) return;
+    const frame = requestAnimationFrame(() => {
+      const element = document.querySelector<HTMLElement>(".mission-inspector");
+      element?.focus({ preventScroll: true });
+      if (window.matchMedia("(max-width:920px)").matches)
+        element?.scrollIntoView({
+          block: "start",
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "instant"
+            : "smooth",
+        });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [selected?.id]);
   function inspect(id: string) {
     if (pending.current) return;
     setSelectedId(id);
@@ -184,6 +215,7 @@ export function MissionsPage() {
     setActionError(null);
     try {
       await completeMission(selected.id);
+      drafts.delete(JSON.stringify(["mission", selected.id]));
       setSelectedId(null);
     } catch (err) {
       setActionError(
@@ -224,6 +256,12 @@ export function MissionsPage() {
       {actionError && (
         <p className="orbital-action-error" role="alert">
           {actionError}
+        </p>
+      )}
+      {selectedId && !selected && !loading && !error && (
+        <p className="orbital-action-error" role="status">
+          A missão solicitada não está nos dados carregados. Consulte a lista ou
+          atualize seu espaço.
         </p>
       )}
       <section className="mission-context-strip">
@@ -563,7 +601,7 @@ export function MissionsPage() {
               {project ? (
                 <button
                   className="context-linked-entity"
-                  onClick={() => navigate("/projetos")}
+                  onClick={() => navigate(entityPath("project", project.id))}
                 >
                   <div>
                     <strong>{project.name}</strong>
@@ -680,13 +718,16 @@ function MissionDecision({
     >,
   ) => Promise<boolean>;
 }) {
-  const [draft, setDraft] = useState({
-    status: mission.status,
-    priority: mission.priority,
-    rank: mission.rank,
-    project: mission.project_id ?? "",
-    date: isoDate(mission.due_at),
-  });
+  const [draft, setDraft, clearDraft] = useEntityDraft(
+    ["mission", mission.id],
+    {
+      status: mission.status,
+      priority: mission.priority,
+      rank: mission.rank,
+      project: mission.project_id ?? "",
+      date: isoDate(mission.due_at),
+    },
+  );
   const [saved, setSaved] = useState(false);
   const terminal = mission.status === "Feita";
   const field = <K extends keyof typeof draft>(
@@ -702,17 +743,20 @@ function MissionDecision({
       onSubmit={async (e) => {
         e.preventDefault();
         if (busy || terminal) return;
-        setSaved(
-          await save({
-            status: draft.status,
-            priority: draft.priority,
-            rank: draft.rank,
-            project_id: draft.project || null,
-            due_at: draft.date ? `${draft.date}T23:59:00-03:00` : null,
-          }),
-        );
+        const success = await save({
+          status: draft.status,
+          priority: draft.priority,
+          rank: draft.rank,
+          project_id: draft.project || null,
+          due_at: draft.date ? `${draft.date}T23:59:00-03:00` : null,
+        });
+        if (success) clearDraft();
+        setSaved(success);
       }}
     >
+      <p className="entity-draft-hint">
+        Troque de área sem perder o rascunho. Salve antes de atualizar a página.
+      </p>
       <fieldset disabled={busy || terminal}>
         <div className="inspector-form-grid">
           <label>

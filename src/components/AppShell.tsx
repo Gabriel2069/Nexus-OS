@@ -1,3 +1,5 @@
+import { RelatedAreas } from "./RelatedAreas";
+import { WorkspaceRail } from "./WorkspaceRail";
 import { Plus } from "lucide-react";
 import type { PropsWithChildren } from "react";
 import { useEffect, useState } from "react";
@@ -69,6 +71,7 @@ export function AppShell({ pathname, children }: AppShellProps) {
       />
       <div className="app-shell__content">
         <Topbar pathname={pathname} />
+        <WorkspaceRail pathname={pathname} />
         <main
           id="nexos-content"
           tabIndex={-1}
@@ -76,6 +79,7 @@ export function AppShell({ pathname, children }: AppShellProps) {
           key={pathname}
         >
           {children}
+          <RelatedAreas pathname={pathname} />
         </main>
       </div>
       <button

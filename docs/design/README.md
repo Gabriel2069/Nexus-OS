@@ -13,3 +13,5 @@ A revisão de 12/10/2026 introduz vidro denso e textura espacial também nos car
 [V04_REVIEW.md](V04_REVIEW.md) incorpora luz estelar e constelações à base, além de Missões/Rotinas/Foco/Projetos. O cronômetro aprovado permanece preservado; a identidade compartilhada passa a seguir essa revisão.
 
 A [revisão V05/V06](V05_REVIEW.md) registra as onze áreas restantes e o acabamento compartilhado de menus, pop-ups e seletores.
+
+[N01_REVIEW.md](N01_REVIEW.md): upgrade funcional de início, menus, atalhos e relações.

@@ -1,7 +1,16 @@
+import { destinations, useNavigation } from "../context/NavigationContext";
+import { entityPath } from "../lib/navigation-state";
+import { emitUI } from "../lib/ui-events";
 import { StellarSpark } from "../components/CosmicEnvironment";
 import { CosmicTexture } from "../components/CosmicEnvironment";
 import {
   ArrowRight,
+  Compass,
+  Plus,
+  Search,
+  BriefcaseBusiness,
+  ListChecks,
+  Inbox,
   CalendarClock,
   CalendarDays,
   Check,
@@ -49,6 +58,7 @@ const categoryLabel: Record<string, string> = {
 };
 export function HomePage() {
   const { workspace, loading, error, refresh } = useNexus();
+  const { pinned, recent } = useNavigation();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 30_000);
@@ -87,6 +97,24 @@ export function HomePage() {
       !["sleep", "recovery"].includes(event.category) &&
       event.end.getTime() - event.start.getTime() < 20 * 60 * 60_000,
   );
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      hourCycle: "h23",
+      timeZone: "America/Sao_Paulo",
+    }).format(now),
+  );
+  const greeting =
+    hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  const openMissions = workspace.missions.filter((m) =>
+    ["A fazer", "Em andamento"].includes(m.status),
+  );
+  const projects = workspace.projects
+    .filter((p) => p.status === "Ativo")
+    .slice(0, 3);
+  const inboxCount = workspace.missions.filter(
+    (m) => m.status === "Inbox",
+  ).length;
   if (loading) return <PageLoading />;
   if (error)
     return (
@@ -98,10 +126,13 @@ export function HomePage() {
     <div className="page-stack now-page">
       <header className="now-heading">
         <div>
-          <span className="eyebrow">Seu observatório pessoal</span>
+          <span className="eyebrow">Seu centro de comando</span>
           <h1>
-            Agora
             <StellarSpark />
+            {greeting}
+            {workspace.profile?.display_name
+              ? `, ${workspace.profile.display_name}`
+              : "."}
           </h1>
         </div>
         <div className="now-heading__time">
@@ -183,6 +214,235 @@ export function HomePage() {
           </span>
         </footer>
       </section>
+      <section className="now-launchpad" aria-label="Acessos e continuidade">
+        <SurfaceCard
+          tone="cyan"
+          className="now-shortcuts"
+          eyebrow="Seu espaço"
+          title="Abra o que importa"
+          action={
+            <button className="text-button" onClick={() => emitUI("command")}>
+              <Compass size={16} />
+              Explorar tudo
+            </button>
+          }
+        >
+          <div className="now-shortcut-grid">
+            {pinned
+              .filter((p) => p !== "/")
+              .map((path) => {
+                const d = destinations.find((d) => d.path === path)!;
+                const Icon = d.icon;
+                return (
+                  <button key={path} onClick={() => navigate(path)}>
+                    <span className={`tone-${d.tone}`}>
+                      <Icon size={22} />
+                    </span>
+                    <strong>{d.label}</strong>
+                    <small>{d.group}</small>
+                    <ArrowRight size={14} />
+                  </button>
+                );
+              })}
+          </div>
+          {!pinned.length && (
+            <p className="panel-copy">
+              Fixe as áreas que você mais usa em Explorar.
+            </p>
+          )}
+          <div className="now-launchpad-actions">
+            <button
+              className="secondary-button"
+              onClick={() => emitUI("quickAdd", { type: "inbox" })}
+            >
+              <Plus size={16} />
+              Capturar ideia
+            </button>
+            <button
+              className="secondary-button"
+              onClick={() => emitUI("command")}
+            >
+              <Search size={16} />
+              Encontrar item
+            </button>
+          </div>
+        </SurfaceCard>
+        <SurfaceCard
+          tone="violet"
+          className="now-resume"
+          eyebrow="Continuidade"
+          title="Retome de onde faz sentido"
+        >
+          <div className="now-resume-list">
+            {recent
+              .filter((path) => path !== "/")
+              .slice(0, 3)
+              .map((path) => {
+                const d = destinations.find((d) => d.path === path)!;
+                const Icon = d.icon;
+                return (
+                  <button key={path} onClick={() => navigate(path)}>
+                    <Icon size={19} />
+                    <span>
+                      <strong>{d.label}</strong>
+                      <small>Área visitada recentemente</small>
+                    </span>
+                    <ArrowRight size={15} />
+                  </button>
+                );
+              })}
+          </div>
+          {!recent.length && (
+            <p className="panel-copy">
+              As áreas que você visitar aparecem aqui para facilitar a volta.
+            </p>
+          )}
+          <button
+            className="now-inbox-signal"
+            onClick={() => navigate("/inbox")}
+          >
+            <Inbox size={19} />
+            <span>
+              <strong>
+                {inboxCount
+                  ? `${inboxCount} ${inboxCount === 1 ? "entrada para decidir" : "entradas para decidir"}`
+                  : "Caixa de entrada organizada"}
+              </strong>
+              <small>
+                {inboxCount
+                  ? "Dê um destino quando houver espaço."
+                  : "Capture quando algo novo surgir."}
+              </small>
+            </span>
+            <ArrowRight size={15} />
+          </button>
+          <h4 className="now-resume-label">O essencial, sem pressa</h4>
+          <div className="essential-loop">
+            <button
+              className={checkinDone ? "done" : ""}
+              onClick={() => navigate("/hoje")}
+            >
+              <span>
+                {checkinDone ? <Check size={16} /> : <Sparkles size={16} />}
+              </span>
+              <div>
+                <strong>Como você está?</strong>
+                <small>
+                  {checkinDone
+                    ? "check-in registrado hoje"
+                    : "energia e humor, em um instante"}
+                </small>
+              </div>
+              <ArrowRight size={14} />
+            </button>
+            <button
+              className={todayFocus > 0 ? "done" : ""}
+              onClick={() => navigate(focusPath)}
+            >
+              <span>
+                {todayFocus > 0 ? <Check size={16} /> : <Orbit size={16} />}
+              </span>
+              <div>
+                <strong>Um bloco que importa</strong>
+                <small>
+                  {todayFocus > 0
+                    ? `${todayFocus} min registrados hoje`
+                    : "quando houver espaço de verdade"}
+                </small>
+              </div>
+              <ArrowRight size={14} />
+            </button>
+            <button
+              className={eveningDone ? "done" : ""}
+              onClick={() => navigate("/rotinas")}
+            >
+              <span>
+                {eveningDone ? <Check size={16} /> : <Moon size={16} />}
+              </span>
+              <div>
+                <strong>Fechar o dia</strong>
+                <small>guardar o que ficou e desacelerar</small>
+              </div>
+              <ArrowRight size={14} />
+            </button>
+          </div>
+        </SurfaceCard>
+      </section>
+      <section className="now-workbench" aria-label="Trabalho em andamento">
+        <SurfaceCard
+          tone="rose"
+          eyebrow="Execução"
+          title="Missões abertas"
+          action={
+            <button
+              className="text-button"
+              onClick={() => navigate("/missoes")}
+            >
+              Ver todas <ArrowRight size={14} />
+            </button>
+          }
+        >
+          <div className="now-work-list">
+            {openMissions.slice(0, 3).map((m) => (
+              <button
+                key={m.id}
+                onClick={() => navigate(entityPath("mission", m.id))}
+              >
+                <ListChecks size={18} />
+                <span>
+                  <strong>{m.title}</strong>
+                  <small>
+                    {m.priority} · {m.duration_minutes ?? 45} min
+                  </small>
+                </span>
+                <ArrowRight size={14} />
+              </button>
+            ))}
+          </div>
+          {!openMissions.length && (
+            <p className="panel-copy">
+              Nenhuma missão aberta nos dados carregados. Crie uma quando houver
+              algo concreto para fazer.
+            </p>
+          )}
+        </SurfaceCard>
+        <SurfaceCard
+          tone="violet"
+          eyebrow="Direção"
+          title="Projetos em movimento"
+          action={
+            <button
+              className="text-button"
+              onClick={() => navigate("/projetos")}
+            >
+              Ver todos <ArrowRight size={14} />
+            </button>
+          }
+        >
+          <div className="now-work-list">
+            {projects.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => navigate(entityPath("project", p.id))}
+              >
+                <BriefcaseBusiness size={18} />
+                <span>
+                  <strong>{p.name}</strong>
+                  <small>
+                    {p.next_action || "Definir a próxima ação"} · {p.progress}%
+                  </small>
+                </span>
+                <ArrowRight size={14} />
+              </button>
+            ))}
+          </div>
+          {!projects.length && (
+            <p className="panel-copy">
+              Nenhum projeto ativo nos dados carregados.
+            </p>
+          )}
+        </SurfaceCard>
+      </section>
       <section className="now-support-grid">
         <SurfaceCard
           tone="blue"
@@ -238,63 +498,6 @@ export function HomePage() {
             )}
           </div>
         </SurfaceCard>
-        <div className="now-side-stack">
-          <SurfaceCard
-            tone="violet"
-            eyebrow="Continuidade"
-            title="O essencial, sem pressa"
-          >
-            <div className="essential-loop">
-              <button
-                className={checkinDone ? "done" : ""}
-                onClick={() => navigate("/hoje")}
-              >
-                <span>
-                  {checkinDone ? <Check size={16} /> : <Sparkles size={16} />}
-                </span>
-                <div>
-                  <strong>Como você está?</strong>
-                  <small>
-                    {checkinDone
-                      ? "check-in registrado hoje"
-                      : "energia e humor, em um instante"}
-                  </small>
-                </div>
-                <ArrowRight size={14} />
-              </button>
-              <button
-                className={todayFocus > 0 ? "done" : ""}
-                onClick={() => navigate(focusPath)}
-              >
-                <span>
-                  {todayFocus > 0 ? <Check size={16} /> : <Orbit size={16} />}
-                </span>
-                <div>
-                  <strong>Um bloco que importa</strong>
-                  <small>
-                    {todayFocus > 0
-                      ? `${todayFocus} min registrados hoje`
-                      : "quando houver espaço de verdade"}
-                  </small>
-                </div>
-                <ArrowRight size={14} />
-              </button>
-              <button
-                className={eveningDone ? "done" : ""}
-                onClick={() => navigate("/rotinas")}
-              >
-                <span>
-                  {eveningDone ? <Check size={16} /> : <Moon size={16} />}
-                </span>
-                <div>
-                  <strong>Fechar o dia</strong>
-                  <small>guardar o que ficou e desacelerar</small>
-                </div>
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          </SurfaceCard>
-        </div>
       </section>
       <section className="now-bottom-grid">
         <SurfaceCard
@@ -333,6 +536,16 @@ export function HomePage() {
               )}
             </div>
           </div>
+          {context.nextExam && (
+            <button
+              className="text-button"
+              onClick={() =>
+                navigate(`/calendario?date=${dateKey(context.nextExam!.start)}`)
+              }
+            >
+              Ver dia da prova <ArrowRight size={14} />
+            </button>
+          )}
         </SurfaceCard>
         <SurfaceCard
           tone="violet"
