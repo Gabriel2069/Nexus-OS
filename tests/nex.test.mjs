@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { route, parseAnswer } from "../worker/nex/routes.ts";
 import worker from "../worker/index.ts";
-import { base64, seal, unseal } from "../worker/nex/core.ts";
+import { base64, seal, unseal, db } from "../worker/nex/core.ts";
 import { complete, enabled, models } from "../worker/nex/providers.ts";
 const who = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -277,7 +277,7 @@ for (const callbackPath of [
         if (url.includes("/nex_oauth_states")) {
           if (init.method === "POST") {
             stateRow = JSON.parse(init.body);
-            return ok(null);
+            return new Response(null, { status: 201 });
           }
           if (init.method === "DELETE" && url.includes("state_hash=")) {
             const rows = stateRow ? [stateRow] : [];
@@ -290,7 +290,7 @@ for (const callbackPath of [
         if (url.includes("/nex_google_connections")) {
           if (init.method === "POST") {
             connection = JSON.parse(init.body);
-            return ok(null);
+            return new Response(null, { status: 201 });
           }
           return ok(connection ? [connection] : []);
         }
@@ -373,6 +373,16 @@ for (const callbackPath of [
       },
     );
   });
+test("PostgREST minimal inserts succeed once; empty/malformed reads remain explicit errors", async () => {
+  await mock((_url, init) => new Response(null, { status: init.method === "POST" ? 201 : 200 }), async (calls) => {
+    assert.equal(await db(env, who, "nex_oauth_states", { method: "POST", body: "{}" }), null);
+    assert.equal(calls.length, 1);
+    await assert.rejects(db(env, who, "nex_memories"), { status: 503 });
+  });
+  await mock(() => new Response("not-json"), async () => {
+    await assert.rejects(db(env, who, "nex_memories"), { status: 503 });
+  });
+});
 test("Google wrong state, denied service and callback mismatch never exchange token", async () => {
   await mock(
     (url) => auth(url) ?? ok(true),

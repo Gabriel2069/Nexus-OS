@@ -101,7 +101,16 @@ export async function db(
       "Dados do N.E.X indisponíveis. Verifique a configuração e a migração.",
     );
   }
-  return r.status === 204 ? null : r.json();
+  if (r.status === 204) return null;
+  const payload = await r.text();
+  // PostgREST inserts default to 201 Created with return=minimal (no body).
+  // A completed write must not fail JSON parsing or be retried unnecessarily.
+  if (r.status === 201 && !payload.trim()) return null;
+  try {
+    return JSON.parse(payload);
+  } catch {
+    throw new Fault(503, "Resposta de dados do N.E.X indisponível.");
+  }
 }
 export async function body(request: Request, max = 16000): Promise<unknown> {
   if (!request.body) throw new Fault(400, "Pedido vazio.");
