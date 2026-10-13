@@ -1,3 +1,6 @@
+import { StellarSpark } from "../components/CosmicEnvironment";
+import { PageLoading } from "../components/PageLoading";
+import { WorkspaceFeedback } from "../components/WorkspaceFeedback";
 import {
   CalendarRange,
   CircleDollarSign,
@@ -9,9 +12,11 @@ import {
   Trash2,
   WalletCards,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { SurfaceCard } from "../components/SurfaceCard";
 import { useNexus } from "../context/NexusContext";
+import { dateKey, civilDate, shiftDate, APP_TIMEZONE } from "../lib/dates";
+import { isDemoMode } from "../lib/supabase";
 import { supabase } from "../lib/supabase";
 
 type FinanceSnapshot = {
@@ -37,16 +42,11 @@ type FinanceEntry = {
 const brl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 const number = (value: number | string | undefined) => Number(value ?? 0);
-const today = () =>
-  new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+const today = dateKey;
 const categories = [
   "Pessoal",
   "Alimentação",
@@ -63,6 +63,9 @@ export function FinancePage() {
   const [entries, setEntries] = useState<FinanceEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const writeLock = useRef(false);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
@@ -73,6 +76,8 @@ export function FinancePage() {
 
   const load = useCallback(async () => {
     if (!userId) {
+      setSnapshot(null);
+      setEntries([]);
       setLoading(false);
       return;
     }
@@ -121,12 +126,11 @@ export function FinancePage() {
   const updated = useMemo(
     () =>
       snapshot?.snapshot_date
-        ? new Date(
-            `${snapshot.snapshot_date}T12:00:00-03:00`,
-          ).toLocaleDateString("pt-BR", {
+        ? civilDate(snapshot.snapshot_date).toLocaleDateString("pt-BR", {
             day: "2-digit",
             month: "long",
             year: "numeric",
+            timeZone: APP_TIMEZONE,
           })
         : null,
     [snapshot],
@@ -143,14 +147,14 @@ export function FinancePage() {
     .reduce((sum, item) => sum + number(item.amount), 0);
   const remainingPlan = spending - realizedExpense;
   const futurePlanned = (days: number) => {
-    const limit = new Date();
-    limit.setDate(limit.getDate() + days);
+    const start = dateKey();
+    const limit = dateKey(shiftDate(civilDate(start), days));
     return entries
       .filter(
         (item) =>
           item.status === "planned" &&
-          new Date(`${item.entry_date}T12:00:00-03:00`) <= limit &&
-          new Date(`${item.entry_date}T12:00:00-03:00`) >= new Date(),
+          item.entry_date >= start &&
+          item.entry_date <= limit,
       )
       .reduce(
         (sum, item) =>
@@ -161,56 +165,85 @@ export function FinancePage() {
   };
 
   async function addEntry() {
-    if (!userId || !title.trim() || !Number(amount) || adding) return;
+    if (
+      writeLock.current ||
+      !title.trim() ||
+      !Number.isFinite(Number(amount)) ||
+      Number(amount) <= 0 ||
+      !entryDate
+    )
+      return;
+    if (!userId) {
+      setActionError(
+        "Entre na sua conta para registrar movimentações. A demonstração não altera finanças.",
+      );
+      return;
+    }
+    writeLock.current = true;
     setAdding(true);
-    setError(null);
+    setActionError(null);
     try {
-      const { error } = await supabase
-        .from("personal_finance_entries")
-        .insert({
-          user_id: userId,
-          title: title.trim(),
-          kind,
-          category,
-          amount: Number(amount),
-          entry_date: entryDate,
-          status,
-        });
+      const { error } = await supabase.from("personal_finance_entries").insert({
+        user_id: userId,
+        title: title.trim(),
+        kind,
+        category,
+        amount: Number(amount),
+        entry_date: entryDate,
+        status,
+      });
       if (error) throw error;
       setTitle("");
       setAmount("");
       setStatus("realized");
       await load();
     } catch (err) {
-      setError(
+      setActionError(
         err instanceof Error
           ? err.message
           : "Não foi possível salvar o lançamento.",
       );
     } finally {
+      writeLock.current = false;
       setAdding(false);
     }
   }
   async function removeEntry(id: string) {
-    if (!userId) return;
-    const { error } = await supabase
-      .from("personal_finance_entries")
-      .delete()
-      .eq("user_id", userId)
-      .eq("id", id);
-    if (error) {
-      setError(error.message);
-      return;
+    if (writeLock.current || !userId) return;
+    writeLock.current = true;
+    setRemoving(id);
+    setActionError(null);
+    try {
+      const { error } = await supabase
+        .from("personal_finance_entries")
+        .delete()
+        .eq("user_id", userId)
+        .eq("id", id);
+      if (error) throw error;
+      await load();
+    } catch (err) {
+      setActionError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível excluir o lançamento.",
+      );
+    } finally {
+      writeLock.current = false;
+      setRemoving(null);
     }
-    await load();
   }
+  if (loading) return <PageLoading />;
+  if (error) return <WorkspaceFeedback error={error} retry={load} />;
 
   return (
     <div className="page-stack finance-page">
-      <section className="page-hero page-hero--amber finance-hero">
+      <section className="orbital-heading page-hero--amber finance-hero">
         <div>
           <span className="eyebrow">Resumo atual</span>
-          <h1>Finanças</h1>
+          <h1>
+            <StellarSpark />
+            Finanças
+          </h1>
           <p>
             Mesada, reserva e plano de gastos continuam no centro. Abaixo, você
             pode registrar o que realmente entrou ou saiu sem transformar isso
@@ -229,13 +262,23 @@ export function FinancePage() {
         </div>
       </section>
 
-      {error && (
-        <div role="alert" className="auth-message auth-message--error">
-          {error}
-          <button className="text-button" onClick={() => void load()}>
-            Tentar novamente
-          </button>
-        </div>
+      {actionError && (
+        <p role="alert" className="orbital-action-error">
+          {actionError}
+        </p>
+      )}
+      {!snapshot && (
+        <p className="panel-copy" role="status">
+          Ainda não há resumo financeiro cadastrado. Os valores abaixo são dos
+          registros carregados; a projeção depende de um resumo mensal.
+        </p>
+      )}
+      {!userId && (
+        <p className="panel-copy">
+          {isDemoMode
+            ? "Modo de demonstração: lançamentos exigem uma conta autenticada."
+            : "Seu perfil precisa estar disponível para registrar movimentações."}
+        </p>
       )}
       <section className="finance-metrics">
         <SurfaceCard tone="blue" className="finance-metric">
@@ -244,7 +287,7 @@ export function FinancePage() {
           </span>
           <div>
             <span>Mesada</span>
-            <strong>{brl.format(allowance)}</strong>
+            <strong>{snapshot ? brl.format(allowance) : "—"}</strong>
             <small>valor mensal cadastrado</small>
           </div>
         </SurfaceCard>
@@ -257,7 +300,7 @@ export function FinancePage() {
           </span>
           <div>
             <span>Dinheiro guardado</span>
-            <strong>{brl.format(saved)}</strong>
+            <strong>{snapshot ? brl.format(saved) : "—"}</strong>
             <small>reserva registrada</small>
           </div>
         </SurfaceCard>
@@ -267,7 +310,7 @@ export function FinancePage() {
           </span>
           <div>
             <span>Plano de gastos</span>
-            <strong>{brl.format(spending)}</strong>
+            <strong>{snapshot ? brl.format(spending) : "—"}</strong>
             <small>{planPct}% da mesada</small>
           </div>
         </SurfaceCard>
@@ -279,11 +322,11 @@ export function FinancePage() {
             <div className="finance-plan__header">
               <div>
                 <span>Planejado para gastos</span>
-                <strong>{brl.format(spending)}</strong>
+                <strong>{snapshot ? brl.format(spending) : "—"}</strong>
               </div>
               <div>
                 <span>Não destinado ao plano</span>
-                <strong>{brl.format(protectedAmount)}</strong>
+                <strong>{snapshot ? brl.format(protectedAmount) : "—"}</strong>
               </div>
             </div>
             <div className="finance-plan__bar">
@@ -298,7 +341,7 @@ export function FinancePage() {
         <SurfaceCard tone="green" eyebrow="Reserva" title="Dinheiro guardado">
           <div className="finance-reserve">
             <Landmark size={25} />
-            <strong>{brl.format(saved)}</strong>
+            <strong>{snapshot ? brl.format(saved) : "—"}</strong>
             <span>registrados como reserva</span>
           </div>
         </SurfaceCard>
@@ -317,7 +360,7 @@ export function FinancePage() {
         </SurfaceCard>
         <SurfaceCard tone={remainingPlan < 0 ? "rose" : "blue"}>
           <span>Plano ainda disponível</span>
-          <strong>{brl.format(remainingPlan)}</strong>
+          <strong>{snapshot ? brl.format(remainingPlan) : "—"}</strong>
           <small>
             {remainingPlan < 0 ? "acima do planejado" : "do plano de gastos"}
           </small>
@@ -329,52 +372,79 @@ export function FinancePage() {
         eyebrow="Registro rápido"
         title="Entrada ou saída"
       >
-        <div className="finance-entry-form">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ex.: lanche, livro, cinema…"
-          />
+        <fieldset
+          className="finance-entry-form"
+          disabled={adding || removing !== null}
+        >
+          <label>
+            <span>Descrição</span>
+            <input
+              aria-label="Descrição do lançamento"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ex.: lanche, livro, cinema…"
+            />
+          </label>
           <div className="finance-entry-form__row">
-            <select
-              value={kind}
-              onChange={(e) => setKind(e.target.value as "income" | "expense")}
-            >
-              <option value="expense">Saída</option>
-              <option value="income">Entrada</option>
-            </select>
-            <input
-              inputMode="decimal"
-              type="number"
-              min="0"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="R$ 0"
-            />
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {categories.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-            <input
-              type="date"
-              value={entryDate}
-              onChange={(e) => setEntryDate(e.target.value)}
-            />
+            <label>
+              <span>Tipo</span>
+              <select
+                aria-label="Tipo de lançamento"
+                value={kind}
+                onChange={(e) =>
+                  setKind(e.target.value as "income" | "expense")
+                }
+              >
+                <option value="expense">Saída</option>
+                <option value="income">Entrada</option>
+              </select>
+            </label>
+            <label>
+              <span>Valor em reais</span>
+              <input
+                inputMode="decimal"
+                type="number"
+                min="0"
+                step="0.01"
+                aria-label="Valor em reais"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="R$ 0"
+              />
+            </label>
+            <label>
+              <span>Categoria</span>
+              <select
+                aria-label="Categoria"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                {categories.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Data</span>
+              <input
+                type="date"
+                aria-label="Data do lançamento"
+                value={entryDate}
+                onChange={(e) => setEntryDate(e.target.value)}
+              />
+            </label>
           </div>
           <div className="finance-entry-form__footer">
             <div className="view-switcher">
               <button
+                aria-pressed={status === "realized"}
                 className={status === "realized" ? "active" : ""}
                 onClick={() => setStatus("realized")}
               >
                 Já aconteceu
               </button>
               <button
+                aria-pressed={status === "planned"}
                 className={status === "planned" ? "active" : ""}
                 onClick={() => setStatus("planned")}
               >
@@ -383,14 +453,21 @@ export function FinancePage() {
             </div>
             <button
               className="primary-button"
-              disabled={adding || !title.trim() || !Number(amount)}
+              disabled={
+                !userId ||
+                adding ||
+                !title.trim() ||
+                !Number.isFinite(Number(amount)) ||
+                Number(amount) <= 0 ||
+                !entryDate
+              }
               onClick={() => void addEntry()}
             >
               <Plus size={15} />
-              Registrar
+              {adding ? "Registrando…" : "Registrar"}
             </button>
           </div>
-        </div>
+        </fieldset>
       </SurfaceCard>
 
       <section className="finance-horizon-grid">
@@ -400,10 +477,12 @@ export function FinancePage() {
               <CalendarRange size={18} />
               <div>
                 <strong>
-                  {brl.format(
-                    protectedAmount * Math.ceil(days / 30) +
-                      futurePlanned(days),
-                  )}
+                  {snapshot
+                    ? brl.format(
+                        protectedAmount * Math.ceil(days / 30) +
+                          futurePlanned(days),
+                      )
+                    : "—"}
                 </strong>
                 <span>
                   potencial não comprometido se a mesada e o plano atual se
@@ -420,6 +499,10 @@ export function FinancePage() {
         eyebrow="Movimentações"
         title={entries.length ? "Últimos registros" : "Nenhum registro ainda"}
       >
+        <p className="panel-copy">
+          Consulta limitada aos 120 últimos lançamentos; 10 exibidos abaixo.
+          Totais e projeções consideram apenas esses dados carregados.
+        </p>
         <div className="finance-entry-list">
           {entries.slice(0, 10).map((item) => (
             <article key={item.id}>
@@ -430,11 +513,10 @@ export function FinancePage() {
                 <strong>{item.title}</strong>
                 <small>
                   {item.category} ·{" "}
-                  {new Date(
-                    `${item.entry_date}T12:00:00-03:00`,
-                  ).toLocaleDateString("pt-BR", {
+                  {civilDate(item.entry_date).toLocaleDateString("pt-BR", {
                     day: "2-digit",
                     month: "short",
+                    timeZone: APP_TIMEZONE,
                   })}{" "}
                   · {item.status === "planned" ? "planejado" : "realizado"}
                 </small>
@@ -445,6 +527,7 @@ export function FinancePage() {
               </strong>
               <button
                 className="icon-button"
+                disabled={adding || removing !== null}
                 onClick={() => void removeEntry(item.id)}
                 aria-label={`Excluir ${item.title}`}
               >

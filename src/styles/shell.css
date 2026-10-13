@@ -135,13 +135,15 @@
 }
 .nav-item--active {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--cyan) 30%, transparent);
+  border-color: var(--nx-visor-rim);
   background: linear-gradient(
     110deg,
     color-mix(in srgb, var(--cyan) 10%, var(--panel)),
     color-mix(in srgb, var(--violet) 4%, var(--panel))
   );
-  box-shadow: inset 0 1px var(--nx-glass-highlight);
+  box-shadow:
+    inset 0 1px var(--nx-glass-highlight),
+    0 0 18px var(--nx-photon-glow);
 }
 .nav-item--active .nav-item__icon {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent);
@@ -200,7 +202,9 @@
   background: var(--nx-glass-bg);
   backdrop-filter: blur(var(--nx-glass-blur));
   -webkit-backdrop-filter: blur(var(--nx-glass-blur));
-  box-shadow: inset 0 1px var(--nx-glass-highlight);
+  box-shadow:
+    inset 0 1px var(--nx-glass-highlight),
+    0 0 18px var(--nx-photon-glow);
 }
 .topbar__context {
   display: flex;

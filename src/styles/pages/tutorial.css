@@ -1,21 +1,21 @@
 /* pages/tutorial: canonical owner. See DESIGN.md and docs/STYLE_SYSTEM.md. */
 
 .tutorial-hero {
-  min-height: 220px;
+  min-height: auto;
 }
 .tutorial-flow {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 .tutorial-step {
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr);
-  gap: 10px;
+  gap: 16px;
   padding: 14px;
   border: 1px solid var(--hairline);
   border-radius: 15px;
-  background: var(--panel2);
+  background: var(--nx-glass-bg);
 }
 .tutorial-step__icon {
   width: 38px;
@@ -30,19 +30,19 @@
   min-width: 0;
 }
 .tutorial-step strong {
-  font-size: 0.82rem;
+  font-size: 1rem;
   line-height: 1.25;
 }
 .tutorial-step p {
   margin: 5px 0 8px;
   color: var(--muted);
-  font-size: 0.69rem;
+  font-size: 0.875rem;
   line-height: 1.5;
 }
 .tutorial-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 15px;
+  gap: 20px;
 }
 .tutorial-rules,
 .tutorial-rpg {
@@ -57,7 +57,7 @@
   align-items: start;
   padding: 10px 11px;
   border-radius: 11px;
-  background: var(--panel2);
+  background: var(--nx-glass-bg);
 }
 .tutorial-rules svg,
 .tutorial-rpg svg {
@@ -66,7 +66,7 @@
 }
 .tutorial-rules span,
 .tutorial-rpg p {
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   line-height: 1.45;
 }
 .tutorial-rpg p {
@@ -90,7 +90,7 @@
   padding: 11px;
   border: 1px solid var(--hairline);
   border-radius: 12px;
-  background: var(--panel2);
+  background: var(--nx-glass-bg);
   color: var(--text);
 }
 .tutorial-shortcuts > button > span {
@@ -101,7 +101,7 @@
   height: 34px;
   border-radius: 9px;
   background: var(--panel);
-  font-size: 0.67rem;
+  font-size: 0.8125rem;
   font-weight: 800;
 }
 .tutorial-shortcuts > button > div {
@@ -109,11 +109,11 @@
   gap: 2px;
 }
 .tutorial-shortcuts strong {
-  font-size: 0.73rem;
+  font-size: 0.875rem;
 }
 .tutorial-shortcuts small {
   color: var(--muted);
-  font-size: 0.61rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .tutorial-destinations {
@@ -124,13 +124,13 @@
 .tutorial-destinations > button {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
+  gap: 16px;
   align-items: center;
   text-align: left;
   padding: 11px 12px;
   border: 1px solid var(--hairline);
   border-radius: 12px;
-  background: var(--panel2);
+  background: var(--nx-glass-bg);
   color: var(--text);
 }
 .tutorial-destinations > button > div {
@@ -139,11 +139,11 @@
   min-width: 0;
 }
 .tutorial-destinations strong {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
 }
 .tutorial-destinations span {
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .tutorial-destinations svg {
@@ -161,7 +161,7 @@
 .tutorial-ignore p {
   margin: 0;
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   line-height: 1.55;
 }
 @media (max-width: 1050px) {
@@ -180,5 +180,36 @@
   }
   .tutorial-hero > .primary-button {
     width: 100%;
+  }
+}
+
+.tutorial-page {
+  max-width: 1200px;
+  margin-inline: auto;
+  gap: 24px;
+}
+.tutorial-step {
+  padding: 20px;
+}
+.tutorial-destinations > button,
+.tutorial-shortcuts > button {
+  min-height: 64px;
+  transition:
+    border-color var(--nx-motion-ui),
+    box-shadow var(--nx-motion-ui);
+}
+@media (hover: hover) {
+  .tutorial-destinations > button:hover,
+  .tutorial-shortcuts > button:hover {
+    border-color: var(--nx-photon);
+    box-shadow: 0 0 18px var(--nx-photon-glow);
+  }
+}
+@media (max-width: 600px) {
+  .tutorial-page {
+    gap: 18px;
+  }
+  .tutorial-step {
+    padding: 16px;
   }
 }

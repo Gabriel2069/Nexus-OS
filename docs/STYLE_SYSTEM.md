@@ -27,7 +27,7 @@ Materiais comuns ficam antes das variantes de página. Para um ajuste exclusivo 
 
 A consolidação retirou 1.373 declarações que eram sobrescritas por regras posteriores equivalentes, mantendo barreiras conservadoras para shorthands. Listas de seletores foram distribuídas entre proprietários; isso pode aumentar o número textual de declarações sem acrescentar um comportamento. Não confundir contagem de bytes com quantidade de sistemas visuais.
 
-Há ainda regras históricas e exceções responsivas dentro dos proprietários. A reorganização não promete uma cascata inteiramente minimalista: a simplificação restante deve acompanhar o refinamento de cada tela, com comparação visual. O teto atual de 87 declarações `!important` (243 → 103 em V01 → 101 em V02 → 94 no visor → 87 em V04) congela a dívida existente; a meta é reduzi-lo, não usá-lo como espaço para novas exceções.
+Há ainda regras históricas e exceções responsivas dentro dos proprietários. A reorganização não promete uma cascata inteiramente minimalista: a simplificação restante deve acompanhar o refinamento de cada tela, com comparação visual. O teto atual de 82 declarações `!important` (243 → 103 em V01 → 101 em V02 → 94 no visor → 87 em V04 → 82 em V05/V06) congela a dívida existente; a meta é reduzi-lo, não usá-lo como espaço para novas exceções.
 
 ## Verificação automática
 
@@ -40,3 +40,5 @@ Em V02, `day-route`, `essential-loop` e `exam-glance` pertencem a pages/now; che
 Neste lote, detalhes privados do Calendário foram retirados de components e consolidados em pages/calendar; inbox e studies simplificam as respectivas cascatas. `visor-texture` é uma camada estática de components usada por SurfaceCard, Sidebar e Agora, com `aria-hidden`/pointer-events none. O gradiente de densidade de vidro é único em foundation. Foram retirados os halos genéricos de page-stack que duplicavam CosmicEnvironment e excediam os limites do documento. Geometria desktop reserva a mesma variável de largura usada pela sidebar fixed; listas de destinos rolam internamente.
 
 V04 centraliza CosmicTexture/StellarSpark e o mapa estelar de ambiente; cores de emissão pertencem a foundation. Missões/Projetos/Rotinas consolidam seus proprietários e deixam componentes comuns de formulário em components. As regras do cronômetro permanecem iguais; o entorno foi reconciliado no proprietário focus. Não reintroduzir halos independentes em cada página para reforçar a identidade.
+
+V05/V06 consolida os proprietários de Insights, Finanças, Life e Revisão; context-signal/live pertence agora a pages/section. Heatmap/consulta de dia pertence a pages/insight. View-switcher e materiais de pop-up têm uma implementação compartilhada em components; a antiga seleção com camadas luminosas concorrentes foi retirada. Nove keyframes de domínios sem referência foram retirados. Não alterar mostrador/anéis de Foco para propagar material de modal.

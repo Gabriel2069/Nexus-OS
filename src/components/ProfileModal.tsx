@@ -1,3 +1,4 @@
+import { CosmicTexture } from "./CosmicEnvironment";
 import { ModalSurface } from "./ModalSurface";
 import { useOverlay } from "../lib/use-overlay";
 import {
@@ -9,13 +10,14 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNexus } from "../context/NexusContext";
 
 export function ProfileModal() {
   const { workspace, editProfile, loading, error: loadError } = useNexus();
   const profile = workspace.profile;
   const { open, setOpen } = useOverlay("profile");
+  const writeLock = useRef(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +58,7 @@ export function ProfileModal() {
         onClose={() => setOpen(false)}
       >
         <section className="profile-modal" aria-busy={loading}>
+          <CosmicTexture />
           <header className="profile-modal__header">
             <div>
               <span className="eyebrow">Seu espaço</span>
@@ -80,7 +83,8 @@ export function ProfileModal() {
     );
 
   async function submit() {
-    if (!displayName.trim() || saving) return;
+    if (!displayName.trim() || writeLock.current) return;
+    writeLock.current = true;
     setSaving(true);
     setSaved(false);
     setError(null);
@@ -102,6 +106,7 @@ export function ProfileModal() {
           : "Não foi possível salvar o perfil.",
       );
     } finally {
+      writeLock.current = false;
       setSaving(false);
     }
   }
@@ -113,6 +118,7 @@ export function ProfileModal() {
       onClose={() => setOpen(false)}
     >
       <section className="profile-modal">
+        <CosmicTexture />
         <header className="profile-modal__header">
           <div>
             <span className="eyebrow">Identidade do NexOS</span>
@@ -152,6 +158,7 @@ export function ProfileModal() {
             <div className="profile-input">
               <UserRound size={15} />
               <input
+                disabled={saving}
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
                 maxLength={64}
@@ -175,6 +182,7 @@ export function ProfileModal() {
           <label className="profile-field">
             <span>Título</span>
             <input
+              disabled={saving}
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               maxLength={80}
@@ -184,6 +192,7 @@ export function ProfileModal() {
           <label className="profile-field profile-field--wide">
             <span>Lema</span>
             <textarea
+              disabled={saving}
               value={motto}
               onChange={(event) => setMotto(event.target.value)}
               rows={3}
@@ -197,6 +206,7 @@ export function ProfileModal() {
             <div className="profile-input">
               <Camera size={15} />
               <input
+                disabled={saving}
                 value={avatarUrl}
                 onChange={(event) => setAvatarUrl(event.target.value)}
                 placeholder="https://…"
@@ -207,6 +217,7 @@ export function ProfileModal() {
           <label className="profile-field">
             <span>Meta diária de XP</span>
             <input
+              disabled={saving}
               type="number"
               min="50"
               max="5000"

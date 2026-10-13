@@ -1,4 +1,7 @@
-import { civilDate, dateKey, shiftDate } from "../lib/dates";
+import { StellarSpark } from "../components/CosmicEnvironment";
+import { PageLoading } from "../components/PageLoading";
+import { WorkspaceFeedback } from "../components/WorkspaceFeedback";
+import { civilDate, dateKey, shiftDate, APP_TIMEZONE } from "../lib/dates";
 import {
   ArrowRight,
   BarChart3,
@@ -26,17 +29,23 @@ const key = (date: Date) => localDate(date);
 type Range = 7 | 30;
 
 export function InsightsPage() {
-  const { workspace } = useNexus();
+  const { workspace, loading, error, refresh } = useNexus();
   const [range, setRange] = useState<Range>(7);
   const [selectedDate, setSelectedDate] = useState(() => localDate());
   const days = useMemo(() => lastDays(range), [range]);
   const xp = days.map((day) => ({
     label:
       range === 7
-        ? new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
+        ? new Intl.DateTimeFormat("pt-BR", {
+            weekday: "short",
+            timeZone: APP_TIMEZONE,
+          })
             .format(day)
             .replace(".", "")
-        : new Intl.DateTimeFormat("pt-BR", { day: "2-digit" }).format(day),
+        : new Intl.DateTimeFormat("pt-BR", {
+            day: "2-digit",
+            timeZone: APP_TIMEZONE,
+          }).format(day),
     value: workspace.activity
       .filter((e) => dateKey(new Date(e.created_at)) === key(day))
       .reduce((sum, e) => sum + Math.max(0, e.xp_delta), 0),
@@ -44,10 +53,16 @@ export function InsightsPage() {
   const focus = days.map((day) => ({
     label:
       range === 7
-        ? new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
+        ? new Intl.DateTimeFormat("pt-BR", {
+            weekday: "short",
+            timeZone: APP_TIMEZONE,
+          })
             .format(day)
             .replace(".", "")
-        : new Intl.DateTimeFormat("pt-BR", { day: "2-digit" }).format(day),
+        : new Intl.DateTimeFormat("pt-BR", {
+            day: "2-digit",
+            timeZone: APP_TIMEZONE,
+          }).format(day),
     value: workspace.focusSessions
       .filter(
         (s) =>
@@ -86,16 +101,20 @@ export function InsightsPage() {
         ],
     );
   const energyXp = pearson(pairs);
-  const energy = periodCheckins.map((c) => ({
-    label: new Date(`${c.checkin_date}T12:00:00`)
-      .toLocaleDateString("pt-BR", {
-        weekday: range === 7 ? "short" : undefined,
-        day: range === 30 ? "2-digit" : undefined,
-      })
-      .replace(".", ""),
-    value: c.energy ?? 0,
-    detail: c.energy ? `${c.energy}/10` : "—",
-  }));
+  const energy = periodCheckins
+    .filter((c) => c.energy != null)
+    .sort((a, b) => a.checkin_date.localeCompare(b.checkin_date))
+    .map((c) => ({
+      label: civilDate(c.checkin_date)
+        .toLocaleDateString("pt-BR", {
+          timeZone: APP_TIMEZONE,
+          weekday: range === 7 ? "short" : undefined,
+          day: range === 30 ? "2-digit" : undefined,
+        })
+        .replace(".", ""),
+      value: c.energy ?? 0,
+      detail: c.energy ? `${c.energy}/10` : "—",
+    }));
   const validEnergy = periodCheckins.filter((c) => c.energy != null);
   const averageEnergy = validEnergy.length
     ? (
@@ -108,6 +127,7 @@ export function InsightsPage() {
     label: new Intl.DateTimeFormat("pt-BR", {
       day: "2-digit",
       month: "short",
+      timeZone: APP_TIMEZONE,
     }).format(day),
     xp: xp[index].value,
     focus: focus[index].value,
@@ -135,10 +155,12 @@ export function InsightsPage() {
     (sum, s) => sum + (s.actual_minutes ?? 0),
     0,
   );
-  const selectedLabel = new Date(`${selectedDate}T12:00:00`).toLocaleDateString(
-    "pt-BR",
-    { weekday: "long", day: "2-digit", month: "long" },
-  );
+  const selectedLabel = civilDate(selectedDate).toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    timeZone: APP_TIMEZONE,
+  });
   const dayReading =
     selectedFocusMinutes > 120 && (selectedCheckin?.energy ?? 10) <= 5
       ? "Foi um dia exigente para a energia registrada. Vale observar se esse volume foi realmente necessário."
@@ -148,12 +170,18 @@ export function InsightsPage() {
           ? "Houve progresso registrado, mesmo sem sessão de foco."
           : "Pouco foi registrado neste dia — isso não significa automaticamente que o dia foi ruim ou improdutivo.";
 
+  if (loading) return <PageLoading />;
+  if (error) return <WorkspaceFeedback error={error} retry={refresh} />;
+
   return (
     <div className="page-stack insights-page insights-page--consultable">
-      <section className="page-hero page-hero--cyan">
+      <section className="orbital-heading page-hero--cyan">
         <div>
           <span className="eyebrow">Seus dados</span>
-          <h1>Insights</h1>
+          <h1>
+            <StellarSpark />
+            Insights
+          </h1>
           <p>
             Explore os dados por período e toque em qualquer dia para entender o
             que aconteceu de verdade, em vez de interpretar gráficos no vazio.
@@ -162,12 +190,14 @@ export function InsightsPage() {
         <div className="view-switcher">
           <button
             className={range === 7 ? "active" : ""}
+            aria-pressed={range === 7}
             onClick={() => setRange(7)}
           >
             7 dias
           </button>
           <button
             className={range === 30 ? "active" : ""}
+            aria-pressed={range === 30}
             onClick={() => setRange(30)}
           >
             30 dias
@@ -246,16 +276,16 @@ export function InsightsPage() {
               <button
                 className={`heatmap-day ${selectedDate === day.date ? "selected" : ""}`}
                 key={day.date}
-                title={`${day.label}: ${day.xp} XP · ${day.focus} min`}
+                aria-label={`${day.label}: ${day.xp} XP · ${day.focus} min`}
+                aria-pressed={selectedDate === day.date}
                 onClick={() => setSelectedDate(day.date)}
               >
                 <span
+                  aria-hidden="true"
                   className={`heatmap-cell heatmap-cell--${day.intensity}`}
                 />
                 <small>
-                  {range === 7
-                    ? day.label
-                    : new Date(`${day.date}T12:00:00`).getDate()}
+                  {range === 7 ? day.label : civilDate(day.date).getUTCDate()}
                 </small>
               </button>
             ))}
@@ -359,8 +389,8 @@ export function InsightsPage() {
               <strong>Energia e XP</strong>
               <span>
                 {energyXp == null
-                  ? "Ainda são necessários pelo menos 3 dias com check-in e atividade."
-                  : `${energyXp > 0.35 ? "Nos dias com mais energia, o XP também tende a subir" : energyXp < -0.35 ? "Mais energia ainda não está aparecendo como mais XP" : "Ainda não há uma relação clara"} (r = ${energyXp.toFixed(2)}).`}
+                  ? "Ainda não há variação suficiente em pelo menos três check-ins para estimar uma relação."
+                  : `${energyXp > 0.35 ? "Nos dias com mais energia, o XP também tende a subir" : energyXp < -0.35 ? "Mais energia ainda não está aparecendo como mais XP" : "Ainda não há uma relação clara"} (r = ${energyXp.toFixed(2)}). Essa relação não prova uma causa.`}
               </span>
             </div>
             <div>
