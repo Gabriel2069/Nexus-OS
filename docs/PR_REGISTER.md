@@ -42,3 +42,5 @@ A01 (`feat/nex-intelligence`) depende da [PR #25](https://github.com/Gabriel2069
 A02 — feat/nex-orbital-command, base main 0889060. Central orbital, dock recolhível e ferramentas confirmadas/Google incremental. O SQL remoto existente é versionado sem reaplicação. Provedores/OAuth reais continuam com limites explícitos em NEX_INTELLIGENCE.md; não encerra I01/B02 integralmente.
 
 A02 integrada pela PR #28 (main 9f475a6), CI #34 aprovado. A03 — feat/nex-holographic-bridge, base 9f475a6: nova composição conforme referências do usuário, constelação projetada, telemetria real e consentimento Google agrupado. Ativação de segredos no runtime permanece bloqueada pelo acesso Cloudflare; documentação não confunde interface com integração ativa.
+
+A04 — fix/nex-runtime-activation, base main 8ad507d (PR #29 integrada): promoção dos secrets já salvos em Build para bindings ausentes do runtime, callback legado protegido e marcador de publicação. Não altera frontend/Supabase nem declara consentimento Google realizado; evidência e condições em NEX_INTELLIGENCE.md.

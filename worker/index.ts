@@ -1,4 +1,5 @@
 import { route } from "./nex/routes.ts";
+import { isGoogleCallback } from "./nex/google-callback.ts";
 import type { Env } from "./nex/core.ts";
 
 async function pingSupabase(env: Env) {
@@ -30,13 +31,15 @@ async function pingSupabase(env: Env) {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname.startsWith("/api/nex/")) return route(request, env);
+    if (url.pathname.startsWith("/api/nex/") || isGoogleCallback(url.pathname))
+      return route(request, env);
 
     if (url.pathname === "/api/health") {
       return Response.json({
         ok: true,
         service: "nexus-os-web",
         runtime: "cloudflare-workers",
+        release: "nex-runtime-activation",
         timestamp: new Date().toISOString(),
       });
     }
