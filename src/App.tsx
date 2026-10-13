@@ -7,10 +7,14 @@ import {
   CalendarDays,
   Mountain,
 } from "lucide-react";
+import { NexProvider } from "./context/NexContext";
 import { NavigationProvider } from "./context/NavigationContext";
 import { PageLoading } from "./components/PageLoading";
 import { AppShell } from "./components/AppShell";
 import { NexusProvider, useNexus } from "./context/NexusContext";
+const NexPage = lazy(() =>
+  import("./pages/NexPage").then((m) => ({ default: m.NexPage })),
+);
 const CalendarPage = lazy(() =>
   import("./pages/CalendarPage").then((module) => ({
     default: module.CalendarPage,
@@ -83,6 +87,8 @@ import { useLocation } from "./lib/router";
 function RouteContent({ pathname }: { pathname: string }) {
   const { userId } = useNexus();
   switch (pathname) {
+    case "/nex":
+      return <NexPage />;
     case "/":
       return <HomePage />;
     case "/hoje":
@@ -318,11 +324,13 @@ export function App() {
   return (
     <NexusProvider>
       <NavigationProvider>
-        <AppShell pathname={pathname}>
-          <Suspense fallback={<PageLoading />}>
-            <RouteContent key={pathname + search} pathname={pathname} />
-          </Suspense>
-        </AppShell>
+        <NexProvider>
+          <AppShell pathname={pathname}>
+            <Suspense fallback={<PageLoading />}>
+              <RouteContent key={pathname + search} pathname={pathname} />
+            </Suspense>
+          </AppShell>
+        </NexProvider>
       </NavigationProvider>
     </NexusProvider>
   );

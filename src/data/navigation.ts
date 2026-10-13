@@ -32,6 +32,7 @@ export const navigation: NavGroup[] = [
   {
     label: "Agora",
     items: [
+      { label: "N.E.X", path: "/nex", icon: Brain, tone: "cyan" },
       { label: "Agora", path: "/", icon: Crosshair, tone: "blue" },
       { label: "Hoje", path: "/hoje", icon: SunMedium, tone: "cyan" },
       {

@@ -1,3 +1,4 @@
+import { NexOverlay } from "./NexConsole";
 import { RelatedAreas } from "./RelatedAreas";
 import { WorkspaceRail } from "./WorkspaceRail";
 import { Plus } from "lucide-react";
@@ -90,6 +91,7 @@ export function AppShell({ pathname, children }: AppShellProps) {
         <Plus size={22} aria-hidden="true" />
       </button>
       <MobileDock pathname={pathname} />
+      {pathname !== "/nex" && <NexOverlay />}
       <CommandPalette />
       <QuickCaptureModal />
       <ProfileModal />

@@ -50,3 +50,7 @@ As onze áreas restantes adotam a assinatura estelar aprovada, com hierarquia pr
 ## N01 — navegação como instrumento
 
 Início concentra direção, acesso, retomada e trabalho real. A central é única no desktop e celular, com busca por itens e áreas; atalhos ficam disponíveis sem reabrir a lista inteira. Menus têm agrupamento e seleção óptica legível, com os materiais e preferências existentes. Conexões abrem o item certo, e rascunhos sobrevivem à troca de área enquanto o app permanece aberto. O indicador de Foco apenas consulta a sessão local, sem outro cronômetro ou recompensa automática. Evidências em [N01_REVIEW.md](docs/design/N01_REVIEW.md).
+
+## N.E.X — núcleo e diálogo
+
+Painel de vidro cósmico com núcleo orbital, estados verificáveis de escuta/processamento/ação/resposta, conversa e instrumentos de contexto. Consultas abrem sobre o painel; links conduzem ao registro certo. Controles e permissões são explícitos, com opt-in para compartilhar dados. Não usar decoração para sugerir integração ativa, ferramenta executada ou escuta permanente. [Contrato A01](docs/NEX_INTELLIGENCE.md).

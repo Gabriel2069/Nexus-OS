@@ -1,4 +1,12 @@
-import { Bell, Command, Download, Flame, Plus, Search } from "lucide-react";
+import {
+  Brain,
+  Bell,
+  Command,
+  Download,
+  Flame,
+  Plus,
+  Search,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNexus } from "../context/NexusContext";
 import { isCurrentDestination, navigation } from "../data/navigation";
@@ -103,6 +111,15 @@ export function Topbar({ pathname }: TopbarProps) {
             <Download size={17} />
           </button>
         )}
+        <button
+          className="icon-button"
+          onClick={() => {
+            if (pathname !== "/nex") emitUI("nex");
+          }}
+          aria-label="Abrir N.E.X"
+        >
+          <Brain size={18} />
+        </button>
         <AppearanceControls />
         <button
           className="icon-button notification-button"

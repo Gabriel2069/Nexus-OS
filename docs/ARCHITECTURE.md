@@ -72,3 +72,7 @@ A presença de RLS e filtros em migrations/clientes é evidência de implementa�
 O próximo salto arquitetural é transformar o ledger em inteligência: recomendação contextual de tarefas, previsão de carga, detecção de atrito, progressão gamificada por regras e dashboards personalizáveis.
 
 O mapa corrente de entregas, dependências e limites está em [PRODUCTION_MAP.md](PRODUCTION_MAP.md).
+
+## N.E.X — fronteira do Worker
+
+`worker/nex` verifica sessão Supabase, deriva ownership, reserva cota em Postgres e então chama provedor gratuito habilitado. OAuth incremental mantém tokens criptografados; dados/contexto vêm de queries com JWT e RLS. `NexContext` guarda conversa efêmera e execução serial; `NexConsole` compartilha painel e overlay. Não substitui command engine/orchestrator nem RPCs de recompensa. Configuração e estado de verificação em [NEX_INTELLIGENCE.md](NEX_INTELLIGENCE.md).
