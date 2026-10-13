@@ -1,10 +1,16 @@
+import { NexOrbitalCore } from "./NexOrbitalCore";
+import {
+  NexOperationCard,
+  NexResponsePanel,
+  safeGoogleLink,
+} from "./NexInstruments";
+import { nexAreas } from "../lib/nex-tools";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Brain,
   Check,
   Mic,
-  Orbit,
   Send,
   Square,
   Volume2,
@@ -19,18 +25,9 @@ import { useOverlay } from "../lib/use-overlay";
 import { ModalSurface } from "./ModalSurface";
 import { SurfaceCard } from "./SurfaceCard";
 import { emitUI } from "../lib/ui-events";
-const labels: Record<string, string> = {
-  geral: "Geral",
-  agora: "Agora",
-  hoje: "Hoje",
-  calendario: "Calendário",
-  inbox: "Caixa de entrada",
-  estudos: "Estudos",
-  projetos: "Projetos",
-  missoes: "Missões",
-  rotinas: "Rotinas",
-  foco: "Foco",
-};
+const labels = Object.fromEntries(
+  Object.entries(nexAreas).map(([k, v]) => [k, v.label]),
+);
 export function NexConsole({ compact = false }: { compact?: boolean }) {
   const nex = useNex();
   const [input, setInput] = useState("");
@@ -44,6 +41,45 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
     data: unknown;
   } | null>(null);
   const [resource, setResource] = useState("");
+  const [range, setRange] = useState("");
+  const [service, setService] = useState("calendar");
+  const [city, setCity] = useState("");
+  const [history, setHistory] = useState<
+    { id: string; kind: string; state: string }[]
+  >([]);
+  const importId = useRef(crypto.randomUUID());
+  const coreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (nex.googleContext)
+      nex.setGoogleContext({ service, id: resource, range });
+  }, [service, resource, range]);
+  useEffect(() => {
+    if (!listening || !stream.current || !window.AudioContext) return;
+    const audio = new AudioContext(),
+      analyser = audio.createAnalyser(),
+      source = audio.createMediaStreamSource(stream.current);
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    const values = new Uint8Array(256);
+    let frame = 0;
+    const sample = () => {
+      analyser.getByteTimeDomainData(values);
+      let power = 0;
+      for (const v of values) power += ((v - 128) / 128) ** 2;
+      coreRef.current?.style.setProperty(
+        "--nex-energy",
+        String(Math.min(1, Math.sqrt(power / values.length) * 5)),
+      );
+      frame = requestAnimationFrame(sample);
+    };
+    sample();
+    return () => {
+      cancelAnimationFrame(frame);
+      source.disconnect();
+      void audio.close();
+      coreRef.current?.style.removeProperty("--nex-energy");
+    };
+  }, [listening]);
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const timer = useRef<number | undefined>(undefined);
@@ -179,7 +215,12 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
   }
   async function read(service: string) {
     const result = await nex.run((signal) =>
-      nexRequest("google/read", { service, id: resource }, "POST", signal),
+      nexRequest(
+        "google/read",
+        { service, id: resource, range },
+        "POST",
+        signal,
+      ),
     );
     if (result) {
       setInspected({ title: `Google · ${service}`, data: result });
@@ -218,17 +259,81 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
         </p>
       )}
       <div className="nex-workspace">
-        <SurfaceCard className="nex-core-card" tone="cyan">
-          <div
-            className={`nex-core ${listening || nex.busy || speaking ? "is-active" : ""}`}
-            aria-hidden="true"
-          >
-            <div className="nex-core__orbit" />
-            <div className="nex-core__lens">
-              <Orbit size={56} />
-            </div>
-            <div className="nex-core__orbit nex-core__orbit--outer" />
+        <SurfaceCard
+          className="nex-command-rail"
+          title="Instrumentos"
+          eyebrow="Controle do universo"
+          tone="blue"
+        >
+          <p className="muted">
+            Escolha um setor para consultar ou elaborar uma ação.
+          </p>
+          <div className="nex-command-areas">
+            {Object.entries(nexAreas)
+              .filter(([k]) => k !== "geral")
+              .map(([k, v]) => (
+                <button
+                  className="secondary-button"
+                  key={k}
+                  aria-label={"Consultar " + v.label + " com N.E.X"}
+                  disabled={nex.busy}
+                  onClick={() => {
+                    nex.setModule(k as typeof nex.module);
+                    setInput(
+                      "Ajude-me com " + v.label + ". Qual o próximo passo?",
+                    );
+                  }}
+                >
+                  {v.label}
+                  <ArrowUpRight size={14} />
+                </button>
+              ))}
           </div>
+          <details className="nex-privacy">
+            <summary>Registro de operações</summary>
+            <button
+              className="secondary-button"
+              disabled={nex.busy}
+              onClick={() =>
+                void nex.run(async (signal) =>
+                  setHistory(
+                    await nexRequest(
+                      "operations/history",
+                      undefined,
+                      "GET",
+                      signal,
+                    ),
+                  ),
+                )
+              }
+            >
+              Consultar histórico
+            </button>
+            {history.map((h) => (
+              <p key={h.id}>
+                {h.kind} ·{" "}
+                {h.state === "applied"
+                  ? "Confirmada"
+                  : "Pendente: confira o destino"}
+              </p>
+            ))}
+          </details>
+        </SurfaceCard>
+        <SurfaceCard className="nex-core-card" tone="cyan">
+          <NexOrbitalCore
+            state={
+              listening
+                ? "listening"
+                : speaking
+                  ? "speaking"
+                  : nex.busy
+                    ? nex.phase.includes("Executando")
+                      ? "acting"
+                      : "thinking"
+                    : "idle"
+            }
+            coreRef={coreRef}
+          />
           <span className="eyebrow">Núcleo de assistência</span>
           <h2>{state}</h2>
           <p>
@@ -242,47 +347,50 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
                   .join(" · ") || "IA ainda não habilitada"
               : "Conexão ainda não verificada"}
           </div>
-          <label className="nex-field">
-            Contexto
-            <select
-              value={nex.module}
-              disabled={nex.busy || listening}
-              onChange={(e) =>
-                nex.setModule(e.target.value as typeof nex.module)
-              }
-            >
-              {nexModules.map((m) => (
-                <option value={m} key={m}>
-                  {labels[m]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="nex-consent">
-            <input
-              type="checkbox"
-              checked={nex.share}
-              disabled={nex.busy || listening}
-              onChange={(e) => nex.setShare(e.target.checked)}
-            />
-            Compartilhar dados deste módulo e memórias com a IA
-          </label>
           <details className="nex-privacy">
-            <summary>Privacidade e voz</summary>
-            <p className="muted">
-              Sua mensagem e até quatro falas recentes são enviadas ao provedor.
-              Contexto limitado aos registros consultados. Planos gratuitos
-              podem usar mensagens para melhorar modelos. Áudio só é enviado
-              quando você encerra a gravação.
-            </p>
+            <summary>Contexto e permissões · {labels[nex.module]}</summary>
+            <label className="nex-field">
+              Contexto
+              <select
+                value={nex.module}
+                disabled={nex.busy || listening}
+                onChange={(e) =>
+                  nex.setModule(e.target.value as typeof nex.module)
+                }
+              >
+                {nexModules.map((m) => (
+                  <option value={m} key={m}>
+                    {labels[m]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="nex-consent">
+              <input
+                type="checkbox"
+                checked={nex.share}
+                disabled={nex.busy || listening}
+                onChange={(e) => nex.setShare(e.target.checked)}
+              />
+              Compartilhar dados deste módulo e memórias com a IA
+            </label>
+            <details className="nex-privacy">
+              <summary>Privacidade e voz</summary>
+              <p className="muted">
+                Sua mensagem e até quatro falas recentes são enviadas ao
+                provedor. Contexto limitado aos registros consultados. Planos
+                gratuitos podem usar mensagens para melhorar modelos. Áudio só é
+                enviado quando você encerra a gravação.
+              </p>
+            </details>
+            <button
+              className="secondary-button"
+              disabled={nex.busy}
+              onClick={showContext}
+            >
+              Inspecionar contexto
+            </button>
           </details>
-          <button
-            className="secondary-button"
-            disabled={nex.busy}
-            onClick={showContext}
-          >
-            Inspecionar contexto
-          </button>
         </SurfaceCard>
         <SurfaceCard
           className="nex-dialogue"
@@ -341,6 +449,23 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
                     Ouvir
                   </button>
                 )}
+                {m.operation && m.operationId && (
+                  <NexOperationCard
+                    operation={m.operation}
+                    id={m.operationId}
+                  />
+                )}
+                {m.panels?.map((p) => (
+                  <NexResponsePanel
+                    key={p.area}
+                    panel={p}
+                    compact={compact}
+                    onInspect={(title, data) => {
+                      setInspected({ title, data });
+                      if (!compact) inspect.show();
+                    }}
+                  />
+                ))}
                 {m.proposal && (
                   <div className="nex-proposal">
                     <span className="eyebrow">
@@ -443,165 +568,273 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
           </form>
         </SurfaceCard>
       </div>
-      <div className="nex-support">
-        <SurfaceCard
-          title="Seu espaço conectado"
-          eyebrow="Navegação"
-          tone="blue"
-        >
-          <div className="nex-destinations">
-            {navigation
-              .flatMap((g) => g.items)
-              .filter((x) => x.path !== "/nex")
-              .map((x) => (
+      <details className="nex-settings">
+        <summary>Conexões, memória e instrumentos externos</summary>
+        <div className="nex-support">
+          <SurfaceCard
+            title="Seu espaço conectado"
+            eyebrow="Navegação"
+            tone="blue"
+          >
+            <div className="nex-destinations">
+              {navigation
+                .flatMap((g) => g.items)
+                .filter((x) => x.path !== "/nex")
+                .map((x) => (
+                  <button
+                    key={x.path}
+                    onClick={() => {
+                      navigate(x.path);
+                      emitUI("inspect");
+                    }}
+                  >
+                    <x.icon size={17} />
+                    {x.shortLabel ?? x.label}
+                    <ArrowUpRight size={14} />
+                  </button>
+                ))}
+            </div>
+          </SurfaceCard>
+          <SurfaceCard
+            title="Conexões Google"
+            eyebrow={
+              nex.status?.google
+                ? "Conta autorizada"
+                : "Conectar é uma escolha sua"
+            }
+            tone="violet"
+          >
+            <p>
+              Autorize cada serviço quando precisar. Drive, Docs, Sheets e
+              Slides acessam apenas arquivos autorizados ao app; as ações de
+              escrita exigem prévia e confirmação.
+            </p>
+            <div className="nex-services">
+              {["calendar", "tasks", "drive", "docs", "sheets", "slides"].map(
+                (service) => (
+                  <div key={service}>
+                    <strong>{service}</strong>
+                    <button
+                      className="secondary-button"
+                      disabled={nex.busy}
+                      onClick={() => nex.connect(service)}
+                    >
+                      Autorizar
+                    </button>
+                    <button
+                      className="secondary-button"
+                      disabled={nex.busy || !nex.status?.google}
+                      onClick={() => read(service)}
+                    >
+                      Consultar
+                    </button>
+                  </div>
+                ),
+              )}
+            </div>
+            <label className="nex-field">
+              ID de arquivo para Docs, Sheets ou Slides
+              <input
+                value={resource}
+                maxLength={200}
+                onChange={(e) => setResource(e.target.value)}
+              />
+            </label>
+            <label className="nex-field">
+              Intervalo A1 para Sheets (opcional)
+              <input
+                value={range}
+                maxLength={100}
+                onChange={(e) => setRange(e.target.value)}
+              />
+            </label>
+            <label className="nex-field">
+              Serviço para compartilhar com a IA
+              <select
+                value={service}
+                onChange={(e) => setService(e.target.value)}
+              >
+                {["calendar", "tasks", "drive", "docs", "sheets", "slides"].map(
+                  (s) => (
+                    <option key={s}>{s}</option>
+                  ),
+                )}
+              </select>
+            </label>
+            <label className="nex-consent">
+              <input
+                type="checkbox"
+                checked={!!nex.googleContext}
+                disabled={nex.busy}
+                onChange={(e) =>
+                  nex.setGoogleContext(
+                    e.target.checked ? { service, id: resource, range } : null,
+                  )
+                }
+              />
+              Compartilhar esta consulta Google na próxima mensagem
+            </label>
+            <div className="nex-compose__actions">
+              {["calendar_write", "tasks_write"].map((s) => (
                 <button
-                  key={x.path}
-                  onClick={() => {
-                    navigate(x.path);
-                    emitUI("inspect");
-                  }}
+                  className="secondary-button"
+                  key={s}
+                  disabled={nex.busy}
+                  onClick={() => nex.connect(s)}
                 >
-                  <x.icon size={17} />
-                  {x.shortLabel ?? x.label}
-                  <ArrowUpRight size={14} />
+                  Autorizar escrita ·{" "}
+                  {s.startsWith("calendar") ? "Calendário" : "Tasks"}
                 </button>
               ))}
-          </div>
-        </SurfaceCard>
-        <SurfaceCard
-          title="Conexões Google"
-          eyebrow={
-            nex.status?.google
-              ? "Conta autorizada"
-              : "Conectar é uma escolha sua"
-          }
-          tone="violet"
-        >
-          <p>
-            Autorize cada serviço quando precisar. Drive, Docs, Sheets e Slides
-            acessam apenas arquivos autorizados ao app; esta fase consulta
-            dados, sem alterações externas.
-          </p>
-          <div className="nex-services">
-            {["calendar", "tasks", "drive", "docs", "sheets", "slides"].map(
-              (service) => (
-                <div key={service}>
-                  <strong>{service}</strong>
+            </div>
+            <NexOperationCard
+              id={importId.current}
+              operation={{ kind: "google.calendar.import", payload: {} }}
+            />
+            {nex.status?.google && (
+              <button
+                className="secondary-button"
+                disabled={nex.busy}
+                onClick={() =>
+                  disconnecting
+                    ? void nex.disconnect().then(() => setDisconnecting(false))
+                    : setDisconnecting(true)
+                }
+              >
+                {disconnecting
+                  ? "Confirmar desconexão e apagar tokens"
+                  : "Desconectar Google"}
+              </button>
+            )}
+            {disconnecting && (
+              <button
+                className="secondary-button"
+                onClick={() => setDisconnecting(false)}
+              >
+                Manter conexão
+              </button>
+            )}
+            <a
+              href="https://myaccount.google.com/permissions"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Revisar permissões no Google
+            </a>
+          </SurfaceCard>
+          <SurfaceCard
+            title="Memória sob seu controle"
+            eyebrow="Perfil e módulos"
+            tone="cyan"
+          >
+            <p>
+              Salve apenas o que quer que N.E.X lembre. A conversa não é gravada
+              automaticamente. Memória atual: {labels[nex.module]}.
+            </p>
+            <label className="nex-field">
+              Nova memória
+              <textarea
+                maxLength={1200}
+                value={memory}
+                onChange={(e) => setMemory(e.target.value)}
+                rows={3}
+              />
+            </label>
+            <button
+              className="primary-button"
+              disabled={nex.busy || !memory.trim()}
+              onClick={async () => {
+                if (await nex.remember(memory)) setMemory("");
+              }}
+            >
+              Salvar memória
+            </button>
+            <div className="nex-memory-list">
+              {nex.memories.map((m) => (
+                <article key={m.id}>
+                  <span className="eyebrow">
+                    {labels[m.module] ?? m.module} · {m.agent}
+                  </span>
+                  <p>{m.content}</p>
                   <button
                     className="secondary-button"
                     disabled={nex.busy}
-                    onClick={() => nex.connect(service)}
+                    onClick={() =>
+                      deleting === m.id
+                        ? void nex.forget(m.id).then(() => setDeleting(""))
+                        : setDeleting(m.id)
+                    }
                   >
-                    Autorizar
+                    {deleting === m.id ? "Confirmar exclusão" : "Excluir"}
                   </button>
-                  <button
-                    className="secondary-button"
-                    disabled={nex.busy || !nex.status?.google}
-                    onClick={() => read(service)}
-                  >
-                    Consultar
-                  </button>
-                </div>
-              ),
-            )}
-          </div>
-          <label className="nex-field">
-            ID de arquivo para Docs, Sheets ou Slides
-            <input
-              value={resource}
-              maxLength={200}
-              onChange={(e) => setResource(e.target.value)}
-            />
-          </label>
-          {nex.status?.google && (
-            <button
-              className="secondary-button"
-              disabled={nex.busy}
-              onClick={() =>
-                disconnecting
-                  ? void nex.disconnect().then(() => setDisconnecting(false))
-                  : setDisconnecting(true)
-              }
-            >
-              {disconnecting
-                ? "Confirmar desconexão e apagar tokens"
-                : "Desconectar Google"}
-            </button>
-          )}
-          {disconnecting && (
-            <button
-              className="secondary-button"
-              onClick={() => setDisconnecting(false)}
-            >
-              Manter conexão
-            </button>
-          )}
-          <a
-            href="https://myaccount.google.com/permissions"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Revisar permissões no Google
-          </a>
-        </SurfaceCard>
-        <SurfaceCard
-          title="Memória sob seu controle"
-          eyebrow="Perfil e módulos"
-          tone="cyan"
+                  {deleting === m.id && (
+                    <button
+                      className="secondary-button"
+                      onClick={() => setDeleting("")}
+                    >
+                      Manter
+                    </button>
+                  )}
+                </article>
+              ))}
+            </div>
+          </SurfaceCard>
+        </div>
+      </details>
+      <details className="nex-settings">
+        <summary>Clima e diagnóstico de conexões</summary>
+        <form
+          className="nex-compose"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void nex.run(async (signal) => {
+              const data = await nexRequest(
+                "weather",
+                { city },
+                "POST",
+                signal,
+              );
+              setInspected({ title: "Previsão · " + city, data });
+              if (!compact) inspect.show();
+            });
+          }}
         >
-          <p>
-            Salve apenas o que quer que N.E.X lembre. A conversa não é gravada
-            automaticamente. Memória atual: {labels[nex.module]}.
-          </p>
           <label className="nex-field">
-            Nova memória
-            <textarea
-              maxLength={1200}
-              value={memory}
-              onChange={(e) => setMemory(e.target.value)}
-              rows={3}
+            Cidade (sem GPS)
+            <input
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              maxLength={80}
             />
           </label>
           <button
-            className="primary-button"
-            disabled={nex.busy || !memory.trim()}
-            onClick={async () => {
-              if (await nex.remember(memory)) setMemory("");
-            }}
+            className="secondary-button"
+            disabled={nex.busy || !city.trim()}
           >
-            Salvar memória
+            Consultar clima
           </button>
-          <div className="nex-memory-list">
-            {nex.memories.map((m) => (
-              <article key={m.id}>
-                <span className="eyebrow">
-                  {labels[m.module] ?? m.module} · {m.agent}
-                </span>
-                <p>{m.content}</p>
-                <button
-                  className="secondary-button"
-                  disabled={nex.busy}
-                  onClick={() =>
-                    deleting === m.id
-                      ? void nex.forget(m.id).then(() => setDeleting(""))
-                      : setDeleting(m.id)
-                  }
-                >
-                  {deleting === m.id ? "Confirmar exclusão" : "Excluir"}
-                </button>
-                {deleting === m.id && (
-                  <button
-                    className="secondary-button"
-                    onClick={() => setDeleting("")}
-                  >
-                    Manter
-                  </button>
-                )}
-              </article>
-            ))}
-          </div>
-        </SurfaceCard>
-      </div>
+          <p className="muted">
+            Open-Meteo · consulta gratuita para uso pessoal, sem localização
+            automática.
+          </p>
+        </form>
+        <p className="muted">
+          Somente presença e habilitação; nenhum valor de chave é exibido.
+        </p>
+        {nex.status?.configuration &&
+          Object.entries(nex.status.configuration).map(([provider, items]) => (
+            <article key={provider}>
+              <strong>{provider}</strong>
+              <ul>
+                {Object.entries(items).map(([k, v]) => (
+                  <li key={k}>
+                    {k}: {v ? "Sim" : "Não"}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+      </details>
       {compact && inspected && (
         <section className="nex-inspector">
           <header>
@@ -644,20 +877,18 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
     </div>
   );
 }
-export function NexOverlay() {
-  const overlay = useOverlay("nex");
-  if (!overlay.open) return null;
+export function NexOverlay({ onClose }: { onClose: () => void }) {
   return (
     <ModalSurface
       className="overlay"
       label="N.E.X Intelligence"
-      onClose={overlay.close}
+      onClose={onClose}
     >
       <section className="nex-overlay">
         <button
           className="secondary-button nex-overlay__close"
           aria-label="Fechar N.E.X"
-          onClick={overlay.close}
+          onClick={onClose}
         >
           <X />
         </button>
@@ -670,11 +901,83 @@ export function NexOverlay() {
 function NexReadout({ data }: { data: unknown }) {
   const payload = data as {
     records?: unknown[];
-    data?: { items?: unknown[]; files?: unknown[]; title?: string };
+    module?: string;
+    sectors?: { module: string; error?: string; records?: unknown[] }[];
+    place?: string;
+    attribution?: string;
+    data?: {
+      items?: unknown[];
+      files?: unknown[];
+      title?: string;
+      values?: unknown[][];
+      slides?: unknown[];
+      body?: unknown;
+      current?: { temperature_2m: number; apparent_temperature: number };
+      daily?: {
+        time: string[];
+        temperature_2m_min: number[];
+        temperature_2m_max: number[];
+      };
+    };
   };
   const rows = payload.records ?? payload.data?.items ?? payload.data?.files;
   return (
     <div className="nex-readout">
+      {payload.sectors?.map((s) => (
+        <section key={s.module}>
+          <h3>{labels[s.module] ?? s.module}</h3>
+          {s.error ? <p role="alert">{s.error}</p> : <NexReadout data={s} />}
+        </section>
+      ))}
+      {payload.place && (
+        <>
+          <h3>{payload.place}</h3>
+          <p>
+            {payload.data?.current?.temperature_2m} °C · sensação{" "}
+            {payload.data?.current?.apparent_temperature} °C
+          </p>
+          {payload.data?.daily?.time.map((day, i) => (
+            <article key={day}>
+              <strong>{day}</strong>
+              <p>
+                {payload.data!.daily!.temperature_2m_min[i]}–
+                {payload.data!.daily!.temperature_2m_max[i]} °C
+              </p>
+            </article>
+          ))}
+          <a
+            href="https://open-meteo.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {payload.attribution}
+          </a>
+        </>
+      )}
+      {payload.data?.values && (
+        <div className="nex-table-scroll">
+          <table>
+            <caption>Consulta parcial · até 40 linhas / 10 colunas</caption>
+            <tbody>
+              {payload.data.values.slice(0, 40).map((row, i) => (
+                <tr key={i}>
+                  {row.slice(0, 10).map((v, j) => (
+                    <td key={j}>{String(v ?? "")}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {(payload.data?.body || payload.data?.slides) && (
+        <p className="nex-document-text">
+          {extractText(payload.data?.body ?? payload.data?.slides).slice(
+            0,
+            6000,
+          )}
+        </p>
+      )}
       {rows?.length === 0 && <p>Nenhum registro retornado nesta consulta.</p>}
       {rows?.map((item, i) => {
         const row = item as Record<string, unknown>;
@@ -691,6 +994,15 @@ function NexReadout({ data }: { data: unknown }) {
         return (
           <article key={i}>
             <strong>{title}</strong>
+            {safeGoogleLink(row.webViewLink ?? row.htmlLink) && (
+              <a
+                href={safeGoogleLink(row.webViewLink ?? row.htmlLink)!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Abrir no Google
+              </a>
+            )}
             {Boolean(row.status) && <p>{String(row.status)}</p>}
             {Boolean(row.due_at) && <p>Prazo: {String(row.due_at)}</p>}
             {id &&
@@ -726,4 +1038,13 @@ function NexReadout({ data }: { data: unknown }) {
       </details>
     </div>
   );
+}
+
+function extractText(v: unknown): string {
+  if (!v || typeof v !== "object") return "";
+  if (Array.isArray(v)) return v.map(extractText).join("");
+  const r = v as Record<string, unknown>;
+  if (r.textRun && typeof r.textRun === "object")
+    return String((r.textRun as { content?: unknown }).content ?? "");
+  return Object.values(r).map(extractText).join("");
 }

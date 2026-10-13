@@ -1,3 +1,4 @@
+import { nexAreas } from "../../src/lib/nex-tools.ts";
 export type Env = {
   SUPABASE_URL: string;
   SUPABASE_PUBLISHABLE_KEY: string;
@@ -81,11 +82,25 @@ export async function db(
       ...init.headers,
     },
   });
-  if (!r.ok)
+  if (!r.ok) {
+    const error = (await r.json().catch(() => ({}))) as { message?: string };
+    const message = error.message ?? "";
+    if (/^Daily operation limit/.test(message))
+      throw new Fault(429, "Limite diário de operações atingido.");
+    if (
+      /^(Conflicting operation|Operation outcome pending|Project changed|Mission changed|Check-in changed|Review changed|Completed missions)/.test(
+        message,
+      )
+    )
+      throw new Fault(
+        409,
+        "Registro alterado ou operação já pendente. Confira o destino e revise novamente; nenhuma repetição automática.",
+      );
     throw new Fault(
       503,
       "Dados do N.E.X indisponíveis. Verifique a configuração e a migração.",
     );
+  }
   return r.status === 204 ? null : r.json();
 }
 export async function body(request: Request, max = 16000): Promise<unknown> {
@@ -123,18 +138,7 @@ export function text(value: unknown, max = 1200): string {
     throw new Fault(400, "Texto ausente ou acima do limite.");
   return value.trim();
 }
-export const modules = [
-  "geral",
-  "agora",
-  "hoje",
-  "calendario",
-  "inbox",
-  "estudos",
-  "projetos",
-  "missoes",
-  "rotinas",
-  "foco",
-] as const;
+export const modules = Object.keys(nexAreas);
 export function moduleName(value: unknown): string {
   if (
     typeof value !== "string" ||

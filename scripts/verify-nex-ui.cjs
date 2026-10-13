@@ -87,6 +87,31 @@ const server = spawn(
           }
           return window.__nexMemories;
         }
+        if (path === "operations/preview")
+          return {
+            operation: input.operation,
+            before: null,
+            label: "Criar projeto",
+            warning: "Revise os campos.",
+          };
+        if (path === "operations/execute")
+          return {
+            id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            kind: input.operation.kind,
+            area: "projetos",
+            applied: true,
+          };
+        if (path === "chat" && window.__nexAdvanced)
+          return {
+            reply: "Confira o projeto proposto.",
+            provider: "groq",
+            proposal: null,
+            operation: {
+              kind: "project.create",
+              payload: { name: "Projeto orbital" },
+            },
+            panels: [{ area: "hoje" }],
+          };
         if (path === "chat")
           return {
             reply: "Posso criar esta missão. Confira antes de confirmar.",
@@ -143,12 +168,33 @@ const server = spawn(
         )
           await page.screenshot({
             path:
-              root + `/docs/design/previews/nex-console-${theme}-${width}.jpg`,
+              root + `/docs/design/previews/nex-orbital-${theme}-${width}.jpg`,
             fullPage: true,
             type: "jpeg",
             quality: 80,
           });
       }
+    await page.setViewportSize({ width: 390, height: 1000 });
+    await page
+      .getByRole("button", { name: "Recolher menu inferior", exact: true })
+      .click();
+    assert.equal(
+      await page
+        .getByRole("navigation", { name: "Navegação móvel" })
+        .isVisible(),
+      false,
+    );
+    await page.reload();
+    await page.locator(".nex-console").waitFor();
+    await page
+      .getByRole("button", { name: "Expandir menu inferior", exact: true })
+      .click();
+    assert.equal(
+      await page
+        .getByRole("navigation", { name: "Navegação móvel" })
+        .isVisible(),
+      true,
+    );
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.evaluate(() => {
       Object.defineProperty(navigator.mediaDevices, "getUserMedia", {
@@ -189,6 +235,9 @@ const server = spawn(
       ).length,
       1,
     );
+    await page
+      .getByText("Contexto e permissões · Geral", { exact: true })
+      .click();
     await page.getByRole("button", { name: "Inspecionar contexto" }).click();
     const dialog = page.getByRole("dialog", { name: "Contexto · Geral" });
     await dialog.waitFor();
@@ -196,6 +245,9 @@ const server = spawn(
     await page.keyboard.press("Escape");
     await dialog.waitFor({ state: "hidden" });
     assert.equal(await page.locator("#root").evaluate((e) => e.inert), false);
+    await page
+      .getByText("Conexões, memória e instrumentos externos", { exact: true })
+      .click();
     await page
       .getByRole("textbox", { name: "Nova memória" })
       .fill("Prefiro começar pelo essencial");
@@ -208,6 +260,38 @@ const server = spawn(
     await page
       .getByText("Prefiro começar pelo essencial", { exact: true })
       .waitFor({ state: "hidden" });
+    await page.evaluate(() => (window.__nexAdvanced = true));
+    await message.fill("Crie um projeto orbital");
+    await page.getByRole("button", { name: "Enviar", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Revisar proposta", exact: true })
+      .last()
+      .click();
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "operations/execute",
+      ).length,
+      0,
+    );
+    await page
+      .getByRole("button", { name: "Confirmar operação", exact: true })
+      .last()
+      .click();
+    await page
+      .getByRole("button", { name: "Abrir destino", exact: true })
+      .waitFor();
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "operations/execute",
+      ).length,
+      1,
+    );
+    await page
+      .getByRole("button", { name: "Expandir consulta", exact: true })
+      .click();
+    await page.getByRole("dialog", { name: "Hoje", exact: true }).waitFor();
+    await page.keyboard.press("Escape");
+    await page.getByRole("dialog").waitFor({ state: "hidden" });
     await page.evaluate(() => (window.__nexFail = true));
     await message.fill("Texto que precisa permanecer");
     await page.getByRole("button", { name: "Enviar", exact: true }).click();
@@ -236,6 +320,9 @@ const server = spawn(
         await panel.evaluate((e) => e.contains(document.activeElement)),
       );
     }
+    await panel
+      .getByText("Contexto e permissões · Geral", { exact: true })
+      .click();
     await panel.getByRole("button", { name: "Inspecionar contexto" }).click();
     await panel.getByText("Revisar Física", { exact: true }).waitFor();
     assert.equal(await page.getByRole("dialog").count(), 1);

@@ -1,17 +1,12 @@
 import { supabase, isDemoMode } from "./supabase";
-export const nexModules = [
-  "geral",
-  "agora",
-  "hoje",
-  "calendario",
-  "inbox",
-  "estudos",
-  "projetos",
-  "missoes",
-  "rotinas",
-  "foco",
-] as const;
-export type NexModule = (typeof nexModules)[number];
+import {
+  nexAreas,
+  type NexArea,
+  type NexOperation,
+  type NexPanel,
+} from "./nex-tools";
+export const nexModules = Object.keys(nexAreas) as NexArea[];
+export type NexModule = NexArea;
 export type Proposal = {
   id: string;
   kind: "mission" | "inbox";
@@ -25,6 +20,8 @@ export type Reply = {
   model: string;
   proposal: Omit<Proposal, "id"> | null;
   contextShared: boolean;
+  operation?: NexOperation | null;
+  panels?: NexPanel[];
 };
 export type Memory = {
   id: string;
@@ -36,6 +33,8 @@ export type NexStatus = {
   providers: { groq: boolean; gemini: boolean; workers: boolean };
   google: { scopes: string[] } | null;
   dailyPerProvider: number;
+  capabilities?: string[];
+  configuration?: Record<string, Record<string, boolean>>;
 };
 export async function nexRequest<T>(
   path: string,

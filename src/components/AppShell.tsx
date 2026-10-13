@@ -1,9 +1,12 @@
-import { NexOverlay } from "./NexConsole";
+import { useOverlay } from "../lib/use-overlay";
+const NexOverlay = lazy(() =>
+  import("./NexConsole").then((m) => ({ default: m.NexOverlay })),
+);
 import { RelatedAreas } from "./RelatedAreas";
 import { WorkspaceRail } from "./WorkspaceRail";
 import { Plus } from "lucide-react";
 import type { PropsWithChildren } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { CommandPalette } from "./CommandPalette";
 import { MobileDock } from "./MobileDock";
 import { NotificationCenter } from "./NotificationCenter";
@@ -18,6 +21,7 @@ type AppShellProps = PropsWithChildren<{ pathname: string }>;
 type IOSNavigator = Navigator & { standalone?: boolean };
 
 export function AppShell({ pathname, children }: AppShellProps) {
+  const nexOverlay = useOverlay("nex");
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem("nexus-sidebar") === "collapsed";
@@ -91,7 +95,11 @@ export function AppShell({ pathname, children }: AppShellProps) {
         <Plus size={22} aria-hidden="true" />
       </button>
       <MobileDock pathname={pathname} />
-      {pathname !== "/nex" && <NexOverlay />}
+      {pathname !== "/nex" && nexOverlay.open && (
+        <Suspense fallback={<p role="status">Abrindo N.E.X…</p>}>
+          <NexOverlay onClose={nexOverlay.close} />
+        </Suspense>
+      )}
       <CommandPalette />
       <QuickCaptureModal />
       <ProfileModal />

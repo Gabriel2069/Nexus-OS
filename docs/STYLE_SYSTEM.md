@@ -46,3 +46,7 @@ V05/V06 consolida os proprietários de Insights, Finanças, Life e Revisão; con
 N01: workspace-rail/focus-beacon/nav-group-toggle pertencem a shell; navigator/related-areas/aviso de draft a components; launchpad/retomada/bancada a pages/now. MobileDock abre a central única. O antigo sheet móvel e command-quick foram retirados, sem criar outra folha. Inicialização de foco de overlays pertence a ModalSurface. Seleção de entidades aceita URL e ativação no mesmo endereço; rascunhos são memória de UI, não uma cópia persistente do workspace.
 
 A01: nex-console/core/readout/inspector pertencem a components; navegação N.E.X usa shell e catálogo existentes. Núcleo reutiliza nexos-orbit-pulse no SVG aninhado; lente possui transform próprio, evitando disputa. Sem folha ou keyframe adicional; botões usam primary/secondary/icon-button canônicos.
+
+## A02 — instrumentos ao redor do núcleo
+
+N.E.X ocupa uma central orbital com a estrela NexOS refratada, mapa de órbitas e emissão branca sem trocar a identidade. Seleção de setores tem rolagem própria; conexão/memória ficam recolhidas até serem necessárias. Núcleo, lente e órbitas têm camadas distintas para não disputar transform. components mantém todo o material; shell mantém dock/toggle; motion mantém a nova animação nex-core-orbit (68 nomes únicos). Redução de movimento e pausa de atmosfera continuam aplicadas. ModalSurface inclui summary na contenção de foco; inspector único impede modais simultâneos. Nenhuma folha nova ou aumento de important. Cronômetro aprovado de Foco preservado.

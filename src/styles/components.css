@@ -6528,7 +6528,10 @@ select:focus-visible {
 }
 .nex-workspace {
   display: grid;
-  grid-template-columns: minmax(250px, 0.8fr) minmax(0, 1.8fr);
+  grid-template-columns: minmax(155px, 0.7fr) minmax(240px, 1fr) minmax(
+      0,
+      1.6fr
+    );
   gap: 24px;
   align-items: start;
 }
@@ -6546,64 +6549,161 @@ select:focus-visible {
   color: var(--muted);
   line-height: 1.65;
 }
-.nex-core {
+/* A02 orbital instrument: each animated transform has its own layer. */
+.nex-orbital-core {
+  --nex-energy: 0;
+  --core-light: var(--nx-photon);
   position: relative;
-  height: 230px;
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 220px;
   display: grid;
   place-items: center;
   isolation: isolate;
+  color: var(--core-light);
 }
-.nex-core::before {
-  content: "";
+.nex-orbital-core[data-state="listening"],
+.nex-orbital-core[data-state="speaking"] {
+  --core-light: var(--cyan);
+}
+.nex-orbital-core[data-state="acting"] {
+  --core-light: var(--amber);
+}
+.nex-orbital-map {
   position: absolute;
-  inset: 12%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, var(--nx-photon-glow), transparent 70%);
-  filter: blur(15px);
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
-.nex-core__lens {
-  width: 132px;
+.nex-orbital-map__rotation {
+  transform-origin: 160px 160px;
+  animation: nex-core-orbit 38s linear infinite;
+}
+.nex-orbital-core[data-state="thinking"] .nex-orbital-map__rotation {
+  animation-duration: 8s;
+}
+.nex-orbital-sphere {
+  width: 48%;
   aspect-ratio: 1;
-  display: grid;
-  place-items: center;
   border-radius: 50%;
-  color: var(--text);
   border: 1px solid var(--hairline);
   background:
     radial-gradient(
-      circle at 30% 20%,
-      rgba(255, 255, 255, 0.28),
-      transparent 55%
+      circle at 28% 22%,
+      rgba(255, 255, 255, 0.35),
+      transparent 48%
     ),
+    radial-gradient(circle at 70% 75%, var(--nx-photon-glow), transparent 72%),
     var(--nx-glass-bg);
   box-shadow:
-    inset 0 1px 18px rgba(255, 255, 255, 0.22),
-    0 20px 45px rgba(0, 0, 0, 0.2),
-    0 0 32px var(--nx-photon-glow);
-  transform: rotate(-12deg);
-  transition:
-    box-shadow 0.4s,
-    transform 0.4s;
+    inset 0 0 22px rgba(255, 255, 255, 0.16),
+    0 25px 50px rgba(0, 0, 0, 0.2),
+    0 0 calc(28px + var(--nex-energy) * 70px) var(--nx-photon-glow);
+  backdrop-filter: blur(16px);
+  display: grid;
+  place-items: center;
+  transform: scale(calc(1 + var(--nex-energy) * 0.12));
 }
-.nex-core__orbit {
-  position: absolute;
-  width: 186px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 1px solid var(--hairline);
-  border-top-color: var(--text);
-  transform: rotateX(55deg) rotate(-25deg);
+.nex-orbital-sphere__light {
+  width: 62%;
+  color: var(--core-light);
+  filter: drop-shadow(0 0 15px var(--nx-photon-glow));
 }
-.nex-core__orbit--outer {
-  width: 214px;
-  transform: rotateY(55deg) rotate(25deg);
-  opacity: 0.5;
+.nex-orbital-sphere__light svg {
+  display: block;
+  width: 100%;
 }
-.nex-core.is-active .nex-core__lens svg {
+.nex-orbital-core[data-state="thinking"] .nex-orbital-sphere__light {
   animation: nexos-orbit-pulse 2.4s ease-in-out infinite;
-  box-shadow:
-    inset 0 0 24px rgba(255, 255, 255, 0.3),
-    0 0 60px var(--nx-photon-glow);
+}
+.nex-orbital-caption {
+  position: absolute;
+  bottom: 0;
+  font: 9px var(--nexos-body);
+  letter-spacing: 0.13em;
+  color: var(--muted);
+  text-align: center;
+}
+.nex-command-rail {
+  min-width: 0;
+}
+.nex-command-areas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  max-height: 440px;
+  overflow: auto;
+  padding: 2px;
+  overscroll-behavior: contain;
+}
+.nex-command-areas button {
+  justify-content: space-between;
+  text-align: left;
+  width: 100%;
+}
+.nex-settings {
+  padding: 18px;
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  background: var(--nx-glass-bg);
+  min-width: 0;
+}
+.nex-settings > summary {
+  cursor: pointer;
+  color: var(--text);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nex-settings > summary::before {
+  content: "+";
+  color: var(--nx-photon);
+}
+.nex-settings[open] > summary::before {
+  content: "−";
+}
+.nex-response-panel {
+  padding: 16px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--nx-glass-bg);
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.nex-operation-fields {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.nex-operation-fields > div {
+  display: grid;
+  grid-template-columns: minmax(85px, 0.65fr) minmax(0, 1fr);
+  gap: 8px;
+}
+.nex-operation-fields dt {
+  color: var(--muted);
+}
+.nex-operation-fields dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.nex-proposal pre {
+  max-width: 100%;
+  overflow: auto;
+  font-size: 12px;
+}
+.nex-readout table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.nex-readout td {
+  padding: 8px;
+  border-bottom: 1px solid var(--hairline);
+  overflow-wrap: anywhere;
 }
 .nex-state {
   padding: 10px 12px;
@@ -6831,8 +6931,29 @@ select:focus-visible {
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 700px) {
+@media (min-width: 701px) and (max-width: 1190px) {
   .nex-workspace {
+    grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.3fr);
+  }
+  .nex-command-rail {
+    grid-column: 1/-1;
+  }
+  .nex-command-areas {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.nex-console--compact .nex-workspace {
+  grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
+}
+.nex-console--compact .nex-command-rail {
+  grid-column: 1/-1;
+}
+.nex-console--compact .nex-command-areas {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 700px) {
+  .nex-workspace,
+  .nex-console--compact .nex-workspace {
     grid-template-columns: 1fr;
     gap: 16px;
   }
@@ -6840,17 +6961,20 @@ select:focus-visible {
     align-items: flex-start;
     flex-direction: column;
   }
-  .nex-core {
-    height: 180px;
+  .nex-core-card {
+    order: -2;
   }
-  .nex-core__lens {
-    width: 110px;
+  .nex-dialogue {
+    order: -1;
   }
-  .nex-core__orbit {
-    width: 145px;
+  .nex-orbital-core {
+    min-height: 180px;
+    width: min(100%, 260px);
+    justify-self: center;
   }
-  .nex-core__orbit--outer {
-    width: 165px;
+  .nex-command-areas,
+  .nex-console--compact .nex-command-areas {
+    grid-template-columns: 1fr 1fr;
   }
   .nex-overlay {
     padding: 16px;
@@ -6865,11 +6989,13 @@ select:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nex-core.is-active .nex-core__lens svg {
+  .nex-orbital-map__rotation,
+  .nex-orbital-core[data-state="thinking"] .nex-orbital-sphere__light {
     animation: none;
   }
 }
-html[data-atmosphere="paused"] .nex-core__lens svg {
+html[data-atmosphere="paused"] .nex-orbital-map__rotation,
+html[data-atmosphere="paused"] .nex-orbital-sphere__light {
   animation-play-state: paused;
 }
 
@@ -6929,8 +7055,8 @@ html[data-atmosphere="paused"] .nex-core__lens svg {
   .nex-core-card {
     gap: 10px;
   }
-  .nex-core {
-    height: 130px;
+  .nex-orbital-core {
+    min-height: 180px;
   }
   .nex-heading h1 {
     font-size: 36px;
@@ -6938,4 +7064,13 @@ html[data-atmosphere="paused"] .nex-core__lens svg {
   .nex-core-card > p {
     font-size: 13px;
   }
+}
+
+.nex-table-scroll {
+  overflow: auto;
+  max-width: 100%;
+}
+.nex-document-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

@@ -277,7 +277,8 @@
 .floating-add {
   display: none;
 }
-.mobile-dock {
+.mobile-dock,
+.mobile-dock-frame {
   display: none;
 }
 .skip-link {
@@ -339,6 +340,32 @@ html.nexus-standalone .topbar {
   }
 }
 @media (max-width: 920px) {
+  .mobile-dock-frame {
+    display: block;
+  }
+  .mobile-dock[hidden] {
+    display: none;
+  }
+  .mobile-dock-toggle {
+    position: fixed;
+    z-index: 31;
+    bottom: calc(92px + env(safe-area-inset-bottom));
+    right: 18px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 0 14px;
+    background: var(--panel);
+    color: var(--text);
+    box-shadow: 0 0 16px var(--nx-photon-glow);
+  }
+  .mobile-dock-toggle.is-collapsed {
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
   .app-shell,
   .app-shell--collapsed {
     display: block;
