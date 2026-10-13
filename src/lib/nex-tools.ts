@@ -46,21 +46,46 @@ export type NexOperation = {
   kind: keyof typeof operationKinds;
   payload: Record<string, string | number | string[]>;
 };
-export type NexPanel = { area: NexArea };
+export type NexPanel = {
+  area: NexArea;
+  google?: "calendar" | "tasks" | "drive";
+};
 export function panels(raw: unknown): NexPanel[] {
   if (!Array.isArray(raw)) return [];
   const found = new Set<string>();
+  let googleSeen = false;
   return raw
     .flatMap((x) => {
       const area = x?.area;
+      const google = x?.google;
+      const googleAreas = {
+        calendar: "calendario",
+        tasks: "inbox",
+        drive: "biblioteca",
+      };
+      if (
+        google !== undefined &&
+        (typeof google !== "string" ||
+          !Object.hasOwn(googleAreas, google) ||
+          googleAreas[google as keyof typeof googleAreas] !== area)
+      )
+        return [];
+      if (google && googleSeen) return [];
+      const key = `${google ?? "local"}:${area}`;
       if (
         typeof area !== "string" ||
         !Object.hasOwn(nexAreas, area) ||
-        found.has(area)
+        found.has(key)
       )
         return [];
-      found.add(area);
-      return [{ area: area as NexArea }];
+      found.add(key);
+      if (google) googleSeen = true;
+      return [
+        {
+          area: area as NexArea,
+          ...(google ? { google: google as NexPanel["google"] } : {}),
+        },
+      ];
     })
     .slice(0, 3);
 }
@@ -250,4 +275,41 @@ export function operation(raw: unknown): NexOperation | null {
   } catch {
     return null;
   }
+}
+
+const normalize = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[.!?]+$/, "");
+export function localNexCommand(
+  value: string,
+): { kind: "stop" } | { kind: "navigate"; area: NexArea } | null {
+  const text = normalize(value);
+  if (
+    /^(parar|pare|pausar|silencio|encerrar conversa|parar conversa|pausar conversa)$/.test(
+      text,
+    )
+  )
+    return { kind: "stop" };
+  const match = text.match(
+    /^(?:abra|abrir|abre|ir para|va para) (?:o |a |os |as )?(.+)$/,
+  );
+  if (!match) return null;
+  const aliases: Record<string, NexArea> = {
+    inicio: "agora",
+    agenda: "calendario",
+    tarefas: "missoes",
+    nex: "geral",
+    "n.e.x": "geral",
+    "life rpg": "life",
+  };
+  const area =
+    aliases[match[1]] ??
+    Object.entries(nexAreas).find(
+      ([, entry]) => normalize(entry.label) === match[1],
+    )?.[0];
+  return area ? { kind: "navigate", area: area as NexArea } : null;
 }

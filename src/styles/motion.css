@@ -679,3 +679,14 @@
     transform: rotate(360deg);
   }
 }
+
+@keyframes nex-window-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

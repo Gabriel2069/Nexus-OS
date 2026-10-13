@@ -195,11 +195,14 @@ export function NexResponsePanel({
   panel,
   compact = false,
   onInspect,
+  onConnect,
 }: {
   panel: NexPanel;
   compact?: boolean;
   onInspect: (title: string, data: unknown) => void;
+  onConnect?: () => void;
 }) {
+  const nex = useNex();
   const [data, setData] = useState<{
       records?: Record<string, unknown>[];
       sectors?: unknown[];
@@ -208,13 +211,32 @@ export function NexResponsePanel({
   const [expanded, setExpanded] = useState(false);
   useEffect(() => {
     const c = new AbortController();
-    nexRequest<typeof data>("context", { module: panel.area }, "POST", c.signal)
-      .then(setData)
-      .catch((e) => {
-        if (!c.signal.aborted) setError(e.message);
-      });
+    setData(null);
+    setError("");
+    if (panel.google && !nex.status?.google) {
+      setError("Conecte sua conta Google para consultar este serviço.");
+      return () => c.abort();
+    }
+    const job = panel.google
+      ? nexRequest<{
+          data: {
+            items?: Record<string, unknown>[];
+            files?: Record<string, unknown>[];
+          };
+        }>("google/read", { service: panel.google }, "POST", c.signal).then(
+          (value) => ({ records: value.data.items ?? value.data.files ?? [] }),
+        )
+      : nexRequest<typeof data>(
+          "context",
+          { module: panel.area },
+          "POST",
+          c.signal,
+        );
+    job.then(setData).catch((e) => {
+      if (!c.signal.aborted) setError(e.message);
+    });
     return () => c.abort();
-  }, [panel.area]);
+  }, [panel.area, panel.google, !!nex.status?.google]);
   const content = (
     <div className="nex-readout">
       {error ? (
@@ -233,6 +255,7 @@ export function NexResponsePanel({
                 {String(
                   r.title ??
                     r.name ??
+                    r.summary ??
                     r.label ??
                     r.subject ??
                     r.checkin_date ??
@@ -240,6 +263,15 @@ export function NexResponsePanel({
                 )}
               </strong>
               <p>{String(r.status ?? r.note ?? r.next_action ?? "")}</p>
+              {panel.google && safeGoogleLink(r.webViewLink ?? r.htmlLink) && (
+                <a
+                  href={safeGoogleLink(r.webViewLink ?? r.htmlLink)!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Abrir no Google
+                </a>
+              )}
             </article>
           ))}
           {data.sectors && <p>Agora · Calendário · Projetos · Hoje</p>}
@@ -248,18 +280,32 @@ export function NexResponsePanel({
     </div>
   );
   return (
-    <section className="nex-response-panel">
+    <section
+      className="nex-response-panel"
+      aria-label={
+        (panel.google ? "Google" : "NexOS") + " / " + nexAreas[panel.area].label
+      }
+    >
       <span className="eyebrow">
-        Instrumento / {nexAreas[panel.area].label}
+        {panel.google ? "Google" : "NexOS"} / {nexAreas[panel.area].label}
       </span>
       {content}
       <div className="nex-compose__actions">
+        {panel.google && !nex.status?.google && onConnect && (
+          <button className="secondary-button" onClick={onConnect}>
+            Conectar Google
+          </button>
+        )}
         <button
           className="secondary-button"
           onClick={() =>
             compact
               ? setExpanded(!expanded)
-              : onInspect(nexAreas[panel.area].label, data)
+              : onInspect(
+                  (panel.google ? "Google · " : "") +
+                    nexAreas[panel.area].label,
+                  data,
+                )
           }
         >
           {expanded ? "Recolher" : "Expandir consulta"}

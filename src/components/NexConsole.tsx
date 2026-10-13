@@ -7,9 +7,13 @@ import {
 } from "./NexInstruments";
 import { nexAreas } from "../lib/nex-tools";
 import { useEffect, useRef, useState } from "react";
+import { useNexVoice } from "../lib/use-nex-voice";
 import {
   ArrowUpRight,
-  Brain,
+  Settings2,
+  Radio,
+  RefreshCw,
+  Layers3,
   Check,
   Mic,
   Send,
@@ -18,8 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { useNex } from "../context/NexContext";
-import { nexModules, nexRequest, voiceWav } from "../lib/nex-api";
-import { navigation } from "../data/navigation";
+import { nexModules, nexRequest } from "../lib/nex-api";
 import { navigate } from "../lib/router";
 import { entityPath } from "../lib/navigation-state";
 import { useOverlay } from "../lib/use-overlay";
@@ -41,8 +44,6 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
   }, []);
   const [input, setInput] = useState("");
   const [memory, setMemory] = useState("");
-  const [listening, setListening] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [deleting, setDeleting] = useState("");
   const [inspected, setInspected] = useState<{
@@ -62,156 +63,44 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
     if (nex.googleContext)
       nex.setGoogleContext({ service, id: resource, range });
   }, [service, resource, range]);
-  useEffect(() => {
-    if (!listening || !stream.current || !window.AudioContext) return;
-    const audio = new AudioContext(),
-      analyser = audio.createAnalyser(),
-      source = audio.createMediaStreamSource(stream.current);
-    analyser.fftSize = 256;
-    source.connect(analyser);
-    const values = new Uint8Array(256);
-    let frame = 0;
-    const sample = () => {
-      analyser.getByteTimeDomainData(values);
-      let power = 0;
-      for (const v of values) power += ((v - 128) / 128) ** 2;
-      coreRef.current?.style.setProperty(
-        "--nex-energy",
-        String(Math.min(1, Math.sqrt(power / values.length) * 5)),
-      );
-      frame = requestAnimationFrame(sample);
-    };
-    sample();
-    return () => {
-      cancelAnimationFrame(frame);
-      source.disconnect();
-      void audio.close();
-      coreRef.current?.style.removeProperty("--nex-energy");
-    };
-  }, [listening]);
-  const recorder = useRef<MediaRecorder | null>(null);
-  const stream = useRef<MediaStream | null>(null);
-  const timer = useRef<number | undefined>(undefined);
-  const alive = useRef(true);
-  const voicePending = useRef(false);
   const end = useRef<HTMLDivElement>(null);
   const inspect = useOverlay("nexInspect");
+  const settingsOverlay = useOverlay("nexSettings");
+  const [inlineSettings, setInlineSettings] = useState(false);
+  const settings = compact
+    ? {
+        open: inlineSettings,
+        show: () => setInlineSettings(true),
+        close: () => setInlineSettings(false),
+      }
+    : settingsOverlay;
+  const [selected, setSelected] = useState<number | null>(null);
+  const voice = useNexVoice({
+    coreRef,
+    send: nex.send,
+    run: nex.run,
+    cancel: nex.cancel,
+    error: nex.setError,
+    draft: (value) => setInput((old) => (old ? `${old}\n${value}` : value)),
+  });
+  const { listening, speaking } = voice;
+  const record = voice.record;
+  const speak = voice.speak;
   useEffect(() => {
-    alive.current = true;
     void nex.load();
-    return () => {
-      alive.current = false;
-      clearTimeout(timer.current);
-      if (recorder.current?.state === "recording") recorder.current.stop();
-      stream.current?.getTracks().forEach((t) => t.stop());
-      window.speechSynthesis?.cancel();
-    };
   }, []);
   useEffect(() => {
     end.current?.scrollIntoView({ block: "nearest", behavior: "instant" });
+    const index = nex.messages.length - 1;
+    const response = nex.messages[index];
+    setSelected(response?.panels?.length ? index : null);
   }, [nex.messages.length]);
   async function submit() {
-    if (await nex.send(input)) setInput("");
-  }
-  async function record() {
-    if (recorder.current?.state === "recording") {
-      recorder.current.stop();
-      return;
+    const result = await nex.send(input);
+    if (result) {
+      setInput("");
+      if (voice.autoSpeak) void voice.speak(result.reply);
     }
-    if (nex.busy || voicePending.current) return;
-    voicePending.current = true;
-    try {
-      if (
-        !window.isSecureContext ||
-        !navigator.mediaDevices?.getUserMedia ||
-        !window.MediaRecorder
-      )
-        throw Error("Microfone indisponível neste navegador. Use texto.");
-      const media = await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (!alive.current) {
-        media.getTracks().forEach((t) => t.stop());
-        return;
-      }
-      stream.current = media;
-      const recording = new MediaRecorder(media);
-      recorder.current = recording;
-      const chunks: Blob[] = [];
-      let failed = false;
-      recording.ondataavailable = (e) => {
-        if (e.data.size) chunks.push(e.data);
-      };
-      recording.onerror = () => {
-        failed = true;
-        clearTimeout(timer.current);
-        media.getTracks().forEach((t) => t.stop());
-        setListening(false);
-        if (recording.state === "recording") recording.stop();
-        nex.setError("Gravação interrompida. Use texto.");
-      };
-      recording.onstop = () => {
-        clearTimeout(timer.current);
-        media.getTracks().forEach((t) => t.stop());
-        if (!alive.current || failed) return;
-        setListening(false);
-        void nex.run(async (signal) => {
-          const audio = await voiceWav(
-            new Blob(chunks, { type: recording.mimeType }),
-          );
-          const result = await nexRequest<{ text: string }>(
-            "transcribe",
-            { audio },
-            "POST",
-            signal,
-          );
-          if (alive.current)
-            setInput((old) => (old ? `${old}\n${result.text}` : result.text));
-        });
-      };
-      recording.start();
-      setListening(true);
-      nex.setError("");
-      timer.current = window.setTimeout(() => {
-        if (recording.state === "recording") recording.stop();
-      }, 29000);
-    } catch (e) {
-      stream.current?.getTracks().forEach((t) => t.stop());
-      nex.setError(
-        e instanceof Error && e.name === "NotAllowedError"
-          ? "Permissão de microfone negada. Libere nas configurações ou continue digitando."
-          : e instanceof Error
-            ? e.message
-            : "Não foi possível abrir o microfone.",
-      );
-    } finally {
-      voicePending.current = false;
-    }
-  }
-  function speak(value: string) {
-    if (!window.speechSynthesis) {
-      nex.setError("Voz do dispositivo indisponível.");
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const voices = window.speechSynthesis.getVoices();
-    const voice =
-      voices.find((v) => v.localService && v.lang === "pt-BR") ??
-      voices.find((v) => v.localService && v.lang.startsWith("pt"));
-    if (!voice) {
-      nex.setError(
-        "Nenhuma voz local em português disponível. Instale uma voz no dispositivo.",
-      );
-      return;
-    }
-    const speech = new SpeechSynthesisUtterance(value);
-    speech.voice = voice;
-    speech.lang = voice.lang;
-    speech.onstart = () => setSpeaking(true);
-    speech.onend = () => setSpeaking(false);
-    speech.onerror = () => {
-      setSpeaking(false);
-      nex.setError("O dispositivo interrompeu a leitura.");
-    };
-    window.speechSynthesis.speak(speech);
   }
   async function showContext() {
     const result = await nex.run((signal) =>
@@ -219,41 +108,41 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
     );
     if (result) {
       setInspected({ title: `Contexto · ${labels[nex.module]}`, data: result });
-      if (!compact) inspect.show();
+      if (!compact) {
+        settings.close();
+        inspect.show();
+      }
     }
   }
-  async function read(service: string) {
+  async function read(service: string, id = resource) {
     const result = await nex.run((signal) =>
-      nexRequest(
-        "google/read",
-        { service, id: resource, range },
-        "POST",
-        signal,
-      ),
+      nexRequest("google/read", { service, id, range }, "POST", signal),
     );
     if (result) {
       setInspected({ title: `Google · ${service}`, data: result });
-      if (!compact) inspect.show();
+      if (!compact) {
+        settings.close();
+        inspect.show();
+      }
     }
   }
-  const state = listening
-    ? "Escutando"
-    : nex.busy
-      ? nex.phase
-      : speaking
-        ? "Respondendo"
-        : "Em espera";
+  const state =
+    voice.phase ||
+    (listening
+      ? "Escutando"
+      : nex.busy
+        ? nex.phase
+        : speaking
+          ? "Respondendo"
+          : "Em espera");
   return (
     <div className={`nex-console ${compact ? "nex-console--compact" : ""}`}>
       <header className="nex-heading">
-        <div>
+        <div className="nex-heading__title">
           <span className="eyebrow">NexOS Intelligence</span>
-          <h1>
-            N.E.X<span>Seu universo, em diálogo.</span>
-          </h1>
+          <h1>N.E.X</h1>
         </div>
         <div className="nex-flight-clock">
-          <span className="eyebrow">Tempo local / São Paulo</span>
           <time dateTime={time.toISOString()}>
             {new Intl.DateTimeFormat("pt-BR", {
               timeZone: "America/Sao_Paulo",
@@ -262,21 +151,23 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
               second: "2-digit",
             }).format(time)}
           </time>
-          <span>
-            {new Intl.DateTimeFormat("pt-BR", {
-              timeZone: "America/Sao_Paulo",
-              day: "2-digit",
-              month: "short",
-            }).format(time)}
-          </span>
+          <span>São Paulo</span>
         </div>
-        <button
-          className="secondary-button"
-          disabled={nex.busy}
-          onClick={nex.load}
-        >
-          Verificar conexões
-        </button>
+        <div className="nex-heading__actions">
+          <button
+            className="icon-button"
+            disabled={nex.busy}
+            onClick={nex.load}
+            aria-label="Verificar conexões"
+            title="Verificar conexões"
+          >
+            <RefreshCw size={16} />
+          </button>
+          <button className="secondary-button" onClick={settings.show}>
+            <Settings2 size={16} />
+            Conexões e ajustes
+          </button>
+        </div>
       </header>
       {new URLSearchParams(window.location.search).get("google") ===
         "denied" && (
@@ -286,91 +177,109 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
         </p>
       )}
       <div className="nex-workspace">
-        <SurfaceCard
-          className="nex-command-rail"
-          title="Instrumentos"
-          eyebrow="Controle do universo"
-          tone="blue"
-        >
-          <div
-            className="nex-telemetry"
-            aria-label="Registros carregados do NexOS"
-          >
+        <aside className="nex-command-rail" aria-label="Seu contexto no NexOS">
+          <section className="nex-live-block">
+            <span className="eyebrow">Agora / seu espaço</span>
             {workspace.loading ? (
-              <p role="status">Carregando seus dados…</p>
+              <p role="status">Carregando…</p>
             ) : workspace.error ? (
               <p role="alert">{workspace.error}</p>
             ) : (
               <>
-                <div>
-                  <strong>
-                    {
-                      workspace.workspace.missions.filter(
-                        (m) => !["Feita", "Cancelada"].includes(m.status),
-                      ).length
-                    }
-                  </strong>
-                  <span>Missões abertas</span>
+                <div className="nex-telemetry">
+                  <div>
+                    <strong>
+                      {
+                        workspace.workspace.missions.filter(
+                          (m) => !["Feita", "Cancelada"].includes(m.status),
+                        ).length
+                      }
+                    </strong>
+                    <span>Missões abertas</span>
+                  </div>
+                  <div>
+                    <strong>{workspace.workspace.projects.length}</strong>
+                    <span>Projetos</span>
+                  </div>
                 </div>
-                <div>
-                  <strong>{workspace.workspace.projects.length}</strong>
-                  <span>Projetos carregados</span>
-                </div>
+                {workspace.workspace.missions
+                  .filter(
+                    (m) => !["Feita", "Cancelada", "Inbox"].includes(m.status),
+                  )
+                  .slice(0, 2)
+                  .map((m) => (
+                    <button
+                      className="nex-live-item"
+                      key={m.id}
+                      onClick={() => {
+                        navigate(entityPath("mission", m.id));
+                        emitUI("inspect");
+                      }}
+                    >
+                      <span>{m.title}</span>
+                      <small>{m.priority}</small>
+                      <ArrowUpRight size={14} />
+                    </button>
+                  ))}
               </>
             )}
-          </div>
-          <div className="nex-command-areas">
-            {Object.entries(nexAreas)
-              .filter(([k]) => k !== "geral")
-              .map(([k, v]) => (
-                <button
-                  className="secondary-button"
-                  key={k}
-                  aria-label={"Consultar " + v.label + " com N.E.X"}
-                  disabled={nex.busy}
-                  onClick={() => {
-                    nex.setModule(k as typeof nex.module);
-                    setInput(
-                      "Ajude-me com " + v.label + ". Qual o próximo passo?",
-                    );
-                  }}
-                >
-                  {v.label}
-                  <ArrowUpRight size={14} />
-                </button>
-              ))}
-          </div>
-          <details className="nex-privacy">
-            <summary>Registro de operações</summary>
+          </section>
+          <section className="nex-live-block">
+            <span className="eyebrow">Contexto da conversa</span>
+            <label className="nex-field">
+              Área
+              <select
+                value={nex.module}
+                disabled={nex.busy || voice.active || listening}
+                onChange={(e) =>
+                  nex.setModule(e.target.value as typeof nex.module)
+                }
+              >
+                {nexModules.map((m) => (
+                  <option key={m} value={m}>
+                    {labels[m]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="nex-consent">
+              <input
+                type="checkbox"
+                checked={nex.share}
+                disabled={nex.busy || voice.active || listening}
+                onChange={(e) => nex.setShare(e.target.checked)}
+              />
+              Usar contexto do NexOS
+            </label>
+            <p className="muted">
+              {nex.share
+                ? "Consulta parcial do módulo e suas memórias."
+                : "Somente a mensagem e a conversa recente vão à IA."}
+            </p>
             <button
-              className="secondary-button"
+              className="text-button"
               disabled={nex.busy}
-              onClick={() =>
-                void nex.run(async (signal) =>
-                  setHistory(
-                    await nexRequest(
-                      "operations/history",
-                      undefined,
-                      "GET",
-                      signal,
-                    ),
-                  ),
-                )
-              }
+              onClick={showContext}
             >
-              Consultar histórico
+              Ver dados disponíveis
             </button>
-            {history.map((h) => (
-              <p key={h.id}>
-                {h.kind} ·{" "}
-                {h.state === "applied"
-                  ? "Confirmada"
-                  : "Pendente: confira o destino"}
-              </p>
-            ))}
-          </details>
-        </SurfaceCard>
-        <SurfaceCard className="nex-core-card" tone="cyan">
+          </section>
+          <section className="nex-live-block">
+            <span className="eyebrow">Conexões</span>
+            <div className="nex-connection-line">
+              <i data-connected={!!nex.status?.google} />
+              <span>Google</span>
+              <small>
+                {nex.status?.google ? "Autorizado" : "Não conectado"}
+              </small>
+            </div>
+            <button className="text-button" onClick={settings.show}>
+              Gerenciar conexões
+              <ArrowUpRight size={14} />
+            </button>
+          </section>
+        </aside>
+        <section className="nex-core-card" aria-label="Núcleo N.E.X">
           <NexOrbitalCore
             state={
               listening
@@ -386,7 +295,7 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
             coreRef={coreRef}
           />
           <div className="nex-core-identity">
-            <span className="eyebrow">Núcleo de assistência / NexOS</span>
+            <span className="eyebrow">Inteligência pessoal</span>
             <h2>N.E.X</h2>
             <p role="status">{state}</p>
           </div>
@@ -399,62 +308,70 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
                   .join(" · ") || "IA desconectada · verifique conexões"
               : "Conexão ainda não verificada"}
           </div>
-          <details className="nex-privacy">
-            <summary>Contexto e permissões · {labels[nex.module]}</summary>
-            <label className="nex-field">
-              Contexto
-              <select
-                value={nex.module}
-                disabled={nex.busy || listening}
-                onChange={(e) =>
-                  nex.setModule(e.target.value as typeof nex.module)
-                }
-              >
-                {nexModules.map((m) => (
-                  <option value={m} key={m}>
-                    {labels[m]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="nex-consent">
-              <input
-                type="checkbox"
-                checked={nex.share}
-                disabled={nex.busy || listening}
-                onChange={(e) => nex.setShare(e.target.checked)}
-              />
-              Compartilhar dados deste módulo e memórias com a IA
-            </label>
-            <details className="nex-privacy">
-              <summary>Privacidade e voz</summary>
-              <p className="muted">
-                Sua mensagem e até quatro falas recentes são enviadas ao
-                provedor. Contexto limitado aos registros consultados. Planos
-                gratuitos podem usar mensagens para melhorar modelos. Áudio só é
-                enviado quando você encerra a gravação.
-              </p>
-            </details>
+          <div className="nex-voice-controls">
             <button
-              className="secondary-button"
-              disabled={nex.busy}
-              onClick={showContext}
+              className={voice.active ? "primary-button" : "secondary-button"}
+              aria-pressed={voice.active}
+              disabled={
+                !voice.active &&
+                (nex.busy || listening || !nex.status?.providers.groq)
+              }
+              onClick={() => void voice.toggle()}
             >
-              Inspecionar contexto
+              {voice.active ? <Square size={18} /> : <Mic size={18} />}{" "}
+              {voice.active ? "Pausar conversa" : "Conversar por voz"}
             </button>
-          </details>
-        </SurfaceCard>
+          </div>
+          <p className="nex-voice-caption">
+            {voice.active
+              ? "Escuta ativa · pausa ao sair desta tela"
+              : "Transcrição Groq · resposta por voz do dispositivo."}
+          </p>
+          {selected !== null && nex.messages[selected]?.panels?.length ? (
+            <div className="nex-canvas-panel" aria-label="Resultados de N.E.X">
+              <header>
+                <span className="eyebrow">Resultados da conversa</span>
+                <button
+                  className="icon-button"
+                  aria-label="Fechar resultados"
+                  onClick={() => setSelected(null)}
+                >
+                  <X size={16} />
+                </button>
+              </header>
+              <div className="nex-canvas-panel__content">
+                {nex.messages[selected].panels!.map((panel) => (
+                  <NexResponsePanel
+                    key={panel.area + (panel.google ?? "")}
+                    panel={panel}
+                    onConnect={settings.show}
+                    compact={compact}
+                    onInspect={(title, data) => {
+                      setInspected({ title, data });
+                      if (!compact) {
+                        settings.close();
+                        inspect.show();
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </section>
+
         <SurfaceCard
           className="nex-dialogue"
-          title="Canal de diálogo"
-          eyebrow="N.E.X / você"
+          title="Conversa"
           action={
             <button
-              className="secondary-button"
+              className="icon-button"
               disabled={nex.busy}
+              aria-label="Limpar conversa"
+              title="Limpar conversa"
               onClick={nex.clear}
             >
-              Limpar conversa
+              <X size={16} />
             </button>
           }
         >
@@ -466,11 +383,11 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
           >
             {!nex.messages.length && (
               <div className="nex-empty">
-                <Brain size={30} />
-                <h2>O que vamos organizar?</h2>
+                <Radio size={22} />
+                <h2>Estou aqui.</h2>
                 <p>
-                  Comece com uma pergunta. Você escolhe o módulo e se deseja
-                  compartilhar contexto.
+                  Fale comigo ou escreva. As consultas aparecem no centro; ações
+                  pedem confirmação.
                 </p>
                 <div className="nex-starters">
                   {[
@@ -507,17 +424,15 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
                     id={m.operationId}
                   />
                 )}
-                {m.panels?.map((p) => (
-                  <NexResponsePanel
-                    key={p.area}
-                    panel={p}
-                    compact={compact}
-                    onInspect={(title, data) => {
-                      setInspected({ title, data });
-                      if (!compact) inspect.show();
-                    }}
-                  />
-                ))}
+                {!!m.panels?.length && (
+                  <button
+                    className="secondary-button"
+                    onClick={() => setSelected(i)}
+                  >
+                    <Layers3 size={16} />
+                    Ver resultados · {m.panels.length}
+                  </button>
+                )}
                 {m.proposal && (
                   <div className="nex-proposal">
                     <span className="eyebrow">
@@ -585,33 +500,56 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
               disabled={nex.busy || listening}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Fale com N.E.X…"
-              rows={3}
+              rows={2}
             />
             <div className="nex-compose__actions">
               <button
                 type="button"
                 className="secondary-button"
-                disabled={nex.busy || !nex.status?.providers.groq}
-                onClick={record}
+                disabled={
+                  !voice.active && (nex.busy || !nex.status?.providers.groq)
+                }
+                onClick={voice.active ? voice.stop : record}
+                aria-label={
+                  voice.active
+                    ? "Pausar conversa por voz"
+                    : listening
+                      ? "Encerrar gravação"
+                      : "Ditar mensagem"
+                }
               >
                 {listening ? <Square size={18} /> : <Mic size={18} />}{" "}
-                {listening ? "Encerrar gravação" : "Gravar até 30 s"}
+                {voice.active
+                  ? "Pausar"
+                  : listening
+                    ? "Concluir ditado"
+                    : "Ditar"}
               </button>
-              {speaking && (
+              {speaking && !voice.active && (
                 <button
                   type="button"
                   className="secondary-button"
                   onClick={() => {
-                    window.speechSynthesis.cancel();
-                    setSpeaking(false);
+                    voice.stop();
                   }}
                 >
                   Parar voz
                 </button>
               )}
               <button
+                type="button"
+                className="icon-button"
+                aria-label="Respostas faladas"
+                aria-pressed={voice.autoSpeak}
+                onClick={() => voice.setAutoSpeak(!voice.autoSpeak)}
+              >
+                <Volume2 size={17} />
+              </button>
+              <button
                 className="primary-button"
-                disabled={nex.busy || listening || !input.trim()}
+                disabled={
+                  nex.busy || voice.active || listening || !input.trim()
+                }
               >
                 <Send size={17} />
                 Enviar
@@ -620,295 +558,397 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
           </form>
         </SurfaceCard>
       </div>
-      <details className="nex-settings">
-        <summary>Conexões, memória e instrumentos externos</summary>
-        <div className="nex-support">
-          <SurfaceCard
-            title="Seu espaço conectado"
-            eyebrow="Navegação"
-            tone="blue"
-          >
-            <div className="nex-destinations">
-              {navigation
-                .flatMap((g) => g.items)
-                .filter((x) => x.path !== "/nex")
-                .map((x) => (
-                  <button
-                    key={x.path}
-                    onClick={() => {
-                      navigate(x.path);
-                      emitUI("inspect");
-                    }}
-                  >
-                    <x.icon size={17} />
-                    {x.shortLabel ?? x.label}
-                    <ArrowUpRight size={14} />
-                  </button>
-                ))}
+      {settings.open && (
+        <NexSettingsSurface inline={compact} onClose={settings.close}>
+          <header>
+            <div>
+              <span className="eyebrow">N.E.X</span>
+              <h2>Conexões e ajustes</h2>
             </div>
-          </SurfaceCard>
-          <SurfaceCard
-            title="Conexões Google"
-            eyebrow={
-              nex.status?.google
-                ? "Conta autorizada"
-                : "Conectar é uma escolha sua"
-            }
-            tone="violet"
-          >
-            <p>
-              Autorize cada serviço quando precisar. Drive, Docs, Sheets e
-              Slides acessam apenas arquivos autorizados ao app; as ações de
-              escrita exigem prévia e confirmação.
-            </p>
             <button
-              className="primary-button"
-              disabled={nex.busy}
-              onClick={() => nex.connect("workspace")}
+              className="icon-button"
+              aria-label="Fechar ajustes N.E.X"
+              onClick={settings.close}
             >
-              {nex.status?.google
-                ? "Ampliar conexão Google"
-                : "Conectar Google ao N.E.X"}
+              <X size={18} />
             </button>
-            <p className="muted">
-              Uma autorização para agenda, tarefas e arquivos do app. O Google
-              apresenta as permissões antes de conceder acesso.
+          </header>
+          {nex.error && (
+            <p className="nex-error" role="alert">
+              {nex.error}
             </p>
-            <div className="nex-services">
-              {["calendar", "tasks", "drive", "docs", "sheets", "slides"].map(
-                (service) => (
-                  <div key={service}>
-                    <strong>{service}</strong>
-                    <button
-                      className="secondary-button"
-                      disabled={nex.busy}
-                      onClick={() => nex.connect(service)}
-                    >
-                      Autorizar
-                    </button>
-                    <button
-                      className="secondary-button"
-                      disabled={nex.busy || !nex.status?.google}
-                      onClick={() => read(service)}
-                    >
-                      Consultar
-                    </button>
-                  </div>
-                ),
-              )}
-            </div>
+          )}
+          <details className="nex-privacy">
+            <summary>Contexto e permissões · {labels[nex.module]}</summary>
             <label className="nex-field">
-              ID de arquivo para Docs, Sheets ou Slides
-              <input
-                value={resource}
-                maxLength={200}
-                onChange={(e) => setResource(e.target.value)}
-              />
-            </label>
-            <label className="nex-field">
-              Intervalo A1 para Sheets (opcional)
-              <input
-                value={range}
-                maxLength={100}
-                onChange={(e) => setRange(e.target.value)}
-              />
-            </label>
-            <label className="nex-field">
-              Serviço para compartilhar com a IA
+              Contexto avançado
               <select
-                value={service}
-                onChange={(e) => setService(e.target.value)}
+                value={nex.module}
+                disabled={nex.busy || listening}
+                onChange={(e) =>
+                  nex.setModule(e.target.value as typeof nex.module)
+                }
               >
-                {["calendar", "tasks", "drive", "docs", "sheets", "slides"].map(
-                  (s) => (
-                    <option key={s}>{s}</option>
-                  ),
-                )}
+                {nexModules.map((m) => (
+                  <option value={m} key={m}>
+                    {labels[m]}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="nex-consent">
               <input
                 type="checkbox"
-                checked={!!nex.googleContext}
-                disabled={nex.busy}
-                onChange={(e) =>
-                  nex.setGoogleContext(
-                    e.target.checked ? { service, id: resource, range } : null,
-                  )
-                }
+                checked={nex.share}
+                disabled={nex.busy || listening}
+                onChange={(e) => nex.setShare(e.target.checked)}
               />
-              Compartilhar esta consulta Google na próxima mensagem
+              Compartilhar dados deste módulo e memórias com a IA
             </label>
-            <div className="nex-compose__actions">
-              {["calendar_write", "tasks_write"].map((s) => (
+            <details className="nex-privacy">
+              <summary>Privacidade e voz</summary>
+              <p className="muted">
+                Sua mensagem e até quatro falas recentes são enviadas ao
+                provedor. Contexto limitado aos registros consultados. Planos
+                gratuitos podem usar mensagens para melhorar modelos. Áudio vai
+                à Groq ao concluir o ditado ou detectar uma pausa no modo
+                Conversar. A resposta falada usa somente voz local.
+              </p>
+            </details>
+            <button
+              className="secondary-button"
+              disabled={nex.busy}
+              onClick={showContext}
+            >
+              Inspecionar contexto
+            </button>
+          </details>
+          <details className="nex-privacy">
+            <summary>Registro de operações</summary>
+            <button
+              className="secondary-button"
+              disabled={nex.busy}
+              onClick={() =>
+                void nex.run(async (signal) =>
+                  setHistory(
+                    await nexRequest(
+                      "operations/history",
+                      undefined,
+                      "GET",
+                      signal,
+                    ),
+                  ),
+                )
+              }
+            >
+              Consultar histórico
+            </button>
+            {history.map((h) => (
+              <p key={h.id}>
+                {h.kind} ·{" "}
+                {h.state === "applied"
+                  ? "Confirmada"
+                  : "Pendente: confira o destino"}
+              </p>
+            ))}
+          </details>
+          <details className="nex-settings">
+            <summary>Conexões, memória e instrumentos externos</summary>
+            <div className="nex-support">
+              <SurfaceCard
+                title="Conexões Google"
+                eyebrow={
+                  nex.status?.google
+                    ? "Conta autorizada"
+                    : "Conectar é uma escolha sua"
+                }
+                tone="violet"
+              >
+                <p>
+                  Autorize cada serviço quando precisar. Drive, Docs, Sheets e
+                  Slides acessam apenas arquivos autorizados ao app; as ações de
+                  escrita exigem prévia e confirmação.
+                </p>
+                <button
+                  className="primary-button"
+                  disabled={nex.busy}
+                  onClick={() => nex.connect("workspace")}
+                >
+                  {nex.status?.google
+                    ? "Ampliar conexão Google"
+                    : "Conectar Google ao N.E.X"}
+                </button>
+                <p className="muted">
+                  Uma autorização para agenda, tarefas e arquivos do app. O
+                  Google apresenta as permissões antes de conceder acesso.
+                </p>
+                <label className="nex-field">
+                  Serviço Google
+                  <select
+                    value={service}
+                    disabled={nex.busy}
+                    onChange={(e) => setService(e.target.value)}
+                  >
+                    {[
+                      "calendar",
+                      "tasks",
+                      "drive",
+                      "docs",
+                      "sheets",
+                      "slides",
+                    ].map((s) => (
+                      <option key={s} value={s}>
+                        {(
+                          {
+                            calendar: "Calendário",
+                            tasks: "Tarefas",
+                            drive: "Arquivos",
+                            docs: "Documentos",
+                            sheets: "Planilhas",
+                            slides: "Apresentações",
+                          } as Record<string, string>
+                        )[s] ?? s}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <button
                   className="secondary-button"
-                  key={s}
-                  disabled={nex.busy}
-                  onClick={() => nex.connect(s)}
+                  disabled={nex.busy || !nex.status?.google}
+                  onClick={() => {
+                    settings.close();
+                    void read(service);
+                  }}
                 >
-                  Autorizar escrita ·{" "}
-                  {s.startsWith("calendar") ? "Calendário" : "Tasks"}
+                  Consultar serviço
+                  <ArrowUpRight size={15} />
                 </button>
-              ))}
-            </div>
-            <NexOperationCard
-              id={importId.current}
-              operation={{ kind: "google.calendar.import", payload: {} }}
-            />
-            {nex.status?.google && (
-              <button
-                className="secondary-button"
-                disabled={nex.busy}
-                onClick={() =>
-                  disconnecting
-                    ? void nex.disconnect().then(() => setDisconnecting(false))
-                    : setDisconnecting(true)
-                }
-              >
-                {disconnecting
-                  ? "Confirmar desconexão e apagar tokens"
-                  : "Desconectar Google"}
-              </button>
-            )}
-            {disconnecting && (
-              <button
-                className="secondary-button"
-                onClick={() => setDisconnecting(false)}
-              >
-                Manter conexão
-              </button>
-            )}
-            <a
-              href="https://myaccount.google.com/permissions"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Revisar permissões no Google
-            </a>
-          </SurfaceCard>
-          <SurfaceCard
-            title="Memória sob seu controle"
-            eyebrow="Perfil e módulos"
-            tone="cyan"
-          >
-            <p>
-              Salve apenas o que quer que N.E.X lembre. A conversa não é gravada
-              automaticamente. Memória atual: {labels[nex.module]}.
-            </p>
-            <label className="nex-field">
-              Nova memória
-              <textarea
-                maxLength={1200}
-                value={memory}
-                onChange={(e) => setMemory(e.target.value)}
-                rows={3}
-              />
-            </label>
-            <button
-              className="primary-button"
-              disabled={nex.busy || !memory.trim()}
-              onClick={async () => {
-                if (await nex.remember(memory)) setMemory("");
-              }}
-            >
-              Salvar memória
-            </button>
-            <div className="nex-memory-list">
-              {nex.memories.map((m) => (
-                <article key={m.id}>
-                  <span className="eyebrow">
-                    {labels[m.module] ?? m.module} · {m.agent}
-                  </span>
-                  <p>{m.content}</p>
+                <details className="nex-privacy">
+                  <summary>Autorizações incrementais</summary>
+                  <div className="nex-services">
+                    {["calendar", "tasks", "drive"].map((s) => (
+                      <button
+                        className="secondary-button"
+                        key={s}
+                        disabled={nex.busy}
+                        onClick={() => nex.connect(s)}
+                      >
+                        Autorizar {s}
+                      </button>
+                    ))}
+                  </div>
+                </details>
+                <label className="nex-field">
+                  ID de arquivo para Docs, Sheets ou Slides
+                  <input
+                    value={resource}
+                    maxLength={200}
+                    onChange={(e) => setResource(e.target.value)}
+                  />
+                </label>
+                <label className="nex-field">
+                  Intervalo A1 para Sheets (opcional)
+                  <input
+                    value={range}
+                    maxLength={100}
+                    onChange={(e) => setRange(e.target.value)}
+                  />
+                </label>
+                <label className="nex-consent">
+                  <input
+                    type="checkbox"
+                    checked={!!nex.googleContext}
+                    disabled={nex.busy}
+                    onChange={(e) =>
+                      nex.setGoogleContext(
+                        e.target.checked
+                          ? { service, id: resource, range }
+                          : null,
+                      )
+                    }
+                  />
+                  Compartilhar esta consulta Google na próxima mensagem
+                </label>
+                <div className="nex-compose__actions">
+                  {["calendar_write", "tasks_write"].map((s) => (
+                    <button
+                      className="secondary-button"
+                      key={s}
+                      disabled={nex.busy}
+                      onClick={() => nex.connect(s)}
+                    >
+                      Autorizar escrita ·{" "}
+                      {s.startsWith("calendar") ? "Calendário" : "Tasks"}
+                    </button>
+                  ))}
+                </div>
+                <NexOperationCard
+                  id={importId.current}
+                  operation={{ kind: "google.calendar.import", payload: {} }}
+                />
+                {nex.status?.google && (
                   <button
                     className="secondary-button"
                     disabled={nex.busy}
                     onClick={() =>
-                      deleting === m.id
-                        ? void nex.forget(m.id).then(() => setDeleting(""))
-                        : setDeleting(m.id)
+                      disconnecting
+                        ? void nex
+                            .disconnect()
+                            .then(() => setDisconnecting(false))
+                        : setDisconnecting(true)
                     }
                   >
-                    {deleting === m.id ? "Confirmar exclusão" : "Excluir"}
+                    {disconnecting
+                      ? "Confirmar desconexão e apagar tokens"
+                      : "Desconectar Google"}
                   </button>
-                  {deleting === m.id && (
-                    <button
-                      className="secondary-button"
-                      onClick={() => setDeleting("")}
-                    >
-                      Manter
-                    </button>
-                  )}
-                </article>
-              ))}
+                )}
+                {disconnecting && (
+                  <button
+                    className="secondary-button"
+                    onClick={() => setDisconnecting(false)}
+                  >
+                    Manter conexão
+                  </button>
+                )}
+                <a
+                  href="https://myaccount.google.com/permissions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Revisar permissões no Google
+                </a>
+              </SurfaceCard>
+              <SurfaceCard
+                title="Memória sob seu controle"
+                eyebrow="Perfil e módulos"
+                tone="cyan"
+              >
+                <p>
+                  Salve apenas o que quer que N.E.X lembre. A conversa não é
+                  gravada automaticamente. Memória atual: {labels[nex.module]}.
+                </p>
+                <label className="nex-field">
+                  Nova memória
+                  <textarea
+                    maxLength={1200}
+                    value={memory}
+                    onChange={(e) => setMemory(e.target.value)}
+                    rows={3}
+                  />
+                </label>
+                <button
+                  className="primary-button"
+                  disabled={nex.busy || !memory.trim()}
+                  onClick={async () => {
+                    if (await nex.remember(memory)) setMemory("");
+                  }}
+                >
+                  Salvar memória
+                </button>
+                <div className="nex-memory-list">
+                  {nex.memories.map((m) => (
+                    <article key={m.id}>
+                      <span className="eyebrow">
+                        {labels[m.module] ?? m.module} · {m.agent}
+                      </span>
+                      <p>{m.content}</p>
+                      <button
+                        className="secondary-button"
+                        disabled={nex.busy}
+                        onClick={() =>
+                          deleting === m.id
+                            ? void nex.forget(m.id).then(() => setDeleting(""))
+                            : setDeleting(m.id)
+                        }
+                      >
+                        {deleting === m.id ? "Confirmar exclusão" : "Excluir"}
+                      </button>
+                      {deleting === m.id && (
+                        <button
+                          className="secondary-button"
+                          onClick={() => setDeleting("")}
+                        >
+                          Manter
+                        </button>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              </SurfaceCard>
             </div>
-          </SurfaceCard>
-        </div>
-      </details>
-      <details className="nex-settings">
-        <summary>Clima e diagnóstico de conexões</summary>
-        <form
-          className="nex-compose"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void nex.run(async (signal) => {
-              const data = await nexRequest(
-                "weather",
-                { city },
-                "POST",
-                signal,
-              );
-              setInspected({ title: "Previsão · " + city, data });
-              if (!compact) inspect.show();
-            });
-          }}
-        >
-          <label className="nex-field">
-            Cidade (sem GPS)
-            <input
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              maxLength={80}
-            />
-          </label>
-          <button
-            className="secondary-button"
-            disabled={nex.busy || !city.trim()}
-          >
-            Consultar clima
-          </button>
-          <p className="muted">
-            Open-Meteo · consulta gratuita para uso pessoal, sem localização
-            automática.
-          </p>
-        </form>
-        <p className="muted">
-          Somente presença e habilitação; nenhum valor de chave é exibido.
-        </p>
-        {nex.status?.configuration &&
-          Object.entries(nex.status.configuration).map(([provider, items]) => (
-            <article key={provider}>
-              <strong>{provider}</strong>
-              <ul>
-                {Object.entries(items).map(([k, v]) => (
-                  <li key={k}>
-                    {{
-                      keyPresent: "Chave disponível no Worker",
-                      freeEnabled: "Uso gratuito habilitado",
-                      bindingPresent: "Workers AI disponível",
-                      clientPresent: "Cliente Google disponível",
-                      secretPresent: "Segredo Google disponível",
-                      redirectPresent: "Callback Google configurado",
-                      encryptionPresent: "Criptografia de tokens configurada",
-                    }[k] ?? k}
-                    : {v ? "Sim" : "Não"}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-      </details>
+          </details>
+          <details className="nex-settings">
+            <summary>Clima e diagnóstico de conexões</summary>
+            <form
+              className="nex-compose"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void nex.run(async (signal) => {
+                  const data = await nexRequest(
+                    "weather",
+                    { city },
+                    "POST",
+                    signal,
+                  );
+                  setInspected({ title: "Previsão · " + city, data });
+                  if (!compact) {
+                    settings.close();
+                    inspect.show();
+                  }
+                });
+              }}
+            >
+              <label className="nex-field">
+                Cidade (sem GPS)
+                <input
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  maxLength={80}
+                />
+              </label>
+              <button
+                className="secondary-button"
+                disabled={nex.busy || !city.trim()}
+              >
+                Consultar clima
+              </button>
+              <p className="muted">
+                Open-Meteo · consulta gratuita para uso pessoal, sem localização
+                automática.
+              </p>
+            </form>
+            <p className="muted">
+              Somente presença e habilitação; nenhum valor de chave é exibido.
+            </p>
+            {nex.status?.configuration &&
+              Object.entries(nex.status.configuration).map(
+                ([provider, items]) => (
+                  <article key={provider}>
+                    <strong>{provider}</strong>
+                    <ul>
+                      {Object.entries(items).map(([k, v]) => (
+                        <li key={k}>
+                          {{
+                            keyPresent: "Chave disponível no Worker",
+                            freeEnabled: "Uso gratuito habilitado",
+                            bindingPresent: "Workers AI disponível",
+                            clientPresent: "Cliente Google disponível",
+                            secretPresent: "Segredo Google disponível",
+                            redirectPresent: "Callback Google configurado",
+                            encryptionPresent:
+                              "Criptografia de tokens configurada",
+                          }[k] ?? k}
+                          : {v ? "Sim" : "Não"}
+                        </li>
+                      ))}
+                    </ul>
+                  </article>
+                ),
+              )}
+          </details>
+        </NexSettingsSurface>
+      )}
       {compact && inspected && (
         <section className="nex-inspector">
           <header>
@@ -920,7 +960,14 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
               Fechar consulta
             </button>
           </header>
-          <NexReadout data={inspected.data} />
+          <NexReadout
+            data={inspected.data}
+            onFile={(kind, id) => {
+              setService(kind);
+              setResource(id);
+              void read(kind, id);
+            }}
+          />
         </section>
       )}
       {!compact && inspect.open && inspected && (
@@ -944,13 +991,43 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
               Consulta limitada. Estes dados só vão à IA se você ativar o
               compartilhamento.
             </p>
-            <NexReadout data={inspected.data} />
+            <NexReadout
+              data={inspected.data}
+              onFile={(kind, id) => {
+                setService(kind);
+                setResource(id);
+                void read(kind, id);
+              }}
+            />
           </section>
         </ModalSurface>
       )}
     </div>
   );
 }
+function NexSettingsSurface({
+  inline,
+  onClose,
+  children,
+}: {
+  inline: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const body = <section className="nex-settings-panel">{children}</section>;
+  return inline ? (
+    body
+  ) : (
+    <ModalSurface
+      className="overlay"
+      label="Conexões e ajustes N.E.X"
+      onClose={onClose}
+    >
+      {body}
+    </ModalSurface>
+  );
+}
+
 export function NexOverlay({ onClose }: { onClose: () => void }) {
   return (
     <ModalSurface
@@ -972,7 +1049,13 @@ export function NexOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
-function NexReadout({ data }: { data: unknown }) {
+function NexReadout({
+  data,
+  onFile,
+}: {
+  data: unknown;
+  onFile?: (service: string, id: string) => void;
+}) {
   const payload = data as {
     records?: unknown[];
     module?: string;
@@ -1077,6 +1160,34 @@ function NexReadout({ data }: { data: unknown }) {
                 Abrir no Google
               </a>
             )}
+            {id &&
+              onFile &&
+              typeof row.mimeType === "string" &&
+              (
+                {
+                  "application/vnd.google-apps.document": "docs",
+                  "application/vnd.google-apps.spreadsheet": "sheets",
+                  "application/vnd.google-apps.presentation": "slides",
+                } as Record<string, string>
+              )[row.mimeType] && (
+                <button
+                  className="secondary-button"
+                  onClick={() =>
+                    onFile(
+                      (
+                        {
+                          "application/vnd.google-apps.document": "docs",
+                          "application/vnd.google-apps.spreadsheet": "sheets",
+                          "application/vnd.google-apps.presentation": "slides",
+                        } as Record<string, string>
+                      )[row.mimeType as string],
+                      id,
+                    )
+                  }
+                >
+                  Ler no N.E.X
+                </button>
+              )}
             {Boolean(row.status) && <p>{String(row.status)}</p>}
             {Boolean(row.due_at) && <p>Prazo: {String(row.due_at)}</p>}
             {id &&

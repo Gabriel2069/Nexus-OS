@@ -6,9 +6,9 @@ import { emitUI } from "../lib/ui-events";
 export function MobileDock({ pathname }: { pathname: string }) {
   const [collapsed, setCollapsed] = useState(() => {
     try {
-      return localStorage.getItem("nexos-mobile-dock") === "collapsed";
+      return localStorage.getItem("nexos-mobile-dock") !== "open";
     } catch {
-      return false;
+      return true;
     }
   });
   useEffect(() => {

@@ -3,11 +3,14 @@ import {
   Bell,
   Command,
   Download,
-  Flame,
+  Settings2,
   Plus,
   Search,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { WorkspaceRail } from "./WorkspaceRail";
+import { ModalSurface } from "./ModalSurface";
+import { useOverlay } from "../lib/use-overlay";
 import { useNexus } from "../context/NexusContext";
 import { isCurrentDestination, navigation } from "../data/navigation";
 import { AppearanceControls } from "./AppearanceControls";
@@ -21,6 +24,7 @@ type TopbarProps = { pathname: string };
 
 export function Topbar({ pathname }: TopbarProps) {
   const { workspace, notifications } = useNexus();
+  const preferences = useOverlay("shellPreferences");
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(
     null,
   );
@@ -54,8 +58,6 @@ export function Topbar({ pathname }: TopbarProps) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-  const level = workspace.profile?.level ?? 1;
-  const streak = workspace.profile?.streak_current ?? 0;
   const avatarUrl = workspace.profile?.avatar_url;
   return (
     <header className="topbar" data-motion-shell="topbar">
@@ -83,16 +85,8 @@ export function Topbar({ pathname }: TopbarProps) {
           </span>
         </button>
       </div>
+      <WorkspaceRail pathname={pathname} />
       <div className="topbar__actions">
-        <div
-          className="topbar__status"
-          title="Progressão atual"
-          data-motion="status"
-        >
-          <Flame size={13} />
-          <b>Nv. {level}</b>
-          <span>{streak}d</span>
-        </div>
         <button
           className="quick-add-top"
           onClick={() => emitUI("quickAdd")}
@@ -101,26 +95,22 @@ export function Topbar({ pathname }: TopbarProps) {
           <Plus size={15} />
           <span>Novo</span>
         </button>
-        {installPrompt && (
+        {pathname !== "/nex" && (
           <button
-            className="icon-button install-button"
-            onClick={install}
-            aria-label="Instalar NexOS"
-            data-motion="icon-action"
+            className="icon-button"
+            onClick={() => emitUI("nex")}
+            aria-label="Abrir N.E.X"
           >
-            <Download size={17} />
+            <Brain size={18} />
           </button>
         )}
         <button
           className="icon-button"
-          onClick={() => {
-            if (pathname !== "/nex") emitUI("nex");
-          }}
-          aria-label="Abrir N.E.X"
+          onClick={preferences.show}
+          aria-label="Preferências de aparência"
         >
-          <Brain size={18} />
+          <Settings2 size={17} />
         </button>
-        <AppearanceControls />
         <button
           className="icon-button notification-button"
           onClick={() => emitUI("notifications")}
@@ -140,6 +130,38 @@ export function Topbar({ pathname }: TopbarProps) {
           {avatarUrl ? <img src={avatarUrl} alt="" /> : initials}
         </button>
       </div>
+      {preferences.open && (
+        <ModalSurface
+          label="Seu ambiente"
+          onClose={preferences.close}
+          className="overlay"
+        >
+          <section className="shell-preferences">
+            <header>
+              <h2 id="shell-preferences-title">Seu ambiente</h2>
+              <button
+                className="icon-button"
+                onClick={preferences.close}
+                aria-label="Fechar preferências"
+              >
+                ×
+              </button>
+            </header>
+            <p>Tema e movimento</p>
+            <AppearanceControls />
+            <p>
+              Nível {workspace.profile?.level ?? 1} ·{" "}
+              {workspace.profile?.streak_current ?? 0} dias de sequência
+            </p>
+            {installPrompt && (
+              <button className="secondary-button" onClick={install}>
+                <Download size={17} />
+                Instalar NexOS
+              </button>
+            )}
+          </section>
+        </ModalSurface>
+      )}
     </header>
   );
 }

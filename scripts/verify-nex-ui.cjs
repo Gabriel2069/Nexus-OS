@@ -21,7 +21,7 @@ const server = spawn(
   },
 );
 (async () => {
-  let browser;
+  let browser, page;
   try {
     for (let i = 0; i < 80; i++) {
       try {
@@ -34,7 +34,7 @@ const server = spawn(
       headless: true,
       args: ["--no-sandbox"],
     });
-    const page = await browser.newPage({
+    page = await browser.newPage({
       viewport: { width: 1440, height: 1000 },
       reducedMotion: "reduce",
     });
@@ -68,7 +68,9 @@ const server = spawn(
         if (path === "status")
           return {
             providers: { groq: true, gemini: false, workers: false },
-            google: null,
+            google: window.__nexGoogle
+              ? { scopes: ["https://www.googleapis.com/auth/drive.file"] }
+              : null,
             dailyPerProvider: 25,
           };
         if (path === "memories") {
@@ -101,6 +103,21 @@ const server = spawn(
             area: "projetos",
             applied: true,
           };
+        if (path === "transcribe")
+          return { text: window.__voiceTranscript || "Pergunta de voz" };
+        if (path === "chat" && input.message === "Pergunta de voz")
+          return {
+            reply: "Resposta de voz simulada.",
+            provider: "groq",
+            proposal: null,
+          };
+        if (path === "chat" && window.__nexGooglePanel)
+          return {
+            reply: "Confira os arquivos autorizados.",
+            provider: "groq",
+            proposal: null,
+            panels: [{ area: "biblioteca", google: "drive" }],
+          };
         if (path === "chat" && window.__nexAdvanced)
           return {
             reply: "Confira o projeto proposto.",
@@ -128,11 +145,35 @@ const server = spawn(
             records: [{ id: "m1", title: "Revisar Física", status: "A fazer" }],
             limited: true,
           };
-        if (path === "google/read")
+        if (path === "google/read") {
+          if (input.service === "drive")
+            return {
+              service: "drive",
+              data: {
+                files: [
+                  {
+                    id: "file-authorized",
+                    name: "Documento autorizado",
+                    mimeType: "application/vnd.google-apps.document",
+                  },
+                ],
+              },
+            };
+          if (input.service === "docs")
+            return {
+              service: "docs",
+              data: {
+                title: "Documento autorizado",
+                body: {
+                  textRun: { content: "Texto retornado pelo leitor simulado." },
+                },
+              },
+            };
           return {
             service: input.service,
             data: { items: [{ summary: "Reunião", id: "event" }] },
           };
+        }
         return {};
       };
     });
@@ -187,6 +228,25 @@ const server = spawn(
       reduced,
       "reduced motion must stop canvas",
     );
+    const geometry = await page.evaluate(() => ({
+      sidebar: document.querySelector(".sidebar").getBoundingClientRect().width,
+      topbar: document.querySelector(".topbar").getBoundingClientRect().height,
+      rails: document.querySelectorAll(".workspace-rail").length,
+    }));
+    assert.ok(
+      geometry.sidebar <= 65 && geometry.topbar <= 57 && geometry.rails === 1,
+      JSON.stringify(geometry),
+    );
+    await page
+      .getByRole("button", { name: "Preferências de aparência" })
+      .click();
+    const preferences = page.getByRole("dialog", { name: "Seu ambiente" });
+    await preferences.waitFor();
+    await preferences
+      .getByRole("button", { name: /Usar tema claro|Usar tema escuro/ })
+      .waitFor();
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator("#root").evaluate((e) => e.inert), false);
     for (const theme of ["dark", "light"])
       for (const width of [320, 390, 834, 1440]) {
         await page.setViewportSize({ width, height: 1000 });
@@ -210,14 +270,16 @@ const server = spawn(
         )
           await page.screenshot({
             path:
-              root +
-              `/docs/design/previews/nex-holographic-${theme}-${width}.jpg`,
+              root + `/docs/design/previews/nex-compact-${theme}-${width}.jpg`,
             fullPage: true,
             type: "jpeg",
             quality: 80,
           });
       }
     await page.setViewportSize({ width: 390, height: 1000 });
+    await page
+      .getByRole("button", { name: "Expandir menu inferior", exact: true })
+      .click();
     await page
       .getByRole("button", { name: "Recolher menu inferior", exact: true })
       .click();
@@ -247,7 +309,7 @@ const server = spawn(
         },
       });
     });
-    await page.getByRole("button", { name: "Gravar até 30 s" }).click();
+    await page.getByRole("button", { name: "Ditar mensagem" }).click();
     await page
       .getByRole("alert")
       .getByText("Permissão de microfone negada.", { exact: false })
@@ -258,6 +320,145 @@ const server = spawn(
       ).length,
       0,
     );
+    // Exercise real MediaRecorder/WAV/VAD with generated audio; no physical mic or external API.
+    await page.evaluate(() => {
+      window.__voiceStreams = [];
+      window.__spoken = [];
+      Object.defineProperty(window, "SpeechSynthesisUtterance", {
+        configurable: true,
+        value: class {
+          constructor(text) {
+            this.text = text;
+          }
+        },
+      });
+      let speechTimer;
+      Object.defineProperty(window, "speechSynthesis", {
+        configurable: true,
+        value: {
+          getVoices: () => [
+            { localService: true, lang: "pt-BR", name: "QA local" },
+          ],
+          cancel: () => clearTimeout(speechTimer),
+          speak: (utterance) => {
+            if (
+              window.__voiceStreams.some((stream) =>
+                stream.getTracks().some((t) => t.readyState !== "ended"),
+              )
+            )
+              throw Error("Microphone must be stopped before speech");
+            window.__spoken.push(utterance.text);
+            utterance.onstart?.();
+            speechTimer = setTimeout(() => utterance.onend?.(), 100);
+          },
+        },
+      });
+      Object.defineProperty(navigator.mediaDevices, "getUserMedia", {
+        configurable: true,
+        value: async () => {
+          const audio = new AudioContext(),
+            osc = audio.createOscillator(),
+            gain = audio.createGain(),
+            out = audio.createMediaStreamDestination();
+          osc.frequency.value = 180;
+          gain.gain.value = 0.2;
+          osc.connect(gain);
+          gain.connect(out);
+          osc.start();
+          await audio.resume();
+          setTimeout(() => (gain.gain.value = 0), 450);
+          for (const track of out.stream.getTracks()) {
+            const stop = track.stop.bind(track);
+            track.stop = () => {
+              if (track.readyState === "ended") return;
+              stop();
+              osc.stop();
+              void audio.close();
+            };
+          }
+          window.__voiceStreams.push(out.stream);
+          return out.stream;
+        },
+      });
+    });
+    await page
+      .getByRole("button", { name: "Conversar por voz", exact: true })
+      .click();
+    await page.waitForFunction(() => window.__spoken.length >= 2, {
+      timeout: 15000,
+    });
+    await page
+      .getByRole("button", { name: "Pausar conversa", exact: true })
+      .click();
+    const voiceCalls = (await page.evaluate(() => window.__nexCalls)).filter(
+      (c) => c.path === "transcribe",
+    ).length;
+    await page.waitForTimeout(500);
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "transcribe",
+      ).length,
+      voiceCalls,
+      "no requests after manual pause",
+    );
+    assert.ok(
+      await page.evaluate(() =>
+        window.__voiceStreams.every((stream) =>
+          stream.getTracks().every((t) => t.readyState === "ended"),
+        ),
+      ),
+      "all microphone tracks must close",
+    );
+    // A spoken stop command ends capture locally, without an inference call.
+    await page.evaluate(() => (window.__voiceTranscript = "Parar conversa"));
+    const chatsBeforeStop = (
+      await page.evaluate(() => window.__nexCalls)
+    ).filter((c) => c.path === "chat").length;
+    await page
+      .getByRole("button", { name: "Conversar por voz", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Pausar conversa", exact: true })
+      .waitFor();
+    await page
+      .getByRole("button", { name: "Conversar por voz", exact: true })
+      .waitFor({ timeout: 15000 });
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "chat",
+      ).length,
+      chatsBeforeStop,
+    );
+    await page.evaluate(() => {
+      window.__voiceTranscript = "Pergunta de voz";
+      window.__nexFail = true;
+    });
+    await page
+      .getByRole("button", { name: "Conversar por voz", exact: true })
+      .click();
+    await page
+      .getByRole("alert")
+      .getByText("Cota preventiva atingida. Aguarde.")
+      .waitFor({ timeout: 15000 });
+    await page
+      .getByRole("button", { name: "Conversar por voz", exact: true })
+      .waitFor();
+    const failedCalls = (await page.evaluate(() => window.__nexCalls)).length;
+    await page.waitForTimeout(600);
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).length,
+      failedCalls,
+      "quota errors stop the loop",
+    );
+    assert.ok(
+      await page.evaluate(() =>
+        window.__voiceStreams.every((stream) =>
+          stream.getTracks().every((t) => t.readyState === "ended"),
+        ),
+      ),
+    );
+    await page.evaluate(() => (window.__nexFail = false));
+    await page.getByRole("textbox", { name: "Sua mensagem" }).fill("");
     const message = page.getByRole("textbox", { name: "Sua mensagem" });
     await message.fill("Crie uma missão para revisar matemática");
     await page.getByRole("button", { name: "Enviar", exact: true }).click();
@@ -278,16 +479,16 @@ const server = spawn(
       ).length,
       1,
     );
-    await page
-      .getByText("Contexto e permissões · Geral", { exact: true })
-      .click();
-    await page.getByRole("button", { name: "Inspecionar contexto" }).click();
+    await page.getByRole("button", { name: "Ver dados disponíveis" }).click();
     const dialog = page.getByRole("dialog", { name: "Contexto · Geral" });
     await dialog.waitFor();
     assert.match(await dialog.textContent(), /Revisar Física/);
     await page.keyboard.press("Escape");
     await dialog.waitFor({ state: "hidden" });
     assert.equal(await page.locator("#root").evaluate((e) => e.inert), false);
+    await page
+      .getByRole("button", { name: "Conexões e ajustes", exact: true })
+      .click();
     await page
       .getByText("Conexões, memória e instrumentos externos", { exact: true })
       .click();
@@ -303,6 +504,7 @@ const server = spawn(
     await page
       .getByText("Prefiro começar pelo essencial", { exact: true })
       .waitFor({ state: "hidden" });
+    await page.getByRole("button", { name: "Fechar ajustes N.E.X" }).click();
     await page.evaluate(() => (window.__nexAdvanced = true));
     await message.fill("Crie um projeto orbital");
     await page.getByRole("button", { name: "Enviar", exact: true }).click();
@@ -335,6 +537,104 @@ const server = spawn(
     await page.getByRole("dialog", { name: "Hoje", exact: true }).waitFor();
     await page.keyboard.press("Escape");
     await page.getByRole("dialog").waitFor({ state: "hidden" });
+    // Google panels never authorize or read implicitly when the account is disconnected.
+    await page.evaluate(() => {
+      window.__nexGooglePanel = true;
+      window.__nexAdvanced = false;
+    });
+    await message.fill("Mostre meus arquivos Google");
+    const readsBefore = (await page.evaluate(() => window.__nexCalls)).filter(
+      (c) => c.path === "google/read",
+    ).length;
+    await page.getByRole("button", { name: "Enviar", exact: true }).click();
+    await page
+      .getByRole("region", { name: "Google / Biblioteca" })
+      .getByRole("button", { name: "Conectar Google", exact: true })
+      .waitFor();
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "google/read",
+      ).length,
+      readsBefore,
+    );
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "google/start",
+      ).length,
+      0,
+    );
+    await page.evaluate(() => (window.__nexGoogle = true));
+    await page
+      .getByRole("button", { name: "Verificar conexões", exact: true })
+      .click();
+    await page
+      .getByRole("region", { name: "Google / Biblioteca" })
+      .getByText("Documento autorizado", { exact: true })
+      .waitFor();
+    await page
+      .getByRole("region", { name: "Google / Biblioteca" })
+      .getByRole("button", { name: "Expandir consulta" })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Google · Biblioteca" })
+      .getByRole("button", { name: "Ler no N.E.X" })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Google · docs" })
+      .getByText("Texto retornado pelo leitor simulado.", { exact: true })
+      .waitFor();
+    assert.ok(
+      (await page.evaluate(() => window.__nexCalls)).some(
+        (c) =>
+          c.path === "google/read" &&
+          c.input.service === "docs" &&
+          c.input.id === "file-authorized",
+      ),
+    );
+    await page.keyboard.press("Escape");
+    await page.evaluate(() => {
+      window.__nexGooglePanel = false;
+      window.__nexAdvanced = true;
+    });
+    await page
+      .getByRole("button", { name: "Conexões e ajustes", exact: true })
+      .click();
+    await page
+      .getByText("Conexões, memória e instrumentos externos", { exact: true })
+      .click();
+    await page
+      .getByRole("checkbox", {
+        name: "Compartilhar esta consulta Google na próxima mensagem",
+      })
+      .check();
+    await page.getByRole("button", { name: "Fechar ajustes N.E.X" }).click();
+    await message.fill("Resuma o documento selecionado");
+    await page.getByRole("button", { name: "Enviar", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Verificar conexões", exact: true })
+      .waitFor({ state: "visible" });
+    await page.waitForFunction(
+      () =>
+        window.__nexCalls.filter((c) => c.path === "chat").at(-1)?.input
+          .googleContext?.service === "docs",
+    );
+    await page
+      .getByRole("button", { name: "Conexões e ajustes", exact: true })
+      .click();
+    await page
+      .getByText("Conexões, memória e instrumentos externos", { exact: true })
+      .click();
+    assert.equal(
+      await page
+        .getByRole("checkbox", {
+          name: "Compartilhar esta consulta Google na próxima mensagem",
+        })
+        .isChecked(),
+      false,
+      "Google context applies to one message only",
+    );
+    await page.getByRole("button", { name: "Fechar ajustes N.E.X" }).click();
+
     await page.evaluate(() => (window.__nexFail = true));
     await message.fill("Texto que precisa permanecer");
     await page.getByRole("button", { name: "Enviar", exact: true }).click();
@@ -343,11 +643,19 @@ const server = spawn(
       .getByText("Cota preventiva atingida. Aguarde.")
       .waitFor();
     assert.equal(await message.inputValue(), "Texto que precisa permanecer");
-    await page
-      .getByRole("button", { name: "Hoje", exact: true })
-      .last()
-      .click();
+    const beforeNavigation = (
+      await page.evaluate(() => window.__nexCalls)
+    ).filter((c) => c.path === "chat").length;
+    await message.fill("Abra Hoje");
+    await page.getByRole("button", { name: "Enviar", exact: true }).click();
     await page.waitForURL("**/hoje");
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "chat",
+      ).length,
+      beforeNavigation,
+      "exact area navigation needs no inference",
+    );
     await page
       .getByRole("button", { name: "Abrir N.E.X", exact: true })
       .click();
@@ -363,6 +671,9 @@ const server = spawn(
         await panel.evaluate((e) => e.contains(document.activeElement)),
       );
     }
+    await panel
+      .getByRole("button", { name: "Conexões e ajustes", exact: true })
+      .click();
     await panel
       .getByText("Contexto e permissões · Geral", { exact: true })
       .click();
@@ -405,9 +716,29 @@ const server = spawn(
         assert.ok(o <= width + 1, path + " " + width + " " + o);
       }
     }
+    for (const [path, name, width] of [
+      ["/", "home", 1440],
+      ["/calendario", "calendar", 1440],
+      ["/foco", "focus", 1440],
+      ["/hoje", "today", 390],
+    ]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto("http://127.0.0.1:5182" + path);
+      await page.locator(".page-content").waitFor();
+      await page.evaluate(
+        () => (document.documentElement.dataset.theme = "dark"),
+      );
+      await page.waitForTimeout(150);
+      await page.screenshot({
+        path: root + `/docs/design/previews/a05-${name}-${width}.jpg`,
+        fullPage: true,
+        type: "jpeg",
+        quality: 80,
+      });
+    }
     assert.deepEqual(errors, []);
     console.log(
-      "N.E.X UI: 8 layouts, chat proposal/confirmation, error draft, memory/delete, inspector, navigation persistence, overlay Tab/Escape/inert passed.",
+      "N.E.X UI: 8 layouts + 80 routes, compact shell, real generated-audio capture/VAD/WAV with mocked Whisper/chat/device voice, pause/quota/stop, Google panels/file reader mocks, proposals, drafts, memory and keyboard passed.",
     );
   } finally {
     await browser?.close();
