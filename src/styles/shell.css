@@ -1,33 +1,39 @@
 /* Shell geometry and navigation. Materials use the semantic foundation tokens. */
 .app-shell {
+  --sidebar-width: 236px;
   position: relative;
   isolation: isolate;
   display: grid;
-  grid-template-columns: 236px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   min-height: 100dvh;
   transition: grid-template-columns var(--nx-motion-panel)
     var(--nx-ease-standard);
 }
 .app-shell--collapsed {
-  grid-template-columns: 88px minmax(0, 1fr);
+  --sidebar-width: 88px;
 }
 .app-shell__content {
+  grid-column: 2;
   min-width: 0;
 }
 .sidebar {
-  position: sticky;
-  top: 0;
-  align-self: start;
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-width);
   height: 100dvh;
+  isolation: isolate;
   z-index: 20;
   display: flex;
   flex-direction: column;
   padding: 28px 14px 16px;
   border-right: 1px solid var(--hairline);
-  background: var(--nx-glass-bg);
+  background: var(--nx-visor-bg);
   backdrop-filter: blur(var(--nx-glass-blur));
   -webkit-backdrop-filter: blur(var(--nx-glass-blur));
-  box-shadow: inset -1px 0 var(--nx-glass-highlight);
+  box-shadow:
+    inset -1px 0 var(--nx-glass-highlight),
+    16px 0 48px color-mix(in srgb, var(--nx-glass-shadow) 35%, transparent);
+  transition: width var(--nx-motion-panel) var(--nx-ease-standard);
 }
 .sidebar__brand {
   display: flex;
@@ -73,7 +79,7 @@
   scrollbar-color: var(--line) transparent;
   display: flex;
   flex-direction: column;
-  gap: 26px;
+  gap: 22px;
   padding: 2px 4px 20px;
   min-height: 0;
 }
@@ -155,6 +161,7 @@
 }
 .sidebar__collapse {
   margin-top: auto;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -291,6 +298,15 @@ html.nexus-standalone .topbar {
     background: var(--panel);
   }
 }
+@media (prefers-reduced-transparency: reduce) {
+  .sidebar,
+  .topbar,
+  .mobile-dock {
+    background: var(--panel);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
 @media (max-width: 1200px) {
   .command-search {
     width: 44px;
@@ -307,10 +323,10 @@ html.nexus-standalone .topbar {
     display: none;
   }
   .app-shell {
-    grid-template-columns: 218px minmax(0, 1fr);
+    --sidebar-width: 218px;
   }
   .app-shell--collapsed {
-    grid-template-columns: 88px minmax(0, 1fr);
+    --sidebar-width: 88px;
   }
   .sidebar {
     padding-inline: 10px;

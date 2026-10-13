@@ -2,7 +2,7 @@
 
 NexOS é um sistema pessoal com identidade cósmica: profundidade discreta, luz ciano e violeta, materiais de vidro e tipografia clara. O conteúdo e o próximo passo devem dominar a tela. Tempo livre continua sendo tempo livre; progressão nunca exige ocupar todo intervalo.
 
-A base foi integrada pela PR #17. A direção proposta é **Observatório pessoal**: ambiente cósmico, conteúdo estável e navegação em vidro lenticular. A [prancheta D01](docs/design/visual-board.html) demonstra desktop, mobile, login, materiais, paleta, estados e movimento. O [plano de implementação](docs/design/IMPLEMENTATION_PLAN.md) define a incorporação por lote; as [referências](docs/design/REFERENCES.md) distinguem evidência e tradução autoral. V01 incorpora a paleta e os materiais principais no runtime; o JSON da prancheta permanece um registro de proposta, não uma segunda fonte de tokens. A [revisão V01](docs/design/V01_REVIEW.md) registra escopo e evidências.
+A base foi integrada pela PR #17. A direção proposta é **Observatório pessoal**: ambiente cósmico, painéis translúcidos e navegação em vidro lenticular, com detalhes ópticos de visor de nave. A [prancheta D01](docs/design/visual-board.html) demonstra desktop, mobile, login, materiais, paleta, estados e movimento. O [plano de implementação](docs/design/IMPLEMENTATION_PLAN.md) define a incorporação por lote; as [referências](docs/design/REFERENCES.md) distinguem evidência e tradução autoral. V01 incorpora a paleta e os materiais principais no runtime; o JSON da prancheta permanece um registro de proposta, não uma segunda fonte de tokens. A [revisão V01](docs/design/V01_REVIEW.md) registra escopo e evidências.
 
 ## Princípios
 
@@ -28,9 +28,9 @@ O mapa técnico está em [STYLE_SYSTEM.md](docs/STYLE_SYSTEM.md). O estado de ex
 ## Contrato de composição e materiais
 
 - Ambiente: vazio profundo, nebulosa assimétrica, estrelas rarefeitas; o efeito não atravessa regiões de leitura.
-- Conteúdo: grafite mineral no escuro e painel claro estável no claro; tabelas, gráficos, campos e números não recebem vidro transparente.
+- Conteúdo: vidro denso no escuro e no claro, conforme a revisão solicitada pelo usuário em 12/10/2026. Painéis transmitem a atmosfera com blur e gradiente de densidade; texto, campos e números preservam contraste sobre a composição real. Textura espacial estática fica numa camada decorativa própria, sem capturar eventos ou disputar o foco.
 - Controles: vidro lenticular na navegação, dock e inspeção, com rim superior e sombra coerente; fallback sólido mantém identificação.
-- Marca: lente 3D e estrela existente. Naves são detalhes narrativos de login/progressão, sem substituir instruções por jargão espacial.
+- Marca: lente 3D e estrela existente. Cantos ópticos, rim e estrelas discretas dão aos painéis a linguagem de instrumento de nave; rótulos continuam em linguagem cotidiana. Naves são detalhes narrativos de login/progressão, sem substituir instruções por jargão espacial.
 - Uma ação principal por região, com títulos, contexto e métricas em ordem explícita. Tema claro tem acentos escuros próprios.
 - Movimento: resposta curta nos controles, órbita serena no foco, ambiente opcional e pausável. Movimento reduzido prevalece. Pausar ambiente não pausa o relógio funcional.
 - Layout: alvos táteis propostos de 44 px; leitura normal em 16 px e compacto em 14 px. Valores iniciais de ritmo, raio e movimento estão em [tokens.json](docs/design/tokens.json), sem segunda fonte de runtime.
@@ -46,3 +46,7 @@ Login e base compartilhada adotam Observatório pessoal. `AppearanceProvider` ce
 ## V02 — menu e dia
 
 Agora organiza próximo passo → trajetória → continuidade; Hoje organiza contexto/check-in → compromissos/estudo → rotinas/espaço livre. A órbita é um instrumento decorativo fora do texto, com os mesmos controles de movimento de V01. Menu móvel usa grupos e o catálogo único de navegação. Estados desconhecidos não viram vazios confirmados; rascunhos e falhas de escrita permanecem explícitos. A [revisão V02](docs/design/V02_REVIEW.md) registra escopo, evidências e dependência da PR #20.
+
+## V03/V04/V07 — visor e espaço de trabalho
+
+A preferência por cards translúcidos substitui a restrição anterior de conteúdo opaco. O material comum pertence a components, seus tokens a foundation; as telas não mantêm implementações concorrentes de textura. A sidebar desktop fica presa à janela, com coluna reservada e rolagem interna de destinos. Calendário (parte de V03), Estudos (parte de V04) e Caixa de entrada (V07) seguem o ritmo de Agora/Hoje. Foco e os demais domínios de V04 continuam pendentes. Evidências e limites em [V03_REVIEW.md](docs/design/V03_REVIEW.md).

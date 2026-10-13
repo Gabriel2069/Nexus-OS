@@ -106,6 +106,7 @@ export function HomePage() {
         className={`now-stage now-stage--${context.suggestion.kind}`}
         aria-labelledby="now-next-title"
       >
+        <span className="visor-texture" aria-hidden="true" />
         <div className="now-stage__main">
           <div className="now-stage__copy">
             <span className="eyebrow">
@@ -286,34 +287,6 @@ export function HomePage() {
               </button>
             </div>
           </SurfaceCard>
-          <SurfaceCard
-            tone="amber"
-            eyebrow="No horizonte"
-            title={context.nextExam?.title ?? "Sem prova à vista"}
-          >
-            <div className="exam-glance">
-              <GraduationCap size={22} />
-              <div>
-                {context.nextExam ? (
-                  <>
-                    <strong>
-                      {context.daysToExam === 0
-                        ? "Hoje"
-                        : context.daysToExam === 1
-                          ? "Amanhã"
-                          : `em ${context.daysToExam} dias`}
-                    </strong>
-                    <span>{dayLabel(context.nextExam.start)}</span>
-                  </>
-                ) : (
-                  <>
-                    <strong>A agenda está tranquila.</strong>
-                    <span>Nenhuma prova futura registrada.</span>
-                  </>
-                )}
-              </div>
-            </div>
-          </SurfaceCard>
         </div>
       </section>
       <section className="now-bottom-grid">
@@ -327,14 +300,32 @@ export function HomePage() {
           </p>
         </SurfaceCard>
         <SurfaceCard
-          tone="green"
-          eyebrow="Espaço livre"
-          title="Descanso também faz parte"
+          tone="amber"
+          eyebrow="No horizonte"
+          title={context.nextExam?.title ?? "Sem prova à vista"}
         >
-          <p className="panel-copy">
-            Família, amigos, hobby e pausas não precisam virar uma fila de
-            tarefas para terem valor.
-          </p>
+          <div className="exam-glance">
+            <GraduationCap size={22} />
+            <div>
+              {context.nextExam ? (
+                <>
+                  <strong>
+                    {context.daysToExam === 0
+                      ? "Hoje"
+                      : context.daysToExam === 1
+                        ? "Amanhã"
+                        : `em ${context.daysToExam} dias`}
+                  </strong>
+                  <span>{dayLabel(context.nextExam.start)}</span>
+                </>
+              ) : (
+                <>
+                  <strong>A agenda está tranquila.</strong>
+                  <span>Nenhuma prova futura registrada.</span>
+                </>
+              )}
+            </div>
+          </div>
         </SurfaceCard>
         <SurfaceCard
           tone="violet"

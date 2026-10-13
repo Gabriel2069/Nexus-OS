@@ -26,3 +26,5 @@ A direção D01 está em [docs/design](design/README.md), com prancheta, tokens 
 A [revisão V01](design/V01_REVIEW.md) registra a base compartilhada e o login implementados, com capturas e limites de verificação.
 
 A [revisão V02](design/V02_REVIEW.md) registra menu, Agora/Hoje, estados e ordem de integração sobre V01.
+
+- [V03_REVIEW.md](design/V03_REVIEW.md): visor compartilhado, menu fixo, Calendário, Caixa de entrada e Estudos; fases V03/V04 e V07.

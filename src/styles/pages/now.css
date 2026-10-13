@@ -37,14 +37,17 @@
   color: var(--muted);
 }
 .now-stage {
+  isolation: isolate;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   position: relative;
   overflow: hidden;
   border: 1px solid var(--hairline);
   border-radius: 28px;
   background: linear-gradient(
     115deg,
-    var(--panel),
-    color-mix(in srgb, var(--violet) 6%, var(--panel))
+    color-mix(in srgb, var(--panel) 82%, transparent),
+    color-mix(in srgb, var(--violet) 6%, var(--nx-glass-bg))
   );
   box-shadow:
     inset 0 1px var(--nx-glass-highlight),
@@ -121,7 +124,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   gap: 24px;
-  align-items: start;
+  align-items: stretch;
 }
 .now-side-stack {
   display: grid;
@@ -129,7 +132,6 @@
   min-width: 0;
 }
 .now-page .surface-card {
-  background: var(--panel);
   border-radius: 20px;
   box-shadow:
     inset 0 1px var(--nx-glass-highlight),
@@ -458,5 +460,18 @@
   }
   .now-heading .eyebrow {
     letter-spacing: 0.08em;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .now-stage {
+    background: var(--panel);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .now-stage {
+    background: var(--panel);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }

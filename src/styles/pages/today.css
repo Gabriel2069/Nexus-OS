@@ -54,10 +54,9 @@
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   gap: 24px;
-  align-items: start;
+  align-items: stretch;
 }
 .today-page .surface-card {
-  background: var(--panel);
   border: 1px solid var(--hairline);
   border-radius: 20px;
   min-width: 0;
@@ -68,7 +67,7 @@
 }
 .today-page .surface-card__header {
   margin-bottom: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 .today-page .surface-card__header h3 {
   font: 500 23px/1.25 var(--nx-heading);
@@ -89,8 +88,8 @@
 .today-page .today-now-card {
   background: linear-gradient(
     130deg,
-    var(--panel),
-    color-mix(in srgb, var(--violet) 5%, var(--panel))
+    color-mix(in srgb, var(--panel) 82%, transparent),
+    color-mix(in srgb, var(--violet) 5%, var(--nx-glass-bg))
   );
 }
 .today-now-meta {
@@ -196,7 +195,7 @@
   display: grid;
   grid-template-columns: 1.15fr 1fr;
   gap: 24px;
-  align-items: start;
+  align-items: stretch;
 }
 .today-timeline {
   display: grid;
@@ -292,7 +291,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
-  align-items: start;
+  align-items: stretch;
 }
 .today-page .routine-mini {
   display: grid;
@@ -418,4 +417,13 @@
   .today-header p {
     font-size: 12px;
   }
+}
+
+.today-context-grid > .surface-card {
+  display: flex;
+  flex-direction: column;
+}
+.today-context-grid > .surface-card > button:last-child {
+  align-self: flex-start;
+  margin-top: auto;
 }

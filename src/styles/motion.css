@@ -385,22 +385,6 @@
     transform: none;
   }
 }
-@keyframes nx-page-orb-a {
-  from {
-    transform: translate3d(0, 0, 0) scale(0.94);
-  }
-  to {
-    transform: translate3d(-18px, 12px, 0) scale(1.08);
-  }
-}
-@keyframes nx-page-orb-b {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(15px, -12px, 0);
-  }
-}
 @keyframes nx-complete {
   0% {
     transform: scale(0.98);
@@ -567,42 +551,6 @@
   from {
     opacity: 0;
     transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nx-inbox-orbit {
-  to {
-    transform: rotate(342deg);
-  }
-}
-@keyframes nx-inbox-pulse {
-  0%,
-  100% {
-    transform: scale(0.92);
-    opacity: 0.45;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
-}
-@keyframes nx-inbox-inspector-in {
-  from {
-    opacity: 0;
-    transform: translateX(12px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes nx-inbox-inspector-stack {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
   }
   to {
     opacity: 1;

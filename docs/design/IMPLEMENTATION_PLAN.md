@@ -46,3 +46,7 @@ B01 prepara dados/autenticação/configuração e validação de ownership em st
 3. Entrega inclui estado real e limites. Novo problema entra com ID; não fica apenas em comentário, screenshot ou nota local.
 4. Depois do merge, registrar o PR no issue canônico, fechar entregas supersedidas e preservar links de recuperação.
 5. Tokens propostos só passam a ser autoridade de runtime depois da incorporação e verificação. A prancheta permanece referência, nunca import global de CSS.
+
+## Sequência revista em 12/10/2026
+
+A prioridade solicitada passou a ser menu fixo, cards em vidro/textura e encaixe, seguidos de Calendário, Caixa de entrada e Estudos. O recorte corrente está em [V03_REVIEW.md](V03_REVIEW.md), com V07 e fases de V03/V04 no mapa canônico. Cards adotam vidro denso; o contrato atual em DESIGN.md prevalece sobre a proposta opaca original da prancheta. Foco permanece o próximo domínio sugerido, seguido de Missões/Projetos/Rotinas.

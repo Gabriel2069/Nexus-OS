@@ -348,6 +348,10 @@ export function NexusProvider({ children }: PropsWithChildren) {
       },
       completeMission: async (id) => {
         if (!userId) {
+          if (!isDemoMode)
+            throw new Error(
+              "Aguarde seu perfil carregar antes de concluir a missão.",
+            );
           setWorkspace((current) => ({
             ...current,
             missions: current.missions.filter((mission) => mission.id !== id),
@@ -359,7 +363,19 @@ export function NexusProvider({ children }: PropsWithChildren) {
         return { xp: result.xp_awarded, coins: result.coins_awarded };
       },
       processMission: async (id, patch) => {
-        if (!userId) return;
+        if (!userId) {
+          if (!isDemoMode)
+            throw new Error(
+              "Aguarde seu perfil carregar antes de processar a entrada.",
+            );
+          setWorkspace((current) => ({
+            ...current,
+            missions: current.missions.map((mission) =>
+              mission.id === id ? { ...mission, ...patch } : mission,
+            ),
+          }));
+          return;
+        }
         await updateMission(userId, id, patch);
         await refresh();
       },
