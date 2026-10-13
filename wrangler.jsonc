@@ -11,9 +11,9 @@
     "enabled": false,
   },
   "vars": {
-    "NEX_GROQ_FREE_ONLY": "false",
-    "NEX_GEMINI_FREE_ONLY": "false",
-    "NEX_WORKERS_FREE_ONLY": "false",
+    "NEX_GROQ_FREE_ONLY": "true",
+    "NEX_GEMINI_FREE_ONLY": "true",
+    "NEX_WORKERS_FREE_ONLY": "true",
     "SUPABASE_URL": "https://emewxqxmgqybojibpbjt.supabase.co",
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_1NzZbLT558ssZxIrjkaz4A_2Fo0Otsy",
   },
