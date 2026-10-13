@@ -19,7 +19,7 @@ Conversar por voz exige ação explícita e voz local em português. O app pede 
 
 Sem SpeechRecognition remoto oculto, chaves no frontend, gravação em storage, hotword permanente ou controle do sistema operacional do dispositivo. Desktop/iPhone dependem dos recursos de áudio, permissão e vozes instaladas. O teste automatizado não prova som no aparelho do usuário, Siri/PWA em background ou inferência Whisper real.
 
-Painel Google desconectado mostra solicitação de conexão e não chama google/read/google/start. Conta autorizada usa a rota existente com JWT verificado, RLS, tokens criptografados e escopo mínimo. Nenhum novo grant automático. Dados consultados para exibição não são enviados ao modelo sem o opt-in Google. Drive continua restrito a drive.file; selecionar ID não concede acesso. Leitores, import snapshot e criação confirmada já existentes são preservados; Picker/sync bidirecional e edição de conteúdo seguem pendentes.
+Painel Google desconectado mostra solicitação de conexão e não chama google/read/google/start. Conta autorizada usa a rota existente com JWT verificado, RLS, tokens criptografados e escopo mínimo. Nenhum novo grant automático. Dados consultados para exibição não são enviados ao modelo sem o opt-in Google, consumido somente pela próxima tentativa de mensagem. Drive continua restrito a drive.file; selecionar ID não concede acesso. Leitores, import snapshot e criação confirmada já existentes são preservados; Picker/sync bidirecional e edição de conteúdo seguem pendentes.
 
 ## Verificação
 
@@ -27,7 +27,7 @@ Painel Google desconectado mostra solicitação de conexão e não chama google/
 - Chromium: oito layouts N.E.X (320/390/834/1440, claro/escuro), 80 smoke das 20 rotas, ausência de overflow/pageerror; teclas, Escape/inert, preferências, dock/reload, ações confirmadas, memória, draft em erro e inspector.
 - Captura real de áudio gerado com oscillator/MediaRecorder/AudioContext/WAV: dois ciclos automáticos, microfone encerrado antes da leitura, pausa manual, comando falado de parada e interrupção por cota. Whisper/chat/síntese são mocks; não houve áudio pessoal ou chamada paga.
 - Google em QA: painel desconectado não autoriza nem consulta; painel conectado recebe fixture Drive e abre leitura de documento pelo ID retornado. Não certifica consentimento ou acesso Google remoto.
-- Movimento: canvas pausa por atmosfera/movimento reduzido e visibilidade; janelas têm entrada curta, fallback estático. 21 proprietários CSS, 69 keyframes únicos, 82 important.
+- Movimento: canvas preserva a rotação entre fases e pausa por atmosfera/movimento reduzido e visibilidade; janelas têm entrada curta, fallback estático. 21 proprietários CSS, 69 keyframes únicos, 82 important.
 - Foco: nenhum diff em FocusPage, pages/focus.css ou focus-clock; motor SQL/login/configuração de secrets preservados.
 
 [Desktop escuro](previews/nex-compact-dark-1440.jpg) e [celular claro](previews/nex-compact-light-390.jpg) são capturas QA com dados simulados, não do workspace pessoal. Publicação e sessão real serão verificadas após integração; estado corrente no issue #18, conexões no #16.

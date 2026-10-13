@@ -115,13 +115,16 @@ function useOwner() {
       return answer;
     }
     const result = await run(async (signal) => {
+      // Google context is authorized for this message only, including failed attempts.
+      const sharedGoogle = googleContext;
+      setGoogleContext(null);
       const answer = await nexRequest<Reply>(
         "chat",
         {
           message: input,
           module,
           shareContext: share,
-          googleContext,
+          googleContext: sharedGoogle,
           history: messages
             .slice(-4)
             .map((m) => ({ role: m.role, content: m.content })),

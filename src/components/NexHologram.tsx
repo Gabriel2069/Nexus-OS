@@ -8,6 +8,8 @@ export function NexHologram({
   coreRef: RefObject<HTMLDivElement | null>;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const phase = useRef(state);
+  phase.current = state;
   useEffect(() => {
     const el = canvas.current,
       host = coreRef.current;
@@ -42,6 +44,7 @@ export function NexHologram({
       !reduced.matches &&
       document.documentElement.dataset.atmosphere !== "paused";
     const draw = () => {
+      const state = phase.current;
       const energy = Number(host.style.getPropertyValue("--nex-energy")) || 0;
       const s = Math.sin(angle),
         c = Math.cos(angle),
@@ -92,7 +95,7 @@ export function NexHologram({
         return;
       }
       if (now - last >= 33) {
-        angle += state === "thinking" ? 0.014 : 0.004;
+        angle += phase.current === "thinking" ? 0.014 : 0.004;
         draw();
         last = now;
       }
@@ -124,6 +127,7 @@ export function NexHologram({
       attributes: true,
       attributeFilter: ["data-theme", "data-atmosphere"],
     });
+    attrs.observe(host, { attributes: true, attributeFilter: ["data-state"] });
     reduced.addEventListener("change", sync);
     document.addEventListener("visibilitychange", sync);
     return () => {
@@ -134,6 +138,6 @@ export function NexHologram({
       reduced.removeEventListener("change", sync);
       document.removeEventListener("visibilitychange", sync);
     };
-  }, [state, coreRef]);
+  }, [coreRef]);
   return <canvas ref={canvas} className="nex-hologram" aria-hidden="true" />;
 }

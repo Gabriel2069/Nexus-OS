@@ -596,6 +596,45 @@ const server = spawn(
       window.__nexGooglePanel = false;
       window.__nexAdvanced = true;
     });
+    await page
+      .getByRole("button", { name: "Conexões e ajustes", exact: true })
+      .click();
+    await page
+      .getByText("Conexões, memória e instrumentos externos", { exact: true })
+      .click();
+    await page
+      .getByRole("checkbox", {
+        name: "Compartilhar esta consulta Google na próxima mensagem",
+      })
+      .check();
+    await page.getByRole("button", { name: "Fechar ajustes N.E.X" }).click();
+    await message.fill("Resuma o documento selecionado");
+    await page.getByRole("button", { name: "Enviar", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Verificar conexões", exact: true })
+      .waitFor({ state: "visible" });
+    await page.waitForFunction(
+      () =>
+        window.__nexCalls.filter((c) => c.path === "chat").at(-1)?.input
+          .googleContext?.service === "docs",
+    );
+    await page
+      .getByRole("button", { name: "Conexões e ajustes", exact: true })
+      .click();
+    await page
+      .getByText("Conexões, memória e instrumentos externos", { exact: true })
+      .click();
+    assert.equal(
+      await page
+        .getByRole("checkbox", {
+          name: "Compartilhar esta consulta Google na próxima mensagem",
+        })
+        .isChecked(),
+      false,
+      "Google context applies to one message only",
+    );
+    await page.getByRole("button", { name: "Fechar ajustes N.E.X" }).click();
+
     await page.evaluate(() => (window.__nexFail = true));
     await message.fill("Texto que precisa permanecer");
     await page.getByRole("button", { name: "Enviar", exact: true }).click();

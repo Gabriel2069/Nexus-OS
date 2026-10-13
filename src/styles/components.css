@@ -6637,9 +6637,6 @@ select:focus-visible {
   transform-origin: 160px 160px;
   animation: nex-core-orbit 38s linear infinite;
 }
-.nex-orbital-core[data-state="thinking"] .nex-orbital-map__rotation {
-  animation-duration: 8s;
-}
 .nex-orbital-sphere {
   width: 10%;
   aspect-ratio: 1;
