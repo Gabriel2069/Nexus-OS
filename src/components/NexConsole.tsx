@@ -1,3 +1,4 @@
+import { useNexus } from "../context/NexusContext";
 import { NexOrbitalCore } from "./NexOrbitalCore";
 import {
   NexOperationCard,
@@ -30,6 +31,14 @@ const labels = Object.fromEntries(
 );
 export function NexConsole({ compact = false }: { compact?: boolean }) {
   const nex = useNex();
+  const workspace = useNexus();
+  const [time, setTime] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (!document.hidden) setTime(new Date());
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
   const [input, setInput] = useState("");
   const [memory, setMemory] = useState("");
   const [listening, setListening] = useState(false);
@@ -243,6 +252,24 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
             N.E.X<span>Seu universo, em diálogo.</span>
           </h1>
         </div>
+        <div className="nex-flight-clock">
+          <span className="eyebrow">Tempo local / São Paulo</span>
+          <time dateTime={time.toISOString()}>
+            {new Intl.DateTimeFormat("pt-BR", {
+              timeZone: "America/Sao_Paulo",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            }).format(time)}
+          </time>
+          <span>
+            {new Intl.DateTimeFormat("pt-BR", {
+              timeZone: "America/Sao_Paulo",
+              day: "2-digit",
+              month: "short",
+            }).format(time)}
+          </span>
+        </div>
         <button
           className="secondary-button"
           disabled={nex.busy}
@@ -265,9 +292,33 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
           eyebrow="Controle do universo"
           tone="blue"
         >
-          <p className="muted">
-            Escolha um setor para consultar ou elaborar uma ação.
-          </p>
+          <div
+            className="nex-telemetry"
+            aria-label="Registros carregados do NexOS"
+          >
+            {workspace.loading ? (
+              <p role="status">Carregando seus dados…</p>
+            ) : workspace.error ? (
+              <p role="alert">{workspace.error}</p>
+            ) : (
+              <>
+                <div>
+                  <strong>
+                    {
+                      workspace.workspace.missions.filter(
+                        (m) => !["Feita", "Cancelada"].includes(m.status),
+                      ).length
+                    }
+                  </strong>
+                  <span>Missões abertas</span>
+                </div>
+                <div>
+                  <strong>{workspace.workspace.projects.length}</strong>
+                  <span>Projetos carregados</span>
+                </div>
+              </>
+            )}
+          </div>
           <div className="nex-command-areas">
             {Object.entries(nexAreas)
               .filter(([k]) => k !== "geral")
@@ -334,17 +385,18 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
             }
             coreRef={coreRef}
           />
-          <span className="eyebrow">Núcleo de assistência</span>
-          <h2>{state}</h2>
-          <p>
-            Converse e decida o próximo passo. Ações exigem sua confirmação.
-          </p>
+          <div className="nex-core-identity">
+            <span className="eyebrow">Núcleo de assistência / NexOS</span>
+            <h2>N.E.X</h2>
+            <p role="status">{state}</p>
+          </div>
+
           <div className="nex-state" role="status">
             {nex.status
               ? Object.entries(nex.status.providers)
                   .filter(([, v]) => v)
                   .map(([name]) => name)
-                  .join(" · ") || "IA ainda não habilitada"
+                  .join(" · ") || "IA desconectada · verifique conexões"
               : "Conexão ainda não verificada"}
           </div>
           <details className="nex-privacy">
@@ -609,6 +661,19 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
               Slides acessam apenas arquivos autorizados ao app; as ações de
               escrita exigem prévia e confirmação.
             </p>
+            <button
+              className="primary-button"
+              disabled={nex.busy}
+              onClick={() => nex.connect("workspace")}
+            >
+              {nex.status?.google
+                ? "Ampliar conexão Google"
+                : "Conectar Google ao N.E.X"}
+            </button>
+            <p className="muted">
+              Uma autorização para agenda, tarefas e arquivos do app. O Google
+              apresenta as permissões antes de conceder acesso.
+            </p>
             <div className="nex-services">
               {["calendar", "tasks", "drive", "docs", "sheets", "slides"].map(
                 (service) => (
@@ -828,7 +893,16 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
               <ul>
                 {Object.entries(items).map(([k, v]) => (
                   <li key={k}>
-                    {k}: {v ? "Sim" : "Não"}
+                    {{
+                      keyPresent: "Chave disponível no Worker",
+                      freeEnabled: "Uso gratuito habilitado",
+                      bindingPresent: "Workers AI disponível",
+                      clientPresent: "Cliente Google disponível",
+                      secretPresent: "Segredo Google disponível",
+                      redirectPresent: "Callback Google configurado",
+                      encryptionPresent: "Criptografia de tokens configurada",
+                    }[k] ?? k}
+                    : {v ? "Sim" : "Não"}
                   </li>
                 ))}
               </ul>

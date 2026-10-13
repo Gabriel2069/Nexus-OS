@@ -50,3 +50,5 @@ A01: nex-console/core/readout/inspector pertencem a components; navegação N.E.
 ## A02 — instrumentos ao redor do núcleo
 
 N.E.X ocupa uma central orbital com a estrela NexOS refratada, mapa de órbitas e emissão branca sem trocar a identidade. Seleção de setores tem rolagem própria; conexão/memória ficam recolhidas até serem necessárias. Núcleo, lente e órbitas têm camadas distintas para não disputar transform. components mantém todo o material; shell mantém dock/toggle; motion mantém a nova animação nex-core-orbit (68 nomes únicos). Redução de movimento e pausa de atmosfera continuam aplicadas. ModalSurface inclui summary na contenção de foco; inspector único impede modais simultâneos. Nenhuma folha nova ou aumento de important. Cronômetro aprovado de Foco preservado.
+
+A03: core/hologram/telemetry/flight-clock ficam em components. Canvas é dono dos pontos/linhas; esfera e órbitas CSS continuam em camadas separadas. Sem novas folhas ou keyframes. Estado e permissões continuam NexContext/Worker, sem derivar conexão da animação. Identidade, temas e clock de Foco preservados.

@@ -58,3 +58,9 @@ Painel de vidro cósmico com núcleo orbital, estados verificáveis de escuta/pr
 ## A02 — instrumentos ao redor do núcleo
 
 N.E.X ocupa uma central orbital com a estrela NexOS refratada, mapa de órbitas e emissão branca sem trocar a identidade. Seleção de setores tem rolagem própria; conexão/memória ficam recolhidas até serem necessárias. Núcleo, lente e órbitas têm camadas distintas para não disputar transform. components mantém todo o material; shell mantém dock/toggle; motion mantém a nova animação nex-core-orbit (68 nomes únicos). Redução de movimento e pausa de atmosfera continuam aplicadas. ModalSurface inclui summary na contenção de foco; inspector único impede modais simultâneos. Nenhuma folha nova ou aumento de important. Cronômetro aprovado de Foco preservado.
+
+## A03 — cockpit holográfico N.E.X
+
+Em 13/10/2026 o usuário forneceu image(4).png, image(5).png e image(6).png como referências de organização: núcleo dominante, instrumentos nas bordas, conversa lateral e holograma formado por partículas. Adaptação no proprietário components, preservando cosmos, vidro, estrela NexOS, temas e hierarquia. Sem copiar marcas/cores ou simular acesso ao dispositivo. Contadores representam missões abertas/projetos do workspace carregado, com loading/erro explícitos; relógio mostra São Paulo.
+
+NexHologram projeta uma constelação de 180 pontos no centro. rAF limitado a cerca de 30 fps, DPR até 1,5, conexões pré-calculadas; pausa com atmosfera, movimento reduzido, aba oculta e saída de viewport, com cleanup de observers/loop. Lente de vidro e estrela ocupam o centro da malha e preservam identidade. Eventos, consultas e confirmação continuam nos instrumentos e no inspector compartilhado. No celular, núcleo → conversa → instrumentos; dock segue recolhível. Não declarar acesso a câmera/tela, CPU/RAM ou automação externa a partir do visual.
