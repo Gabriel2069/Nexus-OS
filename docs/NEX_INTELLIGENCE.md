@@ -1,0 +1,110 @@
+# N.E.X — NexOS Intelligence / A01
+
+Implementação inicial de 13/10/2026, branch `feat/nex-intelligence`, sobre PR #25 (`ecd3b2a`). Reutiliza React/Vite, Worker `nexos`, sessão Supabase, tabelas dos módulos, navegação e materiais existentes. A fila visual #20–#25 continua aberta; esta entrega depende dela. Código implementado não equivale a serviço ativado ou consentimento real testado.
+
+## Auditoria e decisão
+
+O Worker anterior oferecia health e diagnóstico Supabase; não havia endpoints de IA/OAuth. `nexus-intelligence`, orchestrator, command engine e action-policy são motores locais com responsabilidades distintas, preservados. Supabase autentica o app; `nexus-login` continua externo e não é substituído. Workspace, recompensas/RPCs, mostrador e relógio de Foco não foram reescritos. A busca web não abriu a URL pública; GET direto de `/api/health` respondeu ok com runtime Cloudflare Workers. A interface autenticada e integrações de produção não foram inspecionadas. A auditoria funcional baseou-se no repo e testes locais.
+
+N.E.X adiciona uma fronteira autenticada em `worker/nex`, um proprietário de conversa em `NexContext`, console compartilhado em `NexConsole` e rota `/nex`. Botão do topbar abre o console sobre outras páginas. Consultas têm painel de inspeção e links para o item específico. A conversa vive em memória e sobrevive à navegação; troca de identidade reinicia estado e cancela requests. Reload perde o histórico. Não há histórico de chat persistido nem memórias inferidas silenciosamente.
+
+## Modelos e orçamento zero custo
+
+Fontes oficiais consultadas em 13/10/2026:
+
+- [Groq — modelos](https://console.groq.com/docs/models) e [limites](https://console.groq.com/docs/rate-limits): `openai/gpt-oss-20b`, modelo de produção, Free: 30 RPM, 1.000 RPD, 8.000 TPM, 200.000 TPD na tabela pública. Os limites da organização prevalecem. Whisper `whisper-large-v3-turbo`: Free 20 RPM, 2.000 RPD, 7.200 segundos/hora e 28.800/dia na tabela consultada.
+- [Gemini — preços](https://ai.google.dev/gemini-api/docs/pricing) e [limites](https://ai.google.dev/gemini-api/docs/rate-limits): `gemini-2.5-flash-lite` tem entrada/saída gratuitas no Free Tier. Cotas efetivas dependem do projeto e devem ser conferidas no AI Studio; não presumir que a tabela de outro projeto se aplica. Thinking desabilitado, saída 512, sem grounding, cache, batch ou ferramentas faturáveis.
+- [Workers AI — preços](https://developers.cloudflare.com/workers-ai/platform/pricing/) e [Gemma](https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/): `@cf/google/gemma-4-26b-a4b-it`, disponível no catálogo; Free oferece 10.000 neurons/dia. No Workers Paid há cobrança além da franquia. Esta opção exige binding AI já disponível e conta Workers Free; não cria binding, plano, créditos ou infraestrutura automaticamente.
+
+Provedores permanecem **desativados por padrão**, mesmo com chaves. Os flags abaixo são declarações operacionais de que a conta foi conferida como gratuita; o código não consegue provar o estado de faturamento da conta do fornecedor. Nunca ativá-los numa organização paga. Se a conta mudar de plano, desligar o flag antes de usar. Nenhum mecanismo local substitui essa condição. Também se devem respeitar cotas já consumidas por outros apps/chaves da mesma organização e recursos existentes de Supabase/Workers.
+
+A reserva em Postgres antecede cada chamada, com lock transacional compartilhado entre usuários/isolates, janela móvel de 60 s e dia UTC. Falha do banco/migração/cota bloqueia chamadas. Não usa contador de processo, localStorage ou KV eventualmente consistente.
+
+| Limite preventivo                        | Valor                                         |
+| ---------------------------------------- | --------------------------------------------- |
+| Requisições globais / provedor / dia     | 100                                           |
+| Requisições por usuário / provedor / dia | 25                                            |
+| Requisições globais / provedor / 60 s    | 2                                             |
+| Chat: unidades globais reservadas / dia  | 50.000                                        |
+| Chat: unidades globais reservadas / 60 s | 7.000                                         |
+| Saída por resposta                       | 512 tokens                                    |
+| Whisper                                  | 600 segundos globais / dia; WAV até 30 s      |
+| Google                                   | 100 unidades globais / dia (uma por operação) |
+
+Chat reserva bytes UTF-8 dos messages + 1.024 unidades, uma estimativa conservadora para texto/tokenização e saída, não uma medição exata do tokenizer. Neurons de Workers AI são controlados pelo plano Free do fornecedor, não por essa estimativa. Reservas não são reembolsadas em falha incerta. Ledger retém até sete dias e não contém prompts, respostas, chaves ou áudio. 401/402/403/429 interrompem a cadeia; 5xx/falha de rede podem tentar a próxima opção gratuita habilitada, com nova reserva. Não há loop automático, upgrade, cadastro de billing ou fallback pago.
+
+## Variáveis do Worker
+
+| Variável                                   | Uso                                                                                                                          |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | Existentes; chamadas com JWT verificado do usuário, sem service role                                                         |
+| `GROQ_API_KEY`                             | Secret server-only para chat e Whisper                                                                                       |
+| `GEMINI_API_KEY`                           | Secret server-only para alternativa de chat                                                                                  |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Cliente Web OAuth, usado somente no Worker                                                                                   |
+| `GOOGLE_REDIRECT_URI`                      | Exatamente `https://nexos.gtadeusz.workers.dev/api/nex/google/callback`                                                      |
+| `NEX_TOKEN_ENCRYPTION_KEY`                 | Secret adicional necessário: 32 bytes aleatórios em base64/base64url, chave AES-GCM independente das chaves dos fornecedores |
+| `NEX_GROQ_FREE_ONLY`                       | `true` somente após conferir Groq Free; padrão `false`                                                                       |
+| `NEX_GEMINI_FREE_ONLY`                     | `true` somente após conferir projeto Gemini Free, sem billing; padrão `false`                                                |
+| `NEX_WORKERS_FREE_ONLY`                    | `true` somente com binding AI disponível e Workers Free; padrão `false`                                                      |
+| binding `AI`                               | Opcional, para Workers AI. Nenhuma chave desta opção vai ao frontend                                                         |
+
+Configure secrets no painel Cloudflare ou fluxo de secrets próprio, nunca em `VITE_*`, `.env` versionado ou chat. Client ID e redirect URI são identificadores públicos obrigatórios no redirecionamento OAuth, gerado pelo Worker; não são embutidos no bundle. Client Secret, chaves de IA e chave de criptografia permanecem privados. A chave de criptografia não deve ser substituída sem plano de rotação: tokens antigos deixam de ser legíveis; desconectar antes da troca e reconectar depois. Observability do Worker foi desligada para não coletar automaticamente códigos OAuth/query strings; não habilitar logs de corpo/header/URL sensível. Erros externos brutos não são retornados/logados. Diagnóstico antigo deixa de incluir body do Supabase no erro.
+
+## Rotas e autorização
+
+Todas as rotas, exceto callback, verificam Bearer Supabase com `/auth/v1/user`, rejeitam usuário anônimo e derivam ownership dessa identidade. Escritas exigem Origin do próprio domínio. Não há CORS aberto nem autorização por `user_id` enviado pelo cliente. Requests JSON são limitados e validados; chamadas HTTP externas têm timeout de 20 s. O binding Workers AI segue os limites do runtime/fornecedor.
+
+| Rota                                | Contrato                                                                                                                         |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/nex/status`               | Provedores habilitados/modelos e escopos Google, sem tokens                                                                      |
+| `POST /api/nex/chat`                | message, module, shareContext e até quatro falas; resposta e proposta validada, sem execução                                     |
+| `POST /api/nex/context`             | Consulta limitada do módulo, sem enviar ao provedor                                                                              |
+| `POST /api/nex/actions`             | confirmed + UUID estável + kind/title; criar missão ou Inbox, com RPC transacional idempotente                                   |
+| `GET/POST/DELETE /api/nex/memories` | Listar/salvar/excluir memória própria; separação module/agent, geral como perfil, limite atômico 60                              |
+| `POST /api/nex/transcribe`          | WAV mono PCM16/16 kHz em base64, cabeçalho/tamanho/duração validados; retorna texto para revisar, não envia chat automaticamente |
+| `POST /api/nex/google/start`        | service explícito; retorna URL Google e cookie protegido                                                                         |
+| `GET /api/nex/google/callback`      | state/cookie/PKCE, consumo único e troca server-side; redirect limpo para `/nex`                                                 |
+| `POST /api/nex/google/read`         | service + ID de arquivo quando necessário; consultas allowlisted                                                                 |
+| `POST /api/nex/google/disconnect`   | Tenta revogar, apaga conexão/state locais; comunica falha de revogação externa                                                   |
+
+Tokens OAuth e o JWT temporário do fluxo são AES-256-GCM, com IV aleatório e dados associados ao usuário/purpose. Cookie `__Host`, HttpOnly/Secure/SameSite=Lax, dez minutos, tamanho limitado; state hash de uso único no banco, expiry e PKCE S256. Callback valida de novo o JWT que iniciou a conexão. Supabase mantém ciphertext sob RLS, jamais plaintext. Revogação Google pode falhar offline; o app ainda apaga a cópia local e orienta revisar permissões no Google.
+
+`nex_private` não deve ser exposto no Data API. A função privada de orçamento é SECURITY DEFINER por necessidade de serializar o limite global, com auth.uid obrigatório, search_path vazio, allowlist e EXECUTE revogado de PUBLIC/anon. Wrapper público é invoker. Memórias/conexão/states/auditoria têm RLS de ownership e grants explícitos; actions RPC é invoker e usa as políticas existentes de missions. Delete de auth.users cascateia os novos dados. A auditoria de ações guarda criação/id do registro; nenhum chat ou segredo. Conclusão/recompensa/finanças não são ferramentas deste lote.
+
+## Google: configurar e autorizar incrementalmente
+
+1. No projeto Google existente, habilite Calendar, Tasks, Drive, Docs, Sheets e Slides APIs. Cliente OAuth de tipo Web application, origem `https://nexos.gtadeusz.workers.dev`, redirect exatamente igual à variável. Não usar localhost com o callback de produção.
+2. Configure consentimento e usuários de teste; publicação/verificação de escopos sensíveis pode ser necessária. Apps externos em Testing podem ter refresh tokens com validade limitada pelo Google.
+3. Configure secrets e chave de criptografia. Aplique a migração `supabase/migrations/20261013142948_nex_intelligence.sql` no projeto correto, mantendo grants/RLS; não rodar contra outro projeto por suposição. Valide advisors e duas contas de teste antes de uso real.
+4. Integre os PRs dependentes e publique o Worker/cliente pelo fluxo existente, após os checks. Não provisionar recursos pagos.
+5. Após publicar, confira novamente os planos gratuitos e habilite apenas os flags correspondentes no Worker (o arquivo de deploy conserva defaults false). Entre no NexOS e abra N.E.X. Clique **Autorizar** no serviço desejado; o app nunca conecta automaticamente. Repita quando precisar de escopos adicionais. Clique **Consultar** e verifique os dados retornados; esse é o teste real ainda pendente.
+
+| Serviço  | Escopo e consulta deste lote                                             |
+| -------- | ------------------------------------------------------------------------ |
+| Calendar | `calendar.events.readonly`: até 20 eventos futuros do calendário primary |
+| Tasks    | `tasks.readonly`: até 20 tarefas não concluídas da lista padrão          |
+| Drive    | `drive.file`: até 20 arquivos já autorizados ao app                      |
+| Docs     | `drive.file`: documento autorizado, por ID                               |
+| Sheets   | `drive.file`: metadados/abas de planilha autorizada, por ID              |
+| Slides   | `drive.file`: título/IDs de slides de apresentação autorizada, por ID    |
+
+`drive.file` é permissão por arquivo e também permite escrita nesses arquivos, embora o backend deste lote só ofereça leitura. Informar um ID **não concede** autorização por arquivo. Picker/Open with e criação/edição de documentos ainda precisam de uma próxima entrega; uma conta recém-conectada pode retornar lista vazia. Não pedir Drive completo para encobrir essa limitação. Calendar/Tasks também não têm sync ou escrita externa neste lote. Referências: [OAuth web server](https://developers.google.com/identity/protocols/oauth2/web-server), [PKCE](https://developers.google.com/identity/protocols/oauth2/native-app), [Drive scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth), [Docs scopes](https://developers.google.com/workspace/docs/api/auth), [Tasks scopes](https://developers.google.com/workspace/tasks/auth).
+
+## Módulos e experiência
+
+Consulta real de dados quando backend e migração estão ativados: Agora/Missões (abertas, por prazo), Hoje (check-in do dia civil São Paulo), Calendário (próximos/recorrentes), Inbox, Estudos, Projetos ativos, Rotinas ativas e sessões recentes de Foco. Até 12 registros por consulta; ausência e falha são distintas. Contexto não é uma varredura completa do workspace. Memórias geral/módulo do agente N.E.X só são enviadas com opt-in; outros agentes podem ter namespace próprio pela API, sem mistura implícita.
+
+Propostas são texto estruturado e validadas pela allowlist. Só criar missão/Inbox está habilitado; o usuário vê título e confirma. RPC usa UUID de ação para evitar duplicação ao repetir o mesmo pedido; conflito de payload falha. Pode editar/cancelar o registro no módulo; não existe promessa de desfazer automaticamente ações externas. Conteúdo do modelo/documentos/memórias não define permissões, URLs externas arbitrárias, SQL ou comandos de sistema.
+
+Desktop/celular usam os mesmos materiais e navegação; núcleo reage a escuta/processamento/ação/resposta falada. Inspeções sobre o console usam ModalSurface no painel principal e região integrada no overlay, evitando overlays concorrentes. Motion reduzido/pausa e material opaco são respeitados. Microfone explícito, até 29 s de captura; reencoding local WAV, revisão da transcrição antes de enviar; tracks encerrados e cleanup. Negação/indisponibilidade mantém texto disponível. Resposta falada usa apenas voz `localService` em português via speechSynthesis, iniciada por clique; sem voz local, informa indisponibilidade. Não há wake word/background listening, controle do iPhone/OS, streaming em tempo real, busca web ou automação externa irrestrita.
+
+## Verificação e limites da entrega
+
+- `npm run check`: fundações, documentação, 17 testes, TypeScript app **e Worker**, build. PGlite 0.5.9 é dependência apenas de desenvolvimento para testar Postgres/RLS no CI; não integra bundle ou infraestrutura de produção.
+- PostgreSQL WASM isolado: migração sobre core (pgcrypto substituído pela função UUID nativa disponível), ownership/anon denial, ledger privado, cotas global/60 s/usuário, exclusão de memória, ação repetida e payload conflitante. Não substitui advisors nem RLS com sessões reais do projeto remoto.
+- Mocks HTTP: Groq/Gemini e fallback 5xx, bloqueio de cota sem fallback, requisição sem auth/origem inválida, body inválido/grande, opt-in/ownership/contexto, proposta sem execução, confirmação, AES-GCM/tamper/outro usuário, OAuth incremental/state/PKCE/replay, callback errado, áudio inválido e WAV válido/reserva Whisper. Não são inferência/Whisper/consentimento reais.
+- Chromium local: oito layouts do console (320/390/834/1440 × claro/escuro), sem overflow/pageerror; 80 smoke de rotas existentes (20 × quatro larguras). Chat/proposta/confirmação única, draft em erro, memória/salvar/excluir, inspeção/navegação, conversa mantida ao trocar área, overlay Tab/Escape/inert, status inicial em StrictMode e microfone negado simulado. [Desktop](design/previews/nex-console-dark-1440.jpg) · [Celular](design/previews/nex-console-light-390.jpg). Capturas usam dados demonstrativos; não há chamada externa.
+- Harness de navegador versionado em `scripts/verify-nex-ui.cjs`, executado a partir da raiz com Playwright disponível (`NEX_PLAYWRIGHT_MODULE` pode apontar ao módulo instalado) e, opcionalmente, `NEX_CHROMIUM_PATH` para um Chromium local. Configuração Vite isolada em `tests/nex-browser.vite.mjs`; mocks não entram no build.
+- Cronômetro/cálculo do Foco têm diff vazio. 21 owners, 67 keyframes e teto 82 important preservados. Nenhuma alteração de login, recompensa, schema dos módulos ou chave real versionada. CSS 243,47 kB/42,32 gzip; JS inicial aproximadamente 490 kB/141 gzip (PGlite não integra o cliente). Bundles do cliente conferidos sem nomes de credenciais server-only.
+
+A revisão automática bloqueou uma tentativa de telemetria PostHog do CLI Supabase após gerar a migração. Não foi repetida; testes SQL usam banco local e não o CLI. Não houve deploy, aplicação de SQL remoto nem testes autenticados reais: secrets e acesso ao ambiente não estão disponíveis nesta sessão. Build/PR não tornam a URL de produção atualizada. Próximo passo é ativação controlada e testes reais de provedores/OAuth; depois Picker, escrita/sync Google, ações nos demais módulos e reconciliação de Foco. A01 não encerra B01/B02/P01/I01/I02/R01 nem a visão completa JARVIS.

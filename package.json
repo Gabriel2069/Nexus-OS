@@ -9,7 +9,7 @@
     "check": "npm run check:foundations && npm run check:docs && npm test && npm run typecheck && npm run build",
     "preview": "npm run build && vite preview",
     "deploy": "npm run check && wrangler deploy",
-    "typecheck": "tsc -b --pretty false",
+    "typecheck": "tsc -b --pretty false && tsc -p tsconfig.worker.json --pretty false",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "check:foundations": "node scripts/check-foundations.mjs",
     "check:docs": "node scripts/check-docs.mjs"
@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.48.0",
+    "@electric-sql/pglite": "0.5.9",
     "@types/node": "26.1.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",

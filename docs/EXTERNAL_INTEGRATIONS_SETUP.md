@@ -3,6 +3,7 @@
 A identidade visual existente não deve ser alterada para implementar estas integrações.
 
 ## Ordem recomendada
+
 1. Google Calendar
 2. Notion
 3. Google Drive + Gmail
@@ -12,18 +13,20 @@ A identidade visual existente não deve ser alterada para implementar estas inte
 ## 1. Google Calendar
 
 ### No Google Cloud
+
 1. Abra o Google Cloud Console.
 2. Crie ou selecione um projeto para o NexOS.
 3. Configure a tela de consentimento OAuth.
 4. Cadastre o domínio `nexos.gtadeusz.workers.dev` como domínio autorizado.
 5. Crie um cliente OAuth do tipo Web application.
 6. Adicione como origem autorizada: `https://nexos.gtadeusz.workers.dev`.
-7. Adicione a URL de callback OAuth que o backend do NexOS fornecer. Não invente uma URL de callback antes de a Edge Function OAuth ser criada.
+7. O Worker implementa `/api/nex/google/callback`: registre `https://nexos.gtadeusz.workers.dev/api/nex/google/callback`, exatamente igual a GOOGLE_REDIRECT_URI. Variáveis, migração, escopos e limites em [NEX_INTELLIGENCE.md](NEX_INTELLIGENCE.md).
 8. Guarde Client ID e Client Secret como secrets do backend, nunca no frontend ou GitHub.
 9. Ao conectar, conceda acesso somente ao calendário necessário.
 
 ### No NexOS
-Depois da configuração acima, a implementação do backend deve usar OAuth Authorization Code, guardar tokens no backend e sincronizar `calendar_commitments` por `external_id`.
+
+A01 implementa Authorization Code/PKCE, tokens criptografados e consulta do primary. Sincronização com `calendar_commitments` por `external_id` ainda pertence à etapa I01; configurar OAuth não prova sincronização ativa.
 
 ## 2. Notion
 
@@ -76,6 +79,7 @@ O WhatsApp deve ser tratado como canal de comandos, não como acesso irrestrito 
 ## Segurança
 
 Nunca enviar para o chat:
+
 - Client Secret
 - OAuth refresh token
 - Access token

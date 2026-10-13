@@ -34,3 +34,5 @@ A [revisão V04](design/V04_REVIEW.md) registra personalidade estelar, Missões/
 A [revisão V05/V06](design/V05_REVIEW.md) registra as onze áreas restantes e o acabamento compartilhado de menus, pop-ups e seletores.
 
 A [revisão N01](design/N01_REVIEW.md) registra início, central de navegação, atalhos, relações entre itens, rascunhos e retomada local de Foco.
+
+[NEX_INTELLIGENCE.md](NEX_INTELLIGENCE.md): A01, arquitetura, variáveis, cotas, OAuth, testes e limites reais.
