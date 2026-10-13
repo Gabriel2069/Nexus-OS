@@ -7,6 +7,10 @@ test("Postgres migration: quotas, RLS, memory deletion and idempotent confirmed 
   await pg.exec(
     `create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth to authenticated;grant execute on function auth.uid() to authenticated;`,
   );
+  // Reproduce Supabase's inherited table grants, including privileges outside RLS.
+  await pg.exec(
+    "alter default privileges in schema public grant all on tables to anon, authenticated;",
+  );
   let core = readFileSync(
     "supabase/migrations/20260808223500_nexus_core.sql",
     "utf8",
@@ -18,6 +22,42 @@ test("Postgres migration: quotas, RLS, memory deletion and idempotent confirmed 
       "utf8",
     ),
   );
+  await pg.exec(
+    readFileSync(
+      "supabase/migrations/20261013155850_nex_intelligence_privilege_hardening.sql",
+      "utf8",
+    ),
+  );
+  for (const table of [
+    "nex_memories",
+    "nex_google_connections",
+    "nex_oauth_states",
+    "nex_actions",
+  ]) {
+    for (const privilege of ["SELECT", "INSERT", "UPDATE", "DELETE"]) {
+      assert.equal(
+        (
+          await pg.query(
+            "select has_table_privilege('authenticated',$1,$2) as allowed",
+            [`public.${table}`, privilege],
+          )
+        ).rows[0].allowed,
+        true,
+      );
+    }
+    for (const privilege of ["TRUNCATE", "REFERENCES", "TRIGGER"]) {
+      assert.equal(
+        (
+          await pg.query(
+            "select has_table_privilege('authenticated',$1,$2) as allowed",
+            [`public.${table}`, privilege],
+          )
+        ).rows[0].allowed,
+        false,
+        `${table}: inherited ${privilege} must be removed`,
+      );
+    }
+  }
   const a = "11111111-1111-4111-8111-111111111111",
     b = "22222222-2222-4222-8222-222222222222";
   await pg.exec(`insert into auth.users values ('${a}'),('${b}');`);
