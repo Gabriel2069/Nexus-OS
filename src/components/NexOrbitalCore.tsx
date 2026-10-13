@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { NexHologram } from "./NexHologram";
 export function NexOrbitalCore({
   state,
   coreRef,
@@ -14,6 +15,7 @@ export function NexOrbitalCore({
       data-state={state}
       aria-hidden="true"
     >
+      <NexHologram state={state} coreRef={coreRef} />
       <svg className="nex-orbital-map" viewBox="0 0 320 320">
         <defs>
           <radialGradient id={id}>

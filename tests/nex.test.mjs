@@ -230,6 +230,33 @@ test("AES-GCM rejects another user, tampered ciphertext and wrong key", async ()
   );
   await assert.rejects(unseal(env, cipher + "x", who.id));
 });
+test("A03 Google workspace consent groups only Calendar events, Tasks and app files; no implicit grant", async () => {
+  await mock(
+    (url) =>
+      auth(url) ?? (url.includes("rpc/nex_reserve") ? ok(true) : ok(null)),
+    async (calls) => {
+      const r = await route(
+        request("google/start", { service: "workspace" }),
+        env,
+      );
+      assert.equal(r.status, 200);
+      const url = new URL((await r.json()).url);
+      assert.deepEqual(url.searchParams.get("scope").split(" "), [
+        "https://www.googleapis.com/auth/calendar.events",
+        "https://www.googleapis.com/auth/tasks",
+        "https://www.googleapis.com/auth/drive.file",
+      ]);
+      assert.equal(url.searchParams.get("code_challenge_method"), "S256");
+      assert.equal(url.searchParams.get("include_granted_scopes"), "true");
+      assert.ok(calls.every((c) => c.url.startsWith(env.SUPABASE_URL)));
+      assert.equal(
+        (await route(request("google/read", { service: "workspace" }), env))
+          .status,
+        400,
+      );
+    },
+  );
+});
 test("Google incremental flow: PKCE, httpOnly cookie, one-use state, callback and encrypted tokens", async () => {
   let stateRow = null,
     connection = null,

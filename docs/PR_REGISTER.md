@@ -40,3 +40,5 @@ N01 (`feat/n01-connected-observatory`) parte da [PR #24](https://github.com/Gabr
 A01 (`feat/nex-intelligence`) depende da [PR #25](https://github.com/Gabriel2069/Nexus-OS/pull/25), head `ecd3b2a`, e preserva a fila #20 → #21 → #22 → #23 → #24 → #25. Backend/SQL próprios de N.E.X não certificam ativação remota. [Contrato e evidências](NEX_INTELLIGENCE.md); PR/CI corrente no #18. Retarget e verificar novo head/merge/CI após integrar cada base.
 
 A02 — feat/nex-orbital-command, base main 0889060. Central orbital, dock recolhível e ferramentas confirmadas/Google incremental. O SQL remoto existente é versionado sem reaplicação. Provedores/OAuth reais continuam com limites explícitos em NEX_INTELLIGENCE.md; não encerra I01/B02 integralmente.
+
+A02 integrada pela PR #28 (main 9f475a6), CI #34 aprovado. A03 — feat/nex-holographic-bridge, base 9f475a6: nova composição conforme referências do usuário, constelação projetada, telemetria real e consentimento Google agrupado. Ativação de segredos no runtime permanece bloqueada pelo acesso Cloudflare; documentação não confunde interface com integração ativa.

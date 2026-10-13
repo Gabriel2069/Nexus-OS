@@ -16,6 +16,8 @@ import {
 } from "./core.ts";
 import { reserve } from "./providers.ts";
 export const scopes = {
+  workspace:
+    "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/drive.file",
   calendar_write: "https://www.googleapis.com/auth/calendar.events",
   tasks_write: "https://www.googleapis.com/auth/tasks",
   calendar: "https://www.googleapis.com/auth/calendar.events.readonly",

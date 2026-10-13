@@ -145,6 +145,48 @@ const server = spawn(
         (c) => c.path === "status",
       ),
     );
+    assert.ok(
+      await page
+        .locator(".nex-hologram")
+        .evaluate((e) => e.width > 0 && e.height > 0),
+    );
+    const constellation = () =>
+      page.locator(".nex-hologram").evaluate((e) => e.toDataURL());
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.evaluate(
+      () => (document.documentElement.dataset.atmosphere = "active"),
+    );
+    await page.waitForTimeout(100);
+    const moving = await constellation();
+    await page.waitForTimeout(120);
+    assert.notEqual(
+      await constellation(),
+      moving,
+      "constellation must move when enabled",
+    );
+    await page.evaluate(
+      () => (document.documentElement.dataset.atmosphere = "paused"),
+    );
+    await page.waitForTimeout(100);
+    const paused = await constellation();
+    await page.waitForTimeout(120);
+    assert.equal(
+      await constellation(),
+      paused,
+      "global atmosphere pause must stop canvas",
+    );
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.evaluate(
+      () => (document.documentElement.dataset.atmosphere = "active"),
+    );
+    await page.waitForTimeout(100);
+    const reduced = await constellation();
+    await page.waitForTimeout(120);
+    assert.equal(
+      await constellation(),
+      reduced,
+      "reduced motion must stop canvas",
+    );
     for (const theme of ["dark", "light"])
       for (const width of [320, 390, 834, 1440]) {
         await page.setViewportSize({ width, height: 1000 });
@@ -168,7 +210,8 @@ const server = spawn(
         )
           await page.screenshot({
             path:
-              root + `/docs/design/previews/nex-orbital-${theme}-${width}.jpg`,
+              root +
+              `/docs/design/previews/nex-holographic-${theme}-${width}.jpg`,
             fullPage: true,
             type: "jpeg",
             quality: 80,
