@@ -65,11 +65,11 @@ export function Topbar({ pathname }: TopbarProps) {
         <button
           className="command-search"
           onClick={() => emitUI("command")}
-          aria-label="Abrir central de comandos"
+          aria-label="Explorar áreas e itens"
           data-motion="command-trigger"
         >
           <Search size={16} />
-          <span>Pesquisar destinos…</span>
+          <span>Áreas, missões, projetos…</span>
           <span className="key-hint">
             <Command size={12} />K
           </span>

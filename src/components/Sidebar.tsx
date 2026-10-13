@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
+import { emitUI } from "../lib/ui-events";
 import { CosmicTexture } from "./CosmicEnvironment";
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ChevronDown, Search, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { isCurrentDestination, navigation } from "../data/navigation";
 import { navigate } from "../lib/router";
 
@@ -10,6 +12,18 @@ type SidebarProps = {
 };
 
 export function Sidebar({ pathname, collapsed, onToggle }: SidebarProps) {
+  const currentGroup = navigation.find((g) =>
+    g.items.some((i) => isCurrentDestination(i.path, pathname)),
+  )?.label;
+  const [expanded, setExpanded] = useState<string[]>(() => [
+    ...new Set(["Agora", "Fazer", ...(currentGroup ? [currentGroup] : [])]),
+  ]);
+  useEffect(() => {
+    if (currentGroup)
+      setExpanded((prev) =>
+        prev.includes(currentGroup) ? prev : [...prev, currentGroup],
+      );
+  }, [currentGroup]);
   return (
     <aside
       className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}
@@ -32,6 +46,13 @@ export function Sidebar({ pathname, collapsed, onToggle }: SidebarProps) {
           </div>
         )}
       </div>
+      {!collapsed && (
+        <button className="sidebar-explore" onClick={() => emitUI("command")}>
+          <Search size={16} />
+          <span>Encontrar e abrir</span>
+          <kbd>⌘ K</kbd>
+        </button>
+      )}
       <nav
         className="sidebar__nav"
         aria-label="Navegação principal"
@@ -40,29 +61,52 @@ export function Sidebar({ pathname, collapsed, onToggle }: SidebarProps) {
         {navigation.map((group) => (
           <div className="nav-group" key={group.label} data-motion="nav-group">
             {!collapsed && (
-              <span className="nav-group__label">{group.label}</span>
+              <button
+                className="nav-group-toggle"
+                aria-expanded={expanded.includes(group.label)}
+                aria-controls={`nav-section-${group.label}`}
+                onClick={() =>
+                  setExpanded((prev) =>
+                    prev.includes(group.label)
+                      ? prev.filter((label) => label !== group.label)
+                      : [...prev, group.label],
+                  )
+                }
+              >
+                <span>{group.label}</span>
+                <ChevronDown size={13} />
+              </button>
             )}
-            {group.items.map((item) => {
-              const active = isCurrentDestination(item.path, pathname);
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.path}
-                  className={`nav-item ${active ? "nav-item--active" : ""}`}
-                  onClick={() => navigate(item.path)}
-                  title={collapsed ? item.label : undefined}
-                  data-motion="nav-item"
-                  aria-current={active ? "page" : undefined}
-                  aria-label={collapsed ? item.label : undefined}
-                >
-                  <span className={`nav-item__icon tone-${item.tone}`}>
-                    <Icon size={17} />
-                  </span>
-                  <span>{!collapsed && item.label}</span>
-                  <span className="nav-item__active-light" aria-hidden="true" />
-                </button>
-              );
-            })}
+            <div
+              id={`nav-section-${group.label}`}
+              className="nav-group-items"
+              hidden={!collapsed && !expanded.includes(group.label)}
+            >
+              {group.items.map((item) => {
+                const active = isCurrentDestination(item.path, pathname);
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.path}
+                    className={`nav-item ${active ? "nav-item--active" : ""}`}
+                    onClick={() => navigate(item.path)}
+                    title={collapsed ? item.label : undefined}
+                    data-motion="nav-item"
+                    aria-current={active ? "page" : undefined}
+                    aria-label={collapsed ? item.label : undefined}
+                  >
+                    <span className={`nav-item__icon tone-${item.tone}`}>
+                      <Icon size={17} />
+                    </span>
+                    <span>{!collapsed && item.label}</span>
+                    <span
+                      className="nav-item__active-light"
+                      aria-hidden="true"
+                    />
+                  </button>
+                );
+              })}
+            </div>
           </div>
         ))}
       </nav>

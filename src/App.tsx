@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Mountain,
 } from "lucide-react";
+import { NavigationProvider } from "./context/NavigationContext";
 import { PageLoading } from "./components/PageLoading";
 import { AppShell } from "./components/AppShell";
 import { NexusProvider, useNexus } from "./context/NexusContext";
@@ -316,11 +317,13 @@ export function App() {
   const { pathname, search } = useLocation();
   return (
     <NexusProvider>
-      <AppShell pathname={pathname}>
-        <Suspense fallback={<PageLoading />}>
-          <RouteContent key={pathname + search} pathname={pathname} />
-        </Suspense>
-      </AppShell>
+      <NavigationProvider>
+        <AppShell pathname={pathname}>
+          <Suspense fallback={<PageLoading />}>
+            <RouteContent key={pathname + search} pathname={pathname} />
+          </Suspense>
+        </AppShell>
+      </NavigationProvider>
     </NexusProvider>
   );
 }

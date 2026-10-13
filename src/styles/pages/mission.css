@@ -310,6 +310,7 @@
   color: var(--muted);
 }
 .mission-inspector {
+  scroll-margin-top: 170px;
   display: grid;
   gap: 18px;
   min-width: 0;

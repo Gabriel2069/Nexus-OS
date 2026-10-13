@@ -1,3 +1,4 @@
+import { entityPath } from "../lib/navigation-state";
 import { StellarSpark } from "../components/CosmicEnvironment";
 import { PageLoading } from "../components/PageLoading";
 import { WorkspaceFeedback } from "../components/WorkspaceFeedback";
@@ -369,7 +370,10 @@ export function WeeklyReviewPage() {
           >
             <div className="review-action-list">
               {stale.slice(0, 5).map((p) => (
-                <button key={p.id} onClick={() => navigate("/projetos")}>
+                <button
+                  key={p.id}
+                  onClick={() => navigate(entityPath("project", p.id))}
+                >
                   <div>
                     <strong>{p.name}</strong>
                     <small>{p.progress}% · precisa de decisão</small>
