@@ -8,6 +8,9 @@ import {
   type PropsWithChildren,
 } from "react";
 import { useNexus } from "./NexusContext";
+import { localNexCommand } from "../lib/nex-tools";
+import { nexAreas } from "../lib/nex-tools";
+import { navigate } from "../lib/router";
 import {
   nexRequest,
   type NexModule,
@@ -90,7 +93,27 @@ function useOwner() {
     });
   }
   async function send(input: string) {
-    if (!input.trim() || locked.current) return false;
+    if (!input.trim() || locked.current) return;
+    const command = localNexCommand(input);
+    if (command?.kind === "navigate") {
+      const answer: Reply = {
+        reply: `Abrindo ${nexAreas[command.area].label}.`,
+        provider: "local",
+        model: "navigation",
+        proposal: null,
+        contextShared: false,
+      };
+      setMessages(
+        (old) =>
+          [
+            ...old,
+            { role: "user", content: input },
+            { role: "assistant", content: answer.reply, provider: "local" },
+          ].slice(-40) as Message[],
+      );
+      navigate(nexAreas[command.area].path);
+      return answer;
+    }
     const result = await run(async (signal) => {
       const answer = await nexRequest<Reply>(
         "chat",
@@ -106,6 +129,7 @@ function useOwner() {
         "POST",
         signal,
       );
+      if (signal.aborted) return;
       setMessages((old) =>
         [
           ...old,
@@ -123,9 +147,9 @@ function useOwner() {
           },
         ].slice(-40),
       );
-      return true;
+      return answer;
     }, "Organizando resposta");
-    return result === true;
+    return result;
   }
   async function confirm(proposal: Proposal) {
     await run(async (signal) => {
@@ -216,6 +240,7 @@ function useOwner() {
     connect,
     disconnect,
     run,
+    cancel: () => controller.current?.abort(),
     clear: () => {
       if (!locked.current) setMessages([]);
     },

@@ -36,12 +36,12 @@
   --hairline: color-mix(in srgb, var(--text) 16%, transparent);
   --focus-ring: 0 0 0 3px var(--cyan);
   --content-max: 1440px;
-  --page-x: clamp(22px, 2.6vw, 42px);
-  --page-y: clamp(26px, 3vw, 44px);
-  --section-gap: clamp(16px, 1.5vw, 23px);
-  --card-pad: clamp(18px, 1.55vw, 24px);
-  --radius-card: 20px;
-  --radius-hero: 28px;
+  --page-x: clamp(14px, 1.7vw, 26px);
+  --page-y: clamp(16px, 1.8vw, 26px);
+  --section-gap: clamp(12px, 1.2vw, 18px);
+  --card-pad: clamp(14px, 1.25vw, 20px);
+  --radius-card: 16px;
+  --radius-hero: 18px;
   --control-h: 44px;
   --control-line: color-mix(in srgb, var(--muted) 70%, var(--panel));
   --copy-leading: 1.58;
@@ -108,7 +108,7 @@
   --nx-safe-bottom: max(0px, env(safe-area-inset-bottom));
   --nx-safe-left: max(0px, env(safe-area-inset-left));
   --nx-content-max: 1480px;
-  --nx-gutter: clamp(14px, 2.2vw, 34px);
+  --nx-gutter: clamp(14px, 1.8vw, 26px);
   --nx-control: 44px;
   --nx-spring: cubic-bezier(0.22, 1, 0.36, 1);
   --nx-motion-fast: 100ms;

@@ -2,7 +2,7 @@
 .now-page {
   max-width: 1200px;
   margin-inline: auto;
-  gap: 24px;
+  gap: 18px;
 }
 .now-heading {
   display: flex;
@@ -43,7 +43,7 @@
   position: relative;
   overflow: hidden;
   border: 1px solid var(--nx-visor-rim);
-  border-radius: 28px;
+  border-radius: 18px;
   background: linear-gradient(
     115deg,
     color-mix(in srgb, var(--panel) 82%, transparent),
@@ -55,10 +55,10 @@
 }
 .now-stage__main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 250px;
-  gap: 32px;
+  grid-template-columns: minmax(0, 1fr) 170px;
+  gap: 24px;
   align-items: center;
-  padding: 36px;
+  padding: 24px;
 }
 .now-stage__copy {
   min-width: 0;
@@ -70,9 +70,9 @@
   color: var(--cyan);
 }
 .now-stage__copy h2 {
-  font: 500 clamp(30px, 3.3vw, 46px) / 1.1 var(--nx-heading);
+  font: 500 clamp(26px, 2.8vw, 36px) / 1.1 var(--nx-heading);
   letter-spacing: -0.05em;
-  margin: 18px 0;
+  margin: 12px 0;
   max-width: 22ch;
   text-wrap: balance;
   color: var(--text);
@@ -102,7 +102,7 @@
   color: var(--cyan);
 }
 .now-stage__action {
-  margin-top: 28px;
+  margin-top: 18px;
 }
 .now-stage__footer {
   display: flex;
@@ -110,7 +110,7 @@
   justify-content: space-between;
   gap: 16px;
   border-top: 1px solid var(--hairline);
-  padding: 16px 36px;
+  padding: 12px 24px;
   color: var(--muted);
   font-size: 11px;
   background: color-mix(in srgb, var(--panel) 85%, transparent);
@@ -131,15 +131,15 @@
   box-shadow:
     inset 0 1px var(--nx-glass-highlight),
     0 12px 32px color-mix(in srgb, var(--nx-glass-shadow) 40%, transparent);
-  padding: 24px;
+  padding: 18px;
   min-width: 0;
 }
 .now-page .surface-card__header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   align-items: start;
 }
 .now-page .surface-card__header h3 {
-  font: 500 21px/1.25 var(--nx-heading);
+  font: 500 18px/1.25 var(--nx-heading);
   letter-spacing: -0.03em;
   color: var(--text);
   margin-top: 9px;
@@ -248,7 +248,7 @@
   gap: 12px;
   text-align: left;
   width: 100%;
-  min-height: 72px;
+  min-height: 60px;
   border: 1px solid var(--hairline);
   border-radius: 14px;
   background: var(--panel);
@@ -483,10 +483,10 @@
   gap: 8px;
   align-content: start;
   min-width: 0;
-  min-height: 128px;
-  padding: 18px;
+  min-height: 92px;
+  padding: 12px;
   border: 1px solid var(--hairline);
-  border-radius: 18px;
+  border-radius: 12px;
   background: var(--nx-glass-bg);
   color: var(--text);
   text-align: left;
@@ -619,4 +619,25 @@
   font-weight: 500;
   color: var(--muted);
   margin: 22px 0 12px;
+}
+
+.now-stage__main > .orbital-signal {
+  width: 160px;
+  height: 160px;
+}
+.now-essentials .essential-loop {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.now-essentials .essential-loop button {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 12px;
+}
+@media (max-width: 700px) {
+  .now-essentials .essential-loop {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }

@@ -1,6 +1,6 @@
 /* Shell geometry and navigation. Materials use the semantic foundation tokens. */
 .app-shell {
-  --sidebar-width: 236px;
+  --sidebar-width: 200px;
   position: relative;
   isolation: isolate;
   display: grid;
@@ -10,7 +10,7 @@
     var(--nx-ease-standard);
 }
 .app-shell--collapsed {
-  --sidebar-width: 88px;
+  --sidebar-width: 64px;
 }
 .app-shell__content {
   grid-column: 2;
@@ -25,7 +25,7 @@
   z-index: 20;
   display: flex;
   flex-direction: column;
-  padding: 28px 14px 16px;
+  padding: 16px 10px 12px;
   border-right: 1px solid var(--hairline);
   background: var(--nx-visor-bg);
   backdrop-filter: blur(var(--nx-glass-blur));
@@ -39,7 +39,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 10px 28px;
+  padding: 0 4px 16px;
   flex: none;
 }
 .brand-mark {
@@ -64,7 +64,7 @@
 }
 .sidebar__brand-copy strong {
   display: block;
-  font: 600 24px/1.2 var(--nx-heading);
+  font: 600 20px/1.2 var(--nx-heading);
   letter-spacing: -0.06em;
 }
 .sidebar__brand-copy span {
@@ -79,8 +79,8 @@
   scrollbar-color: var(--line) transparent;
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  padding: 2px 4px 20px;
+  gap: 10px;
+  padding: 2px 0 12px;
   min-height: 0;
 }
 .nav-group {
@@ -103,8 +103,8 @@
   min-height: 44px;
   width: 100%;
   border: 1px solid transparent;
-  border-radius: 12px;
-  padding: 8px 10px;
+  border-radius: 9px;
+  padding: 6px 8px;
   text-align: left;
   background: transparent;
   color: var(--muted);
@@ -119,8 +119,8 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 9px;
   background: color-mix(in srgb, currentColor 7%, transparent);
   transition:
@@ -179,14 +179,14 @@
   font-size: 12px;
 }
 .sidebar--collapsed .sidebar__brand {
-  padding-inline: 8px;
+  padding-inline: 0;
 }
 .sidebar--collapsed .nav-item {
   justify-content: center;
   padding: 8px;
 }
 .sidebar--collapsed .sidebar__nav {
-  gap: 20px;
+  gap: 10px;
 }
 .topbar {
   position: sticky;
@@ -196,8 +196,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  min-height: 88px;
-  padding: 16px var(--nx-gutter);
+  min-height: 56px;
+  padding: 6px var(--nx-gutter);
   border-bottom: 1px solid var(--hairline);
   background: var(--nx-glass-bg);
   backdrop-filter: blur(var(--nx-glass-blur));
@@ -209,13 +209,14 @@
 .topbar__context {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 12px;
   min-width: 0;
 }
 .topbar__route {
-  min-width: 90px;
-  display: grid;
-  gap: 4px;
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 .topbar__route small {
   font-size: 10px;
@@ -224,7 +225,7 @@
   text-transform: uppercase;
 }
 .topbar__route strong {
-  font: 500 20px/1.2 var(--nx-heading);
+  font: 500 15px/1.2 var(--nx-heading);
   letter-spacing: -0.04em;
 }
 .command-search {
@@ -232,7 +233,8 @@
   align-items: center;
   gap: 10px;
   min-height: 44px;
-  width: clamp(170px, 17vw, 250px);
+  width: 44px;
+  justify-content: center;
   border: 1px solid var(--hairline);
   border-radius: 12px;
   padding: 0 12px;
@@ -296,7 +298,7 @@
   top: 16px;
 }
 html.nexus-standalone .topbar {
-  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-top: calc(6px + env(safe-area-inset-top));
 }
 @supports not (backdrop-filter: blur(1px)) {
   .sidebar,
@@ -330,10 +332,10 @@ html.nexus-standalone .topbar {
     display: none;
   }
   .app-shell {
-    --sidebar-width: 218px;
+    --sidebar-width: 200px;
   }
   .app-shell--collapsed {
-    --sidebar-width: 88px;
+    --sidebar-width: 64px;
   }
   .sidebar {
     padding-inline: 10px;
@@ -374,8 +376,8 @@ html.nexus-standalone .topbar {
     display: none;
   }
   .topbar {
-    min-height: 76px;
-    padding: 12px 20px;
+    min-height: 56px;
+    padding: 6px 16px;
   }
   .floating-add {
     position: fixed;
@@ -445,15 +447,15 @@ html.nexus-standalone .topbar {
     );
   }
   html.nexus-standalone .topbar {
-    padding-top: calc(12px + env(safe-area-inset-top));
+    padding-top: calc(6px + env(safe-area-inset-top));
   }
 }
 @media (max-width: 600px) {
   .topbar {
     gap: 8px;
-    padding: 10px max(12px, env(safe-area-inset-right)) 10px
-      max(12px, env(safe-area-inset-left));
-    min-height: 68px;
+    padding: 6px max(8px, env(safe-area-inset-right)) 6px
+      max(8px, env(safe-area-inset-left));
+    min-height: 56px;
   }
   .topbar__route {
     min-width: 0;
@@ -500,7 +502,7 @@ html.nexus-standalone .topbar {
     display: none;
   }
   .mobile-dock {
-    left: max(12px, env(safe-area-inset-left));
+    left: max(8px, env(safe-area-inset-left));
     right: max(12px, env(safe-area-inset-right));
   }
   .floating-add {
@@ -582,17 +584,14 @@ html.nexus-standalone .topbar {
 
 /* Persistent, account-scoped shortcuts; scroll is confined to the rail. */
 .workspace-rail {
-  position: sticky;
-  top: 88px;
-  z-index: 14;
+  position: relative;
+  z-index: 1;
   display: flex;
-  gap: 16px;
+  gap: 8px;
   align-items: center;
-  padding: 10px var(--nx-gutter);
-  border-bottom: 1px solid var(--hairline);
-  background: var(--nx-glass-bg-strong);
-  backdrop-filter: blur(var(--nx-glass-blur));
-  -webkit-backdrop-filter: blur(var(--nx-glass-blur));
+  flex: 1;
+  min-width: 0;
+  padding: 0;
 }
 .workspace-rail__links {
   display: flex;
@@ -659,15 +658,13 @@ html.nexus-standalone .topbar {
 }
 @media (max-width: 920px) {
   .workspace-rail {
-    top: 76px;
-    padding-inline: 16px;
+    padding-inline: 0;
   }
 }
 @media (max-width: 600px) {
   .workspace-rail {
-    top: 60px;
     gap: 8px;
-    padding: 6px 8px;
+    padding: 0;
   }
   .workspace-explore {
     width: 44px;
@@ -788,4 +785,151 @@ html.nexus-standalone .topbar {
   .focus-beacon small {
     font-size: 9px;
   }
+}
+
+/* A05: one compact toolbar, with accessible controls and a quiet icon rail. */
+.command-search > span {
+  display: none;
+}
+.sidebar--collapsed .sidebar-explore {
+  margin: 0 0 10px;
+  padding: 0;
+  justify-content: center;
+  width: 44px;
+}
+.sidebar--collapsed .nav-item > span:nth-child(2) {
+  display: none;
+}
+.sidebar .visor-texture {
+  opacity: 0.25;
+}
+.topbar {
+  box-shadow: inset 0 1px var(--nx-glass-highlight);
+  gap: 12px;
+}
+.topbar__route small {
+  display: none;
+}
+.topbar__route strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 130px;
+}
+.topbar__actions {
+  gap: 4px;
+}
+.workspace-rail__links button {
+  padding: 4px 8px;
+  font-size: 12px;
+  gap: 6px;
+  border-radius: 8px;
+}
+.workspace-explore {
+  display: none;
+}
+.workspace-rail__tools > .icon-button {
+  min-width: 36px;
+  width: 36px;
+}
+.focus-beacon {
+  border-radius: 9px;
+  padding: 4px 8px;
+}
+.shell-preferences {
+  width: min(400px, 100%);
+  padding: 20px;
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  background: var(--nx-glass-bg-strong);
+}
+.shell-preferences header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.shell-preferences h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.shell-preferences p {
+  font-size: 13px;
+  color: var(--muted);
+}
+@media (min-width: 921px) and (hover: hover) and (pointer: fine) {
+  .nav-item {
+    min-height: 36px;
+    font-size: 12px;
+  }
+  .nav-group-toggle {
+    min-height: 30px;
+    padding-block: 4px;
+  }
+  .workspace-rail__links button {
+    min-height: 34px;
+  }
+}
+@media (max-width: 1120px) {
+  .workspace-rail__links,
+  .workspace-rail__tools > .icon-button {
+    display: none;
+  }
+  .workspace-rail__tools {
+    margin-left: auto;
+  }
+}
+@media (max-width: 600px) {
+  .topbar .quick-add-top,
+  .workspace-rail {
+    display: none;
+  }
+  .topbar__context {
+    flex: 1;
+    gap: 0;
+  }
+  .topbar .command-search {
+    order: -1;
+    min-width: 44px;
+    width: 44px;
+  }
+  .topbar__route strong {
+    max-width: 86px;
+    font-size: 13px;
+  }
+  .topbar__actions {
+    gap: 0;
+  }
+  .topbar .icon-button,
+  .topbar .avatar {
+    width: 40px;
+    min-width: 40px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar .command-search {
+    display: flex;
+  }
+}
+
+@media (min-width: 921px) {
+  .topbar .command-search {
+    display: none;
+  }
+}
+
+.sidebar .nav-item__icon {
+  color: inherit;
+  background: transparent;
+}
+.sidebar .nav-item--active .nav-item__icon {
+  color: var(--nx-photon);
+}
+.topbar .quick-add-top {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--hairline);
+  box-shadow: inset 0 1px var(--nx-glass-highlight);
 }

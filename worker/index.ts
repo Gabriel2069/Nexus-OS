@@ -39,7 +39,7 @@ export default {
         ok: true,
         service: "nexus-os-web",
         runtime: "cloudflare-workers",
-        release: "nex-runtime-activation",
+        release: "nex-compact-voice",
         timestamp: new Date().toISOString(),
       });
     }

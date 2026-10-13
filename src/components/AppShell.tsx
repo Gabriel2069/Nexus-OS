@@ -3,7 +3,6 @@ const NexOverlay = lazy(() =>
   import("./NexConsole").then((m) => ({ default: m.NexOverlay })),
 );
 import { RelatedAreas } from "./RelatedAreas";
-import { WorkspaceRail } from "./WorkspaceRail";
 import { Plus } from "lucide-react";
 import type { PropsWithChildren } from "react";
 import { useEffect, useState, lazy, Suspense } from "react";
@@ -24,9 +23,9 @@ export function AppShell({ pathname, children }: AppShellProps) {
   const nexOverlay = useOverlay("nex");
   const [collapsed, setCollapsed] = useState(() => {
     try {
-      return localStorage.getItem("nexus-sidebar") === "collapsed";
+      return localStorage.getItem("nexus-sidebar") !== "open";
     } catch {
-      return false;
+      return true;
     }
   });
   useEffect(() => {
@@ -76,7 +75,6 @@ export function AppShell({ pathname, children }: AppShellProps) {
       />
       <div className="app-shell__content">
         <Topbar pathname={pathname} />
-        <WorkspaceRail pathname={pathname} />
         <main
           id="nexos-content"
           tabIndex={-1}

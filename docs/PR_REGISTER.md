@@ -46,3 +46,5 @@ A02 integrada pela PR #28 (main 9f475a6), CI #34 aprovado. A03 — feat/nex-holo
 A04 — fix/nex-runtime-activation, base main 8ad507d (PR #29 integrada): promoção dos secrets já salvos em Build para bindings ausentes do runtime, callback legado protegido e marcador de publicação. Não altera frontend/Supabase nem declara consentimento Google realizado; evidência e condições em NEX_INTELLIGENCE.md.
 
 A04 ativada pela PR #30 (main 604c6fe, CI #38): chat real recebeu OK pela Groq. Continuação fix/nex-oauth-minimal-response corrige retorno 201 vazio do PostgREST em core.ts; nenhum frontend ou SQL. Não confundir presença de Gemini com inferência nem state gravado com consentimento Google concluído.
+
+A05 — feat/nex-compact-command, base main 2913202: responde ao novo pedido de densidade/sobriedade, voz contínua e conexões do N.E.X. Proprietários e evidência em [A05_REVIEW.md](design/A05_REVIEW.md); nenhum merge de propostas antigas, alteração de SQL/login ou provedor pago.

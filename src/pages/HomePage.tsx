@@ -276,7 +276,7 @@ export function HomePage() {
           <div className="now-resume-list">
             {recent
               .filter((path) => path !== "/")
-              .slice(0, 3)
+              .slice(0, 2)
               .map((path) => {
                 const d = destinations.find((d) => d.path === path)!;
                 const Icon = d.icon;
@@ -316,58 +316,63 @@ export function HomePage() {
             </span>
             <ArrowRight size={15} />
           </button>
-          <h4 className="now-resume-label">O essencial, sem pressa</h4>
-          <div className="essential-loop">
-            <button
-              className={checkinDone ? "done" : ""}
-              onClick={() => navigate("/hoje")}
-            >
-              <span>
-                {checkinDone ? <Check size={16} /> : <Sparkles size={16} />}
-              </span>
-              <div>
-                <strong>Como você está?</strong>
-                <small>
-                  {checkinDone
-                    ? "check-in registrado hoje"
-                    : "energia e humor, em um instante"}
-                </small>
-              </div>
-              <ArrowRight size={14} />
-            </button>
-            <button
-              className={todayFocus > 0 ? "done" : ""}
-              onClick={() => navigate(focusPath)}
-            >
-              <span>
-                {todayFocus > 0 ? <Check size={16} /> : <Orbit size={16} />}
-              </span>
-              <div>
-                <strong>Um bloco que importa</strong>
-                <small>
-                  {todayFocus > 0
-                    ? `${todayFocus} min registrados hoje`
-                    : "quando houver espaço de verdade"}
-                </small>
-              </div>
-              <ArrowRight size={14} />
-            </button>
-            <button
-              className={eveningDone ? "done" : ""}
-              onClick={() => navigate("/rotinas")}
-            >
-              <span>
-                {eveningDone ? <Check size={16} /> : <Moon size={16} />}
-              </span>
-              <div>
-                <strong>Fechar o dia</strong>
-                <small>guardar o que ficou e desacelerar</small>
-              </div>
-              <ArrowRight size={14} />
-            </button>
-          </div>
         </SurfaceCard>
       </section>
+      <SurfaceCard
+        className="now-essentials"
+        title="O essencial, no seu ritmo"
+        eyebrow="Seu dia"
+      >
+        <div className="essential-loop">
+          <button
+            className={checkinDone ? "done" : ""}
+            onClick={() => navigate("/hoje")}
+          >
+            <span>
+              {checkinDone ? <Check size={16} /> : <Sparkles size={16} />}
+            </span>
+            <div>
+              <strong>Como você está?</strong>
+              <small>
+                {checkinDone
+                  ? "check-in registrado hoje"
+                  : "energia e humor, em um instante"}
+              </small>
+            </div>
+            <ArrowRight size={14} />
+          </button>
+          <button
+            className={todayFocus > 0 ? "done" : ""}
+            onClick={() => navigate(focusPath)}
+          >
+            <span>
+              {todayFocus > 0 ? <Check size={16} /> : <Orbit size={16} />}
+            </span>
+            <div>
+              <strong>Um bloco que importa</strong>
+              <small>
+                {todayFocus > 0
+                  ? `${todayFocus} min registrados hoje`
+                  : "quando houver espaço de verdade"}
+              </small>
+            </div>
+            <ArrowRight size={14} />
+          </button>
+          <button
+            className={eveningDone ? "done" : ""}
+            onClick={() => navigate("/rotinas")}
+          >
+            <span>
+              {eveningDone ? <Check size={16} /> : <Moon size={16} />}
+            </span>
+            <div>
+              <strong>Fechar o dia</strong>
+              <small>guardar o que ficou e desacelerar</small>
+            </div>
+            <ArrowRight size={14} />
+          </button>
+        </div>
+      </SurfaceCard>
       <section className="now-workbench" aria-label="Trabalho em andamento">
         <SurfaceCard
           tone="rose"
