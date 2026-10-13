@@ -5,6 +5,7 @@ import {
   panels,
 } from "../../src/lib/nex-tools.ts";
 import { operations } from "./operations.ts";
+import { isGoogleCallback } from "./google-callback.ts";
 import { weather } from "./weather.ts";
 import { dateKey } from "../../src/lib/dates.ts";
 import {
@@ -179,7 +180,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url),
     path = url.pathname;
   try {
-    if (path === "/api/nex/google/callback" && request.method === "GET")
+    if (isGoogleCallback(path) && request.method === "GET")
       return await callback(request, env);
     originCheck(request);
     const who = await authenticate(request, env);
@@ -465,7 +466,7 @@ export async function route(request: Request, env: Env): Promise<Response> {
     return json(
       { error: fault.message },
       fault.status,
-      path === "/api/nex/google/callback"
+      isGoogleCallback(path)
         ? {
             "Set-Cookie":
               "__Host-nex-google=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",

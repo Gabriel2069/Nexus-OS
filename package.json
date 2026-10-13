@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "postbuild": "node scripts/sync-nex-runtime-secrets.mjs",
     "check": "npm run check:foundations && npm run check:docs && npm test && npm run typecheck && npm run build",
     "preview": "npm run build && vite preview",
     "deploy": "npm run check && wrangler deploy",

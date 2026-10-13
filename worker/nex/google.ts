@@ -15,6 +15,7 @@ import {
   type Identity,
 } from "./core.ts";
 import { reserve } from "./providers.ts";
+import { isGoogleCallback } from "./google-callback.ts";
 export const scopes = {
   workspace:
     "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/drive.file",
@@ -56,13 +57,15 @@ function configuration(env: Env, origin: string) {
   if (
     redirect.origin !== origin ||
     redirect.protocol !== "https:" ||
-    redirect.pathname !== "/api/nex/google/callback" ||
+    !isGoogleCallback(redirect.pathname) ||
+    redirect.username ||
+    redirect.password ||
     redirect.search ||
     redirect.hash
   )
     throw new Fault(
       503,
-      "Callback Google deve corresponder ao domínio e à rota /api/nex/google/callback.",
+      "Callback Google deve corresponder ao domínio e a uma rota Google autorizada do NexOS.",
     );
 }
 export async function start(request: Request, env: Env, who: Identity) {
@@ -117,6 +120,8 @@ export async function start(request: Request, env: Env, who: Identity) {
 export async function callback(request: Request, env: Env) {
   const url = new URL(request.url);
   configuration(env, url.origin);
+  if (url.pathname !== new URL(env.GOOGLE_REDIRECT_URI!).pathname)
+    throw new Fault(400, "Callback diferente do endereço configurado.");
   const value = request.headers
     .get("Cookie")
     ?.split(";")

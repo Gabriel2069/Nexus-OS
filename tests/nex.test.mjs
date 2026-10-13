@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { route, parseAnswer } from "../worker/nex/routes.ts";
+import worker from "../worker/index.ts";
 import { base64, seal, unseal } from "../worker/nex/core.ts";
 import { complete, enabled, models } from "../worker/nex/providers.ts";
 const who = {
@@ -257,83 +258,121 @@ test("A03 Google workspace consent groups only Calendar events, Tasks and app fi
     },
   );
 });
-test("Google incremental flow: PKCE, httpOnly cookie, one-use state, callback and encrypted tokens", async () => {
-  let stateRow = null,
-    connection = null,
-    consumed = 0;
-  await mock(
-    (url, init) => {
-      if (auth(url)) return auth(url);
-      if (url.includes("rpc/nex_reserve")) return ok(true);
-      if (url.includes("/nex_oauth_states")) {
-        if (init.method === "POST") {
-          stateRow = JSON.parse(init.body);
-          return ok(null);
+for (const callbackPath of [
+  "/api/nex/google/callback",
+  "/api/integrations/google/callback",
+])
+  test(`Google incremental ${callbackPath}: PKCE, encrypted tokens, state consumed once`, async () => {
+    const callbackEnv = {
+      ...env,
+      GOOGLE_REDIRECT_URI: "https://app.example" + callbackPath,
+    };
+    let stateRow = null,
+      connection = null,
+      consumed = 0;
+    await mock(
+      (url, init) => {
+        if (auth(url)) return auth(url);
+        if (url.includes("rpc/nex_reserve")) return ok(true);
+        if (url.includes("/nex_oauth_states")) {
+          if (init.method === "POST") {
+            stateRow = JSON.parse(init.body);
+            return ok(null);
+          }
+          if (init.method === "DELETE" && url.includes("state_hash=")) {
+            const rows = stateRow ? [stateRow] : [];
+            stateRow = null;
+            consumed++;
+            return ok(rows);
+          }
+          return new Response(null, { status: 204 });
         }
-        if (init.method === "DELETE" && url.includes("state_hash=")) {
-          const rows = stateRow ? [stateRow] : [];
-          stateRow = null;
-          consumed++;
-          return ok(rows);
+        if (url.includes("/nex_google_connections")) {
+          if (init.method === "POST") {
+            connection = JSON.parse(init.body);
+            return ok(null);
+          }
+          return ok(connection ? [connection] : []);
         }
-        return new Response(null, { status: 204 });
-      }
-      if (url.includes("/nex_google_connections")) {
-        if (init.method === "POST") {
-          connection = JSON.parse(init.body);
-          return ok(null);
+        if (url === "https://oauth2.googleapis.com/token") {
+          const params = new URLSearchParams(init.body);
+          assert.equal(params.get("code_verifier").length, 43);
+          assert.equal(
+            params.get("redirect_uri"),
+            callbackEnv.GOOGLE_REDIRECT_URI,
+          );
+          return ok({
+            access_token: "google-access-test",
+            refresh_token: "google-refresh-test",
+            expires_in: 3600,
+            scope: "https://www.googleapis.com/auth/calendar.events.readonly",
+          });
         }
-        return ok(connection ? [connection] : []);
-      }
-      if (url === "https://oauth2.googleapis.com/token") {
-        const params = new URLSearchParams(init.body);
-        assert.equal(params.get("code_verifier").length, 43);
-        return ok({
-          access_token: "google-access-test",
-          refresh_token: "google-refresh-test",
-          expires_in: 3600,
-          scope: "https://www.googleapis.com/auth/calendar.events.readonly",
-        });
-      }
-      throw Error("Unexpected " + url);
-    },
-    async (calls) => {
-      const start = await route(
-        request("google/start", { service: "calendar" }),
-        env,
-      );
-      assert.equal(start.status, 200);
-      const authUrl = new URL((await start.json()).url);
-      assert.equal(authUrl.searchParams.get("code_challenge_method"), "S256");
-      assert.equal(authUrl.searchParams.get("include_granted_scopes"), "true");
-      assert.equal(
-        authUrl.searchParams.get("scope"),
-        "https://www.googleapis.com/auth/calendar.events.readonly",
-      );
-      const header = start.headers.get("Set-Cookie");
-      assert.match(header, /HttpOnly; Secure; SameSite=Lax/);
-      assert.equal(header.includes("session-test"), false);
-      const cb = () =>
-        new Request(
-          "https://app.example/api/nex/google/callback?" +
-            new URLSearchParams({
-              state: authUrl.searchParams.get("state"),
-              code: "authorization-test",
-            }),
+        throw Error("Unexpected " + url);
+      },
+      async (calls) => {
+        const start = await route(
+          request("google/start", { service: "calendar" }),
+          callbackEnv,
+        );
+        assert.equal(start.status, 200);
+        const authUrl = new URL((await start.json()).url);
+        assert.equal(
+          authUrl.searchParams.get("redirect_uri"),
+          callbackEnv.GOOGLE_REDIRECT_URI,
+        );
+        assert.equal(authUrl.searchParams.get("code_challenge_method"), "S256");
+        assert.equal(
+          authUrl.searchParams.get("include_granted_scopes"),
+          "true",
+        );
+        assert.equal(
+          authUrl.searchParams.get("scope"),
+          "https://www.googleapis.com/auth/calendar.events.readonly",
+        );
+        const header = start.headers.get("Set-Cookie");
+        assert.match(header, /HttpOnly; Secure; SameSite=Lax/);
+        assert.equal(header.includes("session-test"), false);
+        const cb = () =>
+          new Request(
+            callbackEnv.GOOGLE_REDIRECT_URI +
+              "?" +
+              new URLSearchParams({
+                state: authUrl.searchParams.get("state"),
+                code: "authorization-test",
+              }),
+            { headers: { Cookie: header.split(";")[0] } },
+          );
+        const otherPath =
+          callbackPath === "/api/nex/google/callback"
+            ? "/api/integrations/google/callback"
+            : "/api/nex/google/callback";
+        const wrongEndpoint = new Request(
+          "https://app.example" +
+            otherPath +
+            "?" +
+            new URL(cb().url).searchParams,
           { headers: { Cookie: header.split(";")[0] } },
         );
-      assert.equal((await route(cb(), env)).status, 303);
-      assert.equal(connection.ciphertext.includes("google-access-test"), false);
-      assert.equal((await route(cb(), env)).status, 400);
-      assert.equal(
-        calls.filter((c) => c.url === "https://oauth2.googleapis.com/token")
-          .length,
-        1,
-      );
-      assert.equal(consumed, 2);
-    },
-  );
-});
+        const rejected = await worker.fetch(wrongEndpoint, callbackEnv);
+        assert.equal(rejected.status, 400);
+        assert.match(rejected.headers.get("Set-Cookie"), /Max-Age=0/);
+        assert.equal(consumed, 0);
+        assert.equal((await worker.fetch(cb(), callbackEnv)).status, 303);
+        assert.equal(
+          connection.ciphertext.includes("google-access-test"),
+          false,
+        );
+        assert.equal((await worker.fetch(cb(), callbackEnv)).status, 400);
+        assert.equal(
+          calls.filter((c) => c.url === "https://oauth2.googleapis.com/token")
+            .length,
+          1,
+        );
+        assert.equal(consumed, 2);
+      },
+    );
+  });
 test("Google wrong state, denied service and callback mismatch never exchange token", async () => {
   await mock(
     (url) => auth(url) ?? ok(true),
