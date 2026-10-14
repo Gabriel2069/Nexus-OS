@@ -40,3 +40,5 @@ A [revisão N01](design/N01_REVIEW.md) registra início, central de navegação,
 [A05_REVIEW.md](design/A05_REVIEW.md): densidade compartilhada, central N.E.X, voz contínua, painéis Google e evidências/limites.
 
 [A06_REVIEW.md](design/A06_REVIEW.md): desktop de janelas, comandos locais, aprovações e pontes dos módulos/Google.
+
+[A07_REVIEW.md](design/A07_REVIEW.md): organização de janelas, busca local, atalhos e continuidade de movimento.

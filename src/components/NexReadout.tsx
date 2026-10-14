@@ -11,9 +11,11 @@ const labels = Object.fromEntries(
 export function NexReadout({
   data,
   onFile,
+  showDetails = true,
 }: {
   data: unknown;
   onFile?: (service: string, id: string) => void;
+  showDetails?: boolean;
 }) {
   const nex = useNex();
   onFile ??= (service, id) =>
@@ -28,6 +30,7 @@ export function NexReadout({
     module?: string;
     sectors?: { module: string; error?: string; records?: unknown[] }[];
     place?: string;
+    summary?: string;
     attribution?: string;
     data?: {
       items?: unknown[];
@@ -47,6 +50,10 @@ export function NexReadout({
   const rows = payload.records ?? payload.data?.items ?? payload.data?.files;
   return (
     <div className="nex-readout">
+      {payload.summary && <p role="status">{payload.summary}</p>}
+      {payload.sectors?.length === 0 && (
+        <p>Nenhum registro encontrado nos dados carregados.</p>
+      )}
       {payload.service === "calendar" && (
         <button
           className="secondary-button"
@@ -64,7 +71,11 @@ export function NexReadout({
       {payload.sectors?.map((s) => (
         <section key={s.module}>
           <h3>{labels[s.module] ?? s.module}</h3>
-          {s.error ? <p role="alert">{s.error}</p> : <NexReadout data={s} />}
+          {s.error ? (
+            <p role="alert">{s.error}</p>
+          ) : (
+            <NexReadout data={s} onFile={onFile} showDetails={false} />
+          )}
         </section>
       ))}
       {payload.place && (
@@ -249,10 +260,12 @@ export function NexReadout({
         );
       })}
       {payload.data?.title && <h3>{payload.data.title}</h3>}
-      <details>
-        <summary>Detalhes da consulta</summary>
-        <pre>{JSON.stringify(data, null, 2).slice(0, 20000)}</pre>
-      </details>
+      {showDetails && (
+        <details>
+          <summary>Detalhes da consulta</summary>
+          <pre>{JSON.stringify(data, null, 2).slice(0, 20000)}</pre>
+        </details>
+      )}
     </div>
   );
 }

@@ -489,7 +489,7 @@ const server = spawn(
       0,
     );
     await page.screenshot({
-      path: root + "/docs/design/previews/a06-windows-dark-1440.jpg",
+      path: root + "/../a07-baseline-windows-dark-1440.jpg",
       type: "jpeg",
       quality: 85,
     });
@@ -541,7 +541,7 @@ const server = spawn(
     });
     await page.waitForTimeout(250);
     await page.screenshot({
-      path: root + "/docs/design/previews/a06-window-light-390.jpg",
+      path: root + "/../a07-baseline-window-light-390.jpg",
       type: "jpeg",
       quality: 85,
     });
@@ -567,6 +567,270 @@ const server = spawn(
       chatsBeforeLocal,
     );
     await closeWindows();
+    // A07: workspace management, keyboard resize, local search and interruptible motion.
+    const localSend = async (text) => {
+      await localMessage.fill(text);
+      await localMessage.press("Control+Enter");
+    };
+    await localSend("Buscar: termo-inexistente-a07");
+    const searchWindow = page.getByRole("dialog", {
+      name: "Busca · termo-inexistente-a07",
+      exact: true,
+    });
+    await searchWindow
+      .getByText("Nenhum registro encontrado nos dados carregados.")
+      .waitFor();
+    await localSend("Missões atrasadas");
+    const overdueWindow = page.getByRole("dialog", {
+      name: "Missões atrasadas",
+      exact: true,
+    });
+    await overdueWindow.waitFor();
+    assert.equal(
+      await page.locator(".nex-floating-window").count(),
+      1,
+      "search reuses one window with refreshed title",
+    );
+    await localSend("O que tenho hoje?");
+    await page
+      .getByRole("button", { name: "Organizar janelas", exact: true })
+      .click();
+    const tiled = await page
+      .locator(".nex-floating-window:visible")
+      .evaluateAll((nodes) =>
+        nodes.map((n) => {
+          const r = n.getBoundingClientRect();
+          return { x: r.x, y: r.y, width: r.width, height: r.height };
+        }),
+      );
+    assert.equal(tiled.length, 2);
+    assert.ok(
+      tiled[0].x + tiled[0].width <= tiled[1].x ||
+        tiled[1].x + tiled[1].width <= tiled[0].x,
+    );
+    const disposition = overdueWindow.getByRole("combobox", {
+      name: "Disposição de Missões atrasadas",
+    });
+    await disposition.selectOption("left");
+    assert.equal(await overdueWindow.getAttribute("data-layout"), "left");
+    await disposition.selectOption("free");
+    await page.waitForFunction(() => {
+      const n = document.querySelector(
+        '[aria-label="Missões atrasadas"].nex-floating-window',
+      );
+      return (
+        n.dataset.layout === "free" &&
+        Math.abs(
+          n.getBoundingClientRect().width -
+            parseFloat(getComputedStyle(n).getPropertyValue("--window-width")),
+        ) < 1
+      );
+    });
+    const beforeSize = await overdueWindow.boundingBox();
+    await overdueWindow
+      .getByRole("button", {
+        name: "Redimensionar Missões atrasadas",
+        exact: true,
+      })
+      .press("ArrowLeft");
+    await page.waitForFunction(
+      (width) =>
+        document
+          .querySelector('[aria-label="Missões atrasadas"].nex-floating-window')
+          .getBoundingClientRect().width < width,
+      beforeSize.width,
+    );
+    const resizeGrip = await overdueWindow
+      .getByRole("button", {
+        name: "Redimensionar Missões atrasadas",
+        exact: true,
+      })
+      .boundingBox();
+    const beforePointerSize = await overdueWindow.boundingBox();
+    await page.mouse.move(
+      resizeGrip.x + resizeGrip.width / 2,
+      resizeGrip.y + resizeGrip.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+      resizeGrip.x + resizeGrip.width / 2 - 32,
+      resizeGrip.y + resizeGrip.height / 2 - 32,
+      { steps: 3 },
+    );
+    await page.mouse.up();
+    await page.waitForFunction(
+      (width) =>
+        document
+          .querySelector('[aria-label="Missões atrasadas"].nex-floating-window')
+          .getBoundingClientRect().width < width,
+      beforePointerSize.width,
+    );
+    const dockOrderBefore = await page
+      .locator(".nex-window-dock button[data-minimized]")
+      .allTextContents();
+    const activeBefore = await page
+      .locator('.nex-floating-window[data-active="true"]')
+      .getAttribute("aria-label");
+    await page.keyboard.press("Alt+PageDown");
+    assert.notEqual(
+      await page
+        .locator('.nex-floating-window[data-active="true"]')
+        .getAttribute("aria-label"),
+      activeBefore,
+    );
+    assert.deepEqual(
+      await page
+        .locator(".nex-window-dock button[data-minimized]")
+        .allTextContents(),
+      dockOrderBefore,
+      "dock order does not jump when focusing a window",
+    );
+    await page
+      .getByRole("button", { name: "Recolher janelas", exact: true })
+      .click();
+    assert.equal(await page.locator(".nex-floating-window:visible").count(), 0);
+    await page
+      .getByRole("button", { name: "Seletor de janelas", exact: true })
+      .click();
+    await page
+      .getByRole("searchbox", { name: "Filtrar janelas" })
+      .fill("atrasadas");
+    await page
+      .getByRole("button", {
+        name: "Alternar para Missões atrasadas",
+        exact: true,
+      })
+      .click();
+    await overdueWindow.waitFor();
+    await overdueWindow
+      .getByRole("button", {
+        name: "Mover janela Missões atrasadas",
+        exact: true,
+      })
+      .press("Alt+m");
+    await overdueWindow.waitFor({ state: "hidden" });
+    await page
+      .getByRole("button", { name: "Restaurar janelas", exact: true })
+      .click();
+    assert.equal(await page.locator(".nex-floating-window:visible").count(), 2);
+    // Enable actual motion: transitions can be interrupted and reduce-motion settles immediately.
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await disposition.selectOption("right");
+    await disposition.selectOption("maximized");
+    await overdueWindow.evaluate(async (n) => {
+      await Promise.all(
+        n.getAnimations().map((a) => a.finished.catch(() => {})),
+      );
+    });
+    await page.waitForTimeout(30);
+    assert.equal(
+      await overdueWindow.evaluate((n) => getComputedStyle(n).transform),
+      "none",
+    );
+    assert.ok((await overdueWindow.boundingBox()).width > 1400);
+    await overdueWindow.getByRole("button", { name: /Minimizar/ }).click();
+    await page
+      .getByRole("button", { name: "Restaurar Missões atrasadas", exact: true })
+      .click();
+    await page.waitForTimeout(260);
+    assert.equal(
+      await overdueWindow.isVisible(),
+      true,
+      "interrupted minimize restores latest state",
+    );
+    assert.equal(await overdueWindow.evaluate((n) => n.inert), false);
+    await disposition.selectOption("left");
+    await page.evaluate(() => {
+      window.__motionChanged = false;
+      matchMedia("(prefers-reduced-motion: reduce)").addEventListener(
+        "change",
+        () => {
+          window.__motionChanged = true;
+        },
+        { once: true },
+      );
+    });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.waitForFunction(() => window.__motionChanged);
+    assert.equal(
+      await overdueWindow.evaluate((n) => getComputedStyle(n).transform),
+      "none",
+    );
+    await page
+      .getByRole("button", { name: "Organizar janelas", exact: true })
+      .click();
+    await localSend("Buscar: neurofisiologia");
+    await page
+      .getByRole("dialog", { name: "Busca · neurofisiologia", exact: true })
+      .getByText("Revisar neurofisiologia por 45 min", { exact: true })
+      .waitFor();
+    await page
+      .getByRole("dialog", { name: /Agenda ·/ })
+      .getByRole("button", { name: /^Fechar / })
+      .click();
+    await page
+      .getByRole("dialog", { name: /Agenda ·/ })
+      .waitFor({ state: "hidden" });
+    await localSend("Mostre projetos");
+    await page.getByRole("dialog", { name: "Projetos", exact: true }).waitFor();
+    await localSend("Recolher janelas");
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll(".nex-floating-window:not([hidden])")
+          .length === 0,
+    );
+    await localSend("Restaurar janelas");
+    await page
+      .getByRole("button", { name: "Organizar janelas", exact: true })
+      .click();
+    await page.screenshot({
+      path: root + "/docs/design/previews/a07-workspace-dark-1440.jpg",
+      type: "jpeg",
+      quality: 85,
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.evaluate(
+      () => (document.documentElement.dataset.theme = "light"),
+    );
+    await page
+      .getByRole("button", { name: "Seletor de janelas", exact: true })
+      .click();
+    await page.getByRole("searchbox", { name: "Filtrar janelas" }).fill("");
+    await page.waitForTimeout(250);
+    assert.equal(
+      await page
+        .getByRole("button", { name: "Organizar janelas", exact: true })
+        .isVisible(),
+      false,
+    );
+    assert.ok(
+      await page
+        .locator(".nex-window-switcher")
+        .evaluate((n) => n.getBoundingClientRect().right <= window.innerWidth),
+    );
+    await page.screenshot({
+      path: root + "/docs/design/previews/a07-switcher-light-390.jpg",
+      type: "jpeg",
+      quality: 85,
+    });
+    await page.keyboard.press("Escape");
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.evaluate(
+      () => (document.documentElement.dataset.theme = "dark"),
+    );
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "chat",
+      ).length,
+      chatsBeforeLocal,
+      "A07 search and window management never call inference",
+    );
+    await closeWindows();
+    if (process.env.NEX_QA_DESKTOP_ONLY) {
+      assert.deepEqual(errors, []);
+      console.log("A07 desktop/search/motion passed");
+      return;
+    }
     await page
       .getByRole("checkbox", { name: "Usar IA em perguntas livres" })
       .check();
@@ -1010,7 +1274,7 @@ const server = spawn(
     }
     assert.deepEqual(errors, []);
     console.log(
-      "N.E.X UI: 8 layouts + 80 routes, modeless desktop/local commands, persistent previews/forms, Google Tasks copy with confirmation and zero inference, compact shell, real generated-audio capture/VAD/WAV with mocked Whisper/chat/device voice, pause/quota/stop, Google panels/file reader mocks, proposals, drafts, memory and keyboard passed.",
+      "N.E.X UI: 8 layouts + 80 routes, A07 tiling/switcher/keyboard/pointer resize and interruptible motion, local search/overdue, modeless desktop/local commands, persistent previews/forms, Google Tasks copy with confirmation and zero inference, compact shell, real generated-audio capture/VAD/WAV with mocked Whisper/chat/device voice, pause/quota/stop, Google panels/file reader mocks, proposals, drafts, memory and keyboard passed.",
     );
   } finally {
     await browser?.close();

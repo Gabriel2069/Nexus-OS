@@ -1,17 +1,10 @@
+import { useEffect, useRef, useState } from "react";
 import {
-  useEffect,
-  useRef,
-  useState,
-  type PointerEvent,
-  type CSSProperties,
-} from "react";
-import {
-  Grip,
-  Minus,
-  Maximize2,
-  Minimize2,
   X,
   PanelsTopLeft,
+  LayoutGrid,
+  PanelBottomClose,
+  PanelBottomOpen,
 } from "lucide-react";
 import { useNex } from "../context/NexContext";
 import { useNexus } from "../context/NexusContext";
@@ -24,22 +17,84 @@ import {
   type NexArea,
   type NexOperation,
 } from "../lib/nex-tools";
-import { clampWindow, type NexWindow } from "../lib/nex-windows";
+import { arrangeWindows, type NexWindow } from "../lib/nex-windows";
 import { navigate } from "../lib/router";
 import { entityPath } from "../lib/navigation-state";
 import { emitUI } from "../lib/ui-events";
+import { NexWindowFrame, type WindowArrangement } from "./NexWindowFrame";
 import { NexReadout } from "./NexReadout";
 import { NexOperationCard, NexResponsePanel } from "./NexInstruments";
 
 /** Modeless instruments live inside root: existing ModalSurface still isolates them. */
 export function NexDesktop() {
   const nex = useNex();
+  const [arrangement, setArrangement] = useState<WindowArrangement | null>(
+    null,
+  );
+  const [switcher, setSwitcher] = useState(false),
+    [query, setQuery] = useState("");
+  const picker = useRef<HTMLDivElement>(null),
+    toggle = useRef<HTMLButtonElement>(null),
+    search = useRef<HTMLInputElement>(null);
+  const visible = nex.windows.filter((w) => !w.minimized);
+  // Stacking changes on focus; the dock and keyboard traversal keep a stable order.
+  const order = useRef<string[]>([]);
+  order.current = [
+    ...order.current.filter((id) => nex.windows.some((w) => w.id === id)),
+    ...nex.windows
+      .filter((w) => !order.current.includes(w.id))
+      .map((w) => w.id),
+  ];
+  const orderedWindows = order.current.map(
+    (id) => nex.windows.find((w) => w.id === id)!,
+  );
+  const activeId = visible.at(-1)?.id;
+  function closeSwitcher() {
+    setSwitcher(false);
+    toggle.current?.focus();
+  }
+  useEffect(() => {
+    if (!switcher) return;
+    search.current?.focus();
+    const outside = (e: globalThis.PointerEvent) => {
+      if (
+        !picker.current?.contains(e.target as Node) &&
+        !toggle.current?.contains(e.target as Node)
+      )
+        setSwitcher(false);
+    };
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, [switcher]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.defaultPrevented || document.querySelector('[aria-modal="true"]'))
         return;
       const visible = nex.windows.filter((w) => !w.minimized);
       const active = visible.at(-1);
+      if (e.key === "Escape" && switcher) {
+        e.preventDefault();
+        closeSwitcher();
+        return;
+      }
+      if (
+        e.altKey &&
+        ["PageDown", "PageUp"].includes(e.key) &&
+        visible.length > 1
+      ) {
+        e.preventDefault();
+        const ordered = order.current
+          .map((id) => visible.find((w) => w.id === id))
+          .filter((w): w is NexWindow => !!w);
+        const i = ordered.findIndex((w) => w.id === active?.id);
+        const next =
+          ordered[
+            (i + (e.key === "PageDown" ? 1 : ordered.length - 1)) %
+              ordered.length
+          ];
+        nex.focusWindow(next.id);
+        return;
+      }
       if (
         e.key === "Escape" &&
         active &&
@@ -51,27 +106,150 @@ export function NexDesktop() {
     };
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
-  }, [nex.windows]);
+  }, [nex.windows, switcher]);
   if (!nex.windows.length) return null;
   return (
     <div className="nex-desktop" aria-label="Janelas do N.E.X">
-      {nex.windows.map((w, i) => (
-        <FloatingWindow key={w.id} item={w} index={i} />
+      {orderedWindows.map((w) => (
+        <NexWindowFrame
+          key={w.id}
+          item={w}
+          index={nex.windows.findIndex((item) => item.id === w.id)}
+          arrangement={arrangement}
+        >
+          <WindowBody item={w} />
+        </NexWindowFrame>
       ))}
       <nav className="nex-window-dock" aria-label="Janelas abertas">
-        <PanelsTopLeft size={16} aria-hidden="true" />
-        {nex.windows.map((w) => (
+        <button
+          ref={toggle}
+          className="nex-dock-tool"
+          aria-label="Seletor de janelas"
+          aria-expanded={switcher}
+          aria-controls="nex-window-switcher"
+          onClick={() => setSwitcher((v) => !v)}
+          title="Janelas abertas · Alt+PageUp/PageDown para alternar"
+        >
+          <PanelsTopLeft size={17} />
+          <span>{nex.windows.length}</span>
+        </button>
+        <button
+          className="nex-dock-tool nex-arrange"
+          aria-label="Organizar janelas"
+          disabled={!visible.length}
+          onClick={() => {
+            const bounds = arrangeWindows(
+              visible.length,
+              window.innerWidth,
+              window.innerHeight,
+            );
+            setArrangement({
+              sequence: Date.now(),
+              bounds: Object.fromEntries(
+                visible.map((w, i) => [w.id, bounds[i]]),
+              ),
+            });
+          }}
+          title="Organizar as janelas visíveis"
+        >
+          <LayoutGrid size={17} />
+        </button>
+        <button
+          className="nex-dock-tool"
+          aria-label={visible.length ? "Recolher janelas" : "Restaurar janelas"}
+          onClick={() => nex.showWindows(!visible.length)}
+          title="Preservar formulários e aprovações"
+        >
+          {visible.length ? (
+            <PanelBottomClose size={17} />
+          ) : (
+            <PanelBottomOpen size={17} />
+          )}
+        </button>
+        {orderedWindows.map((w) => (
           <button
             key={w.id}
             id={`nex-restore-${w.id}`}
             aria-label={`Restaurar ${w.title}`}
-            aria-pressed={!w.minimized}
+            aria-pressed={w.id === activeId}
+            data-minimized={w.minimized}
             onClick={() => nex.focusWindow(w.id)}
           >
             {w.title}
           </button>
         ))}
       </nav>
+      {switcher && (
+        <div
+          id="nex-window-switcher"
+          ref={picker}
+          className="nex-window-switcher"
+          role="region"
+          aria-label="Alternar janelas"
+        >
+          <header>
+            <strong>Seu espaço de trabalho</strong>
+            <button
+              className="icon-button"
+              aria-label="Fechar seletor de janelas"
+              onClick={closeSwitcher}
+            >
+              <X size={16} />
+            </button>
+          </header>
+          <label>
+            Filtrar janelas
+            <input
+              ref={search}
+              type="search"
+              value={query}
+              maxLength={100}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Título da janela"
+            />
+          </label>
+          <div>
+            {orderedWindows
+              .filter((w) =>
+                w.title
+                  .toLocaleLowerCase("pt-BR")
+                  .includes(query.toLocaleLowerCase("pt-BR")),
+              )
+              .map((w) => (
+                <button
+                  key={w.id}
+                  aria-label={`Alternar para ${w.title}`}
+                  onClick={() => {
+                    setSwitcher(false);
+                    nex.focusWindow(w.id);
+                  }}
+                >
+                  <PanelsTopLeft size={16} />
+                  <span>
+                    <strong>{w.title}</strong>
+                    <small>
+                      {w.minimized
+                        ? "Recolhida"
+                        : w.id === activeId
+                          ? "Em primeiro plano"
+                          : "Aberta"}
+                    </small>
+                  </span>
+                </button>
+              ))}
+          </div>
+          {!nex.windows.some((w) =>
+            w.title
+              .toLocaleLowerCase("pt-BR")
+              .includes(query.toLocaleLowerCase("pt-BR")),
+          ) && <p>Nenhuma janela com esse título.</p>}
+          <p>
+            Alt + PageUp / PageDown · alternar
+            <br />
+            Alt + M na janela · recolher
+          </p>
+        </div>
+      )}
       {nex.error && (
         <p role="alert" className="nex-window-error">
           {nex.error}
@@ -85,197 +263,6 @@ export function NexDesktop() {
         </p>
       )}
     </div>
-  );
-}
-function FloatingWindow({ item, index }: { item: NexWindow; index: number }) {
-  const nex = useNex(),
-    ref = useRef<HTMLElement>(null),
-    move = useRef<HTMLButtonElement>(null);
-  const [position, setPosition] = useState(() => ({
-    x:
-      index % 3 === 0
-        ? 88
-        : index % 3 === 1
-          ? window.innerWidth - 468
-          : window.innerWidth / 2 - 220,
-    y: 110 + Math.floor(index / 3) * 58,
-  }));
-  const [maximized, setMaximized] = useState(false);
-  const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(
-    null,
-  );
-  const latestPosition = useRef(position);
-  latestPosition.current = position;
-  const keepVisible = (x = position.x, y = position.y) => {
-    const r = ref.current?.getBoundingClientRect();
-    if (r)
-      setPosition(
-        clampWindow(
-          x,
-          y,
-          r.width,
-          r.height,
-          window.innerWidth,
-          window.innerHeight,
-        ),
-      );
-  };
-  useEffect(() => {
-    const r = ref.current;
-    if (!r) return;
-    keepVisible();
-    const resize = () =>
-      keepVisible(latestPosition.current.x, latestPosition.current.y);
-    window.addEventListener("resize", resize);
-    return () => {
-      window.removeEventListener("resize", resize);
-    };
-  }, [maximized]);
-
-  useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null;
-    const node = ref.current;
-    return () => {
-      // StrictMode reconnects effects without removing the window. Restoring
-      // then would raise its opener underneath a pointer-down and lose clicks.
-      queueMicrotask(() => {
-        if (
-          !node?.isConnected &&
-          document.activeElement === document.body &&
-          previous?.isConnected &&
-          !document.getElementById("root")?.inert &&
-          !previous.closest("[hidden]")
-        )
-          previous.focus({ preventScroll: true });
-      });
-    };
-  }, []);
-  const top = nex.windows.at(-1)?.id === item.id;
-  useEffect(() => {
-    if (
-      top &&
-      !item.minimized &&
-      !document.getElementById("root")?.inert &&
-      !ref.current?.contains(document.activeElement)
-    )
-      move.current?.focus({ preventScroll: true });
-  }, [top, item.minimized]);
-  function start(e: PointerEvent<HTMLButtonElement>) {
-    if (maximized || window.innerWidth < 720) return;
-    drag.current = {
-      x: e.clientX,
-      y: e.clientY,
-      px: position.x,
-      py: position.y,
-    };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-  return (
-    <section
-      ref={ref}
-      hidden={item.minimized}
-      role="dialog"
-      aria-modal="false"
-      aria-label={item.title}
-      className={`nex-floating-window ${maximized ? "is-maximized" : ""}`}
-      style={
-        {
-          "--window-x": `${position.x}px`,
-          "--window-y": `${position.y}px`,
-          zIndex: 20 + index,
-        } as CSSProperties
-      }
-      onPointerDownCapture={() => {
-        if (nex.windows.at(-1)?.id !== item.id) nex.focusWindow(item.id);
-      }}
-      onFocusCapture={() => {
-        if (nex.windows.at(-1)?.id !== item.id) nex.focusWindow(item.id);
-      }}
-    >
-      <header className="nex-window-titlebar">
-        <button
-          ref={move}
-          className="nex-window-grip"
-          aria-label={`Mover janela ${item.title}`}
-          title="Arraste ou use as setas para mover"
-          onPointerDown={start}
-          onPointerMove={(e) => {
-            const d = drag.current;
-            if (d) keepVisible(d.px + e.clientX - d.x, d.py + e.clientY - d.y);
-          }}
-          onPointerUp={() => {
-            drag.current = null;
-          }}
-          onPointerCancel={() => {
-            drag.current = null;
-          }}
-          onKeyDown={(e) => {
-            if (
-              !maximized &&
-              ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(
-                e.key,
-              )
-            ) {
-              e.preventDefault();
-              keepVisible(
-                position.x +
-                  (e.key === "ArrowRight"
-                    ? 24
-                    : e.key === "ArrowLeft"
-                      ? -24
-                      : 0),
-                position.y +
-                  (e.key === "ArrowDown" ? 24 : e.key === "ArrowUp" ? -24 : 0),
-              );
-            }
-          }}
-        >
-          <Grip size={15} />
-          <span>
-            <small>
-              N.E.X /{" "}
-              {item.body.kind === "operation" || item.body.kind === "proposal"
-                ? "Aprovação"
-                : "Instrumento"}
-            </small>
-            <strong>{item.title}</strong>
-          </span>
-        </button>
-        <button
-          className="icon-button"
-          aria-label={`Minimizar ${item.title}`}
-          onClick={() => {
-            nex.minimizeWindow(item.id);
-            requestAnimationFrame(() =>
-              document.getElementById(`nex-restore-${item.id}`)?.focus(),
-            );
-          }}
-        >
-          <Minus size={16} />
-        </button>
-        <button
-          className="icon-button"
-          aria-label={`${maximized ? "Restaurar tamanho de" : "Maximizar"} ${item.title}`}
-          onClick={() => setMaximized((v) => !v)}
-        >
-          {maximized ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-        </button>
-        <button
-          className="icon-button"
-          aria-label={`Fechar ${item.title}`}
-          onClick={() => nex.closeWindow(item.id)}
-        >
-          <X size={17} />
-        </button>
-      </header>
-      <div className="nex-window-content">
-        <WindowBody item={item} />
-      </div>
-      <footer className="nex-window-status">
-        <span>Consulta/execução sem inferência</span>
-        <span>Esc · fechar</span>
-      </footer>
-    </section>
   );
 }
 function WindowBody({ item }: { item: NexWindow }) {
