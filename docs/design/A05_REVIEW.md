@@ -33,3 +33,11 @@ Painel Google desconectado mostra solicitação de conexão e não chama google/
 [Desktop escuro](previews/nex-compact-dark-1440.jpg) e [celular claro](previews/nex-compact-light-390.jpg) são capturas QA com dados simulados, não do workspace pessoal. Publicação e sessão real serão verificadas após integração; estado corrente no issue #18, conexões no #16.
 
 Fontes de comportamento: [getUserMedia](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia), [SpeechSynthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis), [SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition). A última pode usar um serviço remoto do navegador; não foi adotada como fallback silencioso. As páginas HIG de sidebar/materiais retornaram somente a exigência de JavaScript na consulta; decisões de densidade/composição aqui são julgamento de projeto, sem certificação HIG.
+
+## Verificação publicada e correção de renovação
+
+PR #32 integrada em main 095f9af; assets A05 observados no site publicado e resposta real `OK` pelo Groq em sessão autenticada, sem opt-in de contexto. Google reconhecido como autorizado. A primeira consulta real encontrou resposta vazia ao salvar renovação: o tratamento de PostgREST aceitava 201 mínimo, mas não 200 mínimo de upsert de registro existente. A gravação pode concluir antes desse erro, portanto não se deve repetir automaticamente.
+
+O complemento aceita corpo vazio somente em escrita de tabela com status 200/201 sem representação exigida; leitura, RPC de cota e escrita com `return=representation` continuam exigindo JSON válido. Dois testes cobrem o limite e o fluxo completo de token expirado → renovação → uma gravação criptografada → consulta original. Nenhum token, grant, dado pessoal ou migration é alterado manualmente. Verificação final da publicação/consulta no issue #16.
+
+Referência: [PostgREST: minimal é o padrão de escrita](https://docs.postgrest.org/en/stable/references/api/preferences.html#minimal).
