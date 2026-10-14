@@ -1,3 +1,6 @@
+import { safeGoogleLink } from "../lib/nex-links";
+import { NexReadout } from "./NexReadout";
+export { safeGoogleLink } from "../lib/nex-links";
 import { useEffect, useState } from "react";
 import { useNex } from "../context/NexContext";
 import { nexRequest } from "../lib/nex-api";
@@ -55,24 +58,6 @@ const fields: Record<string, string> = {
   module: "Área",
   content: "Memória",
 };
-export function safeGoogleLink(value: unknown) {
-  try {
-    const u = new URL(String(value));
-    return u.protocol === "https:" &&
-      !u.username &&
-      !u.password &&
-      [
-        "docs.google.com",
-        "calendar.google.com",
-        "tasks.google.com",
-        "drive.google.com",
-      ].includes(u.hostname)
-      ? u.href
-      : null;
-  } catch {
-    return null;
-  }
-}
 export function NexOperationCard({
   operation,
   id,
@@ -80,9 +65,15 @@ export function NexOperationCard({
   operation: NexOperation;
   id: string;
 }) {
-  const nex = useNex(),
-    [preview, setPreview] = useState<Preview | null>(null),
-    [receipt, setReceipt] = useState<Receipt | null>(null);
+  const nex = useNex();
+  const { preview, receipt } = nex.operationStates[id] ?? {};
+  const setPreview = (preview: Preview | null) =>
+    nex.setOperationState(id, {
+      ...nex.operationStates[id],
+      preview: preview ?? undefined,
+    });
+  const setReceipt = (receipt: Receipt) =>
+    nex.setOperationState(id, { ...nex.operationStates[id], receipt });
   const p = preview?.operation ?? operation;
   async function review() {
     await nex.run(async (signal) =>
@@ -193,22 +184,22 @@ export function NexOperationCard({
 }
 export function NexResponsePanel({
   panel,
-  compact = false,
-  onInspect,
   onConnect,
 }: {
   panel: NexPanel;
-  compact?: boolean;
-  onInspect: (title: string, data: unknown) => void;
   onConnect?: () => void;
 }) {
   const nex = useNex();
   const [data, setData] = useState<{
       records?: Record<string, unknown>[];
       sectors?: unknown[];
+      data?: {
+        items?: Record<string, unknown>[];
+        files?: Record<string, unknown>[];
+      };
     } | null>(null),
     [error, setError] = useState("");
-  const [expanded, setExpanded] = useState(false);
+  const [version, setVersion] = useState(0);
   useEffect(() => {
     const c = new AbortController();
     setData(null);
@@ -224,7 +215,7 @@ export function NexResponsePanel({
             files?: Record<string, unknown>[];
           };
         }>("google/read", { service: panel.google }, "POST", c.signal).then(
-          (value) => ({ records: value.data.items ?? value.data.files ?? [] }),
+          (value) => ({ ...value, service: panel.google }),
         )
       : nexRequest<typeof data>(
           "context",
@@ -236,7 +227,7 @@ export function NexResponsePanel({
       if (!c.signal.aborted) setError(e.message);
     });
     return () => c.abort();
-  }, [panel.area, panel.google, !!nex.status?.google]);
+  }, [panel.area, panel.google, !!nex.status?.google, version]);
   const content = (
     <div className="nex-readout">
       {error ? (
@@ -245,36 +236,10 @@ export function NexResponsePanel({
         <p role="status">Consultando…</p>
       ) : (
         <>
-          <p>
-            Consulta parcial · {(data.records ?? data.sectors ?? []).length}{" "}
-            registros/setores retornados.
-          </p>
-          {data.records?.slice(0, expanded ? 12 : 2).map((r, i) => (
-            <article key={i}>
-              <strong>
-                {String(
-                  r.title ??
-                    r.name ??
-                    r.summary ??
-                    r.label ??
-                    r.subject ??
-                    r.checkin_date ??
-                    "Registro",
-                )}
-              </strong>
-              <p>{String(r.status ?? r.note ?? r.next_action ?? "")}</p>
-              {panel.google && safeGoogleLink(r.webViewLink ?? r.htmlLink) && (
-                <a
-                  href={safeGoogleLink(r.webViewLink ?? r.htmlLink)!}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Abrir no Google
-                </a>
-              )}
-            </article>
-          ))}
-          {data.sectors && <p>Agora · Calendário · Projetos · Hoje</p>}
+          <p>Consulta parcial · sem envio automático à IA.</p>
+          <NexReadout
+            data={panel.google ? data : { ...data, module: panel.area }}
+          />
         </>
       )}
     </div>
@@ -291,24 +256,22 @@ export function NexResponsePanel({
       </span>
       {content}
       <div className="nex-compose__actions">
-        {panel.google && !nex.status?.google && onConnect && (
-          <button className="secondary-button" onClick={onConnect}>
-            Conectar Google
-          </button>
-        )}
+        {panel.google &&
+          (!nex.status?.google ||
+            /[Aa]utorize|expirada|revogada|recusada/.test(error)) &&
+          onConnect && (
+            <button className="secondary-button" onClick={onConnect}>
+              {nex.status?.google
+                ? "Revisar autorização Google"
+                : "Conectar Google"}
+            </button>
+          )}
         <button
           className="secondary-button"
-          onClick={() =>
-            compact
-              ? setExpanded(!expanded)
-              : onInspect(
-                  (panel.google ? "Google · " : "") +
-                    nexAreas[panel.area].label,
-                  data,
-                )
-          }
+          disabled={!data && !error}
+          onClick={() => setVersion((v) => v + 1)}
         >
-          {expanded ? "Recolher" : "Expandir consulta"}
+          Atualizar consulta
         </button>
         <button
           className="secondary-button"

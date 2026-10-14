@@ -1,5 +1,6 @@
 export const UI_EVENTS = {
   nex: "nexos:nex",
+  nexWindow: "nexos:nex-window",
   nexInspect: "nexos:nex-inspect",
   nexSettings: "nexos:nex-settings",
   shellPreferences: "nexos:shell-preferences",

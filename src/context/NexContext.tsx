@@ -1,3 +1,4 @@
+import { emitUI, UI_EVENTS } from "../lib/ui-events";
 import type { NexOperation, NexPanel } from "../lib/nex-tools";
 import {
   createContext,
@@ -8,8 +9,19 @@ import {
   type PropsWithChildren,
 } from "react";
 import { useNexus } from "./NexusContext";
-import { localNexCommand } from "../lib/nex-tools";
-import { nexAreas } from "../lib/nex-tools";
+import {
+  parseLocalIntent,
+  localReadout,
+  dayReadout,
+  nextReadout,
+  localTime,
+} from "../lib/nex-local";
+import {
+  addNexWindow,
+  type NexWindow,
+  type NexWindowBody,
+} from "../lib/nex-windows";
+import { nexAreas, operationKinds } from "../lib/nex-tools";
 import { navigate } from "../lib/router";
 import {
   nexRequest,
@@ -29,7 +41,137 @@ type Message = {
   panels?: NexPanel[];
 };
 function useOwner() {
-  const { refresh } = useNexus();
+  const workspace = useNexus();
+  const { refresh } = workspace;
+  const [useAI, setUseAI] = useState(false);
+  const surfaceVersion = useRef(0);
+  useEffect(() => {
+    const events = Object.entries(UI_EVENTS)
+      .filter(([key]) => key !== "nexWindow")
+      .map(([, value]) => value);
+    const changed = () => {
+      surfaceVersion.current++;
+    };
+    events.forEach((event) => window.addEventListener(event, changed));
+    return () =>
+      events.forEach((event) => window.removeEventListener(event, changed));
+  }, []);
+  const [settingsRequested, setSettingsRequested] = useState(false);
+  const [windows, setWindows] = useState<NexWindow[]>([]);
+  const windowsRef = useRef<NexWindow[]>([]);
+  const [proposals, setProposals] = useState<Record<string, Proposal>>({});
+  const [operationStates, setOperationStates] = useState<
+    Record<
+      string,
+      {
+        preview?: {
+          operation: NexOperation;
+          before: unknown;
+          label: string;
+          warning: string;
+        };
+        receipt?: {
+          applied: boolean;
+          id: string;
+          kind: string;
+          area: keyof typeof nexAreas;
+          href?: string;
+          imported?: number;
+          preserved?: number;
+        };
+      }
+    >
+  >({});
+  function updateWindows(next: NexWindow[]) {
+    windowsRef.current = next;
+    setWindows(next);
+  }
+  function openWindow(
+    key: string,
+    title: string,
+    body: NexWindowBody,
+    reveal = true,
+  ) {
+    const old = windowsRef.current;
+    const next = addNexWindow(old, {
+      id: crypto.randomUUID(),
+      key,
+      title,
+      body,
+      minimized: false,
+    });
+    if (next === old) {
+      setError(
+        "Seis janelas abertas. Feche uma antes de abrir outra; aprovações e rascunhos foram preservados.",
+      );
+      return;
+    }
+    updateWindows(next);
+    if (reveal) emitUI("nexWindow");
+  }
+  function closeWindow(id: string) {
+    updateWindows(windowsRef.current.filter((w) => w.id !== id));
+  }
+  function focusWindow(id: string) {
+    const w = windowsRef.current.find((w) => w.id === id);
+    if (w)
+      updateWindows([
+        ...windowsRef.current.filter((w) => w.id !== id),
+        { ...w, minimized: false },
+      ]);
+  }
+  function minimizeWindow(id: string) {
+    updateWindows(
+      windowsRef.current.map((w) =>
+        w.id === id ? { ...w, minimized: true } : w,
+      ),
+    );
+  }
+  function openReply(
+    answer: Reply,
+    proposalId?: string,
+    operationId?: string,
+    reveal = true,
+  ) {
+    for (const p of answer.panels ?? [])
+      openWindow(
+        `panel:${p.google ?? "local"}:${p.area}`,
+        `${p.google ? "Google · " : ""}${nexAreas[p.area].label}`,
+        { kind: "panel", panel: p },
+        reveal,
+      );
+    if (answer.operation && operationId)
+      openWindow(
+        `operation:${operationId}`,
+        "Aprovação · " + operationKinds[answer.operation.kind],
+        { kind: "operation", operation: answer.operation, operationId },
+        reveal,
+      );
+    if (proposalId)
+      openWindow(
+        `proposal:${proposalId}`,
+        "Aprovação · criação",
+        {
+          kind: "proposal",
+          proposalId,
+        },
+        reveal,
+      );
+  }
+  async function openArea(area: keyof typeof nexAreas) {
+    if (workspace.loading || workspace.error) {
+      setError(workspace.error ?? "Aguarde os dados do NexOS.");
+      return;
+    }
+    const data = localReadout(area, workspace.workspace);
+    if (data)
+      openWindow(`local:${area}`, nexAreas[area].label, { kind: "data", data });
+    else
+      openWindow(`panel:local:${area}`, nexAreas[area].label, {
+        kind: "panel",
+        panel: { area },
+      });
+  }
   const [messages, setMessages] = useState<Message[]>([]);
   const [module, setModule] = useState<NexModule>("geral");
   const [share, setShare] = useState(false);
@@ -92,28 +234,157 @@ function useOwner() {
       );
     });
   }
+  useEffect(() => {
+    void load();
+  }, []);
   async function send(input: string) {
     if (!input.trim() || locked.current) return;
-    const command = localNexCommand(input);
-    if (command?.kind === "navigate") {
-      const answer: Reply = {
-        reply: `Abrindo ${nexAreas[command.area].label}.`,
-        provider: "local",
-        model: "navigation",
-        proposal: null,
-        contextShared: false,
-      };
-      setMessages(
-        (old) =>
-          [
-            ...old,
-            { role: "user", content: input },
-            { role: "assistant", content: answer.reply, provider: "local" },
-          ].slice(-40) as Message[],
+    setError("");
+    const intent = parseLocalIntent(input);
+    function appendLocal(answer: Reply) {
+      const proposal = answer.proposal
+        ? { ...answer.proposal, id: crypto.randomUUID() }
+        : undefined;
+      const operationId = answer.operation ? crypto.randomUUID() : undefined;
+      if (proposal)
+        setProposals((old) => ({ ...old, [proposal.id]: proposal }));
+      setMessages((old) =>
+        [
+          ...old,
+          { role: "user" as const, content: input, provider: "local" },
+          {
+            role: "assistant" as const,
+            content: answer.reply,
+            provider: "local",
+            proposal,
+            operation: answer.operation ?? undefined,
+            operationId,
+          },
+        ].slice(-40),
       );
-      navigate(nexAreas[command.area].path);
+      openReply(answer, proposal?.id, operationId);
       return answer;
     }
+    const local = (reply: string, extra: Partial<Reply> = {}) =>
+      appendLocal({
+        reply,
+        provider: "local",
+        model: "deterministic",
+        proposal: null,
+        contextShared: false,
+        ...extra,
+      });
+    if (intent) {
+      if (intent.kind === "navigate") {
+        navigate(nexAreas[intent.area].path);
+        return local(`Abrindo ${nexAreas[intent.area].label}.`);
+      }
+      if (intent.kind === "stop") return local("Conversa pausada.");
+      if (intent.kind === "greeting")
+        return local(
+          `Estou aqui${workspace.workspace.profile?.display_name ? ", " + workspace.workspace.profile.display_name : ""}. Posso consultar sua agenda, abrir dados e preparar ações sem usar IA. Diga “comandos” para ver exemplos.`,
+        );
+      if (intent.kind === "time") return local(localTime());
+      if (intent.kind === "help") {
+        openWindow("help", "Comandos sem IA", { kind: "help" });
+        return local(
+          "Abri os comandos locais. Consultas não usam inferência; escritas continuam exigindo confirmação.",
+        );
+      }
+      if (intent.kind === "google") {
+        openWindow(`panel:${intent.service}`, `Google · ${intent.service}`, {
+          kind: "panel",
+          panel: {
+            area:
+              intent.service === "calendar"
+                ? "calendario"
+                : intent.service === "tasks"
+                  ? "inbox"
+                  : "biblioteca",
+            google: intent.service,
+          },
+        });
+        return local(
+          "Abri a consulta Google. Usa a API autorizada, sem inferência nem envio dos dados ao modelo.",
+        );
+      }
+      if (intent.kind === "proposal")
+        return local(
+          "Confira a criação na janela de aprovação. Nenhum registro foi salvo ainda.",
+          { proposal: { kind: intent.target, title: intent.title } },
+        );
+      if (intent.kind === "operation")
+        return local(
+          "Preparei a proposta. Revise os campos e confirme na janela; ainda não executei a ação.",
+          { operation: intent.operation },
+        );
+      if (workspace.loading || workspace.error) {
+        setError(workspace.error ?? "Aguarde os dados do NexOS.");
+        return;
+      }
+      if (intent.kind === "complete") {
+        const matches = workspace.workspace.missions.filter(
+          (m) =>
+            m.title.localeCompare(intent.title, "pt-BR", {
+              sensitivity: "base",
+            }) === 0 && !["Feita", "Cancelada"].includes(m.status),
+        );
+        if (matches.length !== 1) {
+          openWindow("mission-choice", "Escolha a missão", {
+            kind: "data",
+            data: {
+              module: "missoes",
+              records: matches.length
+                ? matches
+                : workspace.workspace.missions
+                    .filter((m) => !["Feita", "Cancelada"].includes(m.status))
+                    .slice(0, 20),
+            },
+          });
+          return local(
+            "Não há uma única missão com esse título. Abra o item certo na janela; nenhuma conclusão foi executada.",
+          );
+        }
+        return local(
+          "Preparei a conclusão. Ela usa as recompensas existentes e precisa de revisão e confirmação.",
+          {
+            operation: {
+              kind: "mission.complete",
+              payload: { id: matches[0].id },
+            },
+          },
+        );
+      }
+      if (intent.kind === "read") {
+        await openArea(intent.area);
+        return local(
+          `Abri ${nexAreas[intent.area].label}. A consulta é parcial, sem IA.`,
+        );
+      }
+      if (intent.kind === "agenda") {
+        const result = dayReadout(workspace.workspace, intent.offset);
+        openWindow(`agenda:${intent.offset}`, result.title, {
+          kind: "data",
+          data: result.data,
+        });
+        return local(result.reply);
+      }
+      if (intent.kind === "next") {
+        const result = nextReadout(workspace.workspace);
+        openWindow("next", "Próximo passo", {
+          kind: "data",
+          data: result.data,
+        });
+        return local(result.reply);
+      }
+    }
+    if (!useAI) {
+      openWindow("help", "Comandos sem IA", { kind: "help" });
+      return local(
+        "Não reconheci um comando local seguro. Não consumi IA. Veja os exemplos ou ative “Usar IA” para uma pergunta livre.",
+      );
+    }
+    const requestSurface = surfaceVersion.current;
     const result = await run(async (signal) => {
       // Google context is authorized for this message only, including failed attempts.
       const sharedGoogle = googleContext;
@@ -126,6 +397,7 @@ function useOwner() {
           shareContext: share,
           googleContext: sharedGoogle,
           history: messages
+            .filter((m) => m.provider !== "local")
             .slice(-4)
             .map((m) => ({ role: m.role, content: m.content })),
         },
@@ -133,6 +405,18 @@ function useOwner() {
         signal,
       );
       if (signal.aborted) return;
+      const proposal = answer.proposal
+        ? { ...answer.proposal, id: crypto.randomUUID() }
+        : undefined;
+      const operationId = answer.operation ? crypto.randomUUID() : undefined;
+      if (proposal)
+        setProposals((old) => ({ ...old, [proposal.id]: proposal }));
+      openReply(
+        answer,
+        proposal?.id,
+        operationId,
+        surfaceVersion.current === requestSurface,
+      );
       setMessages((old) =>
         [
           ...old,
@@ -142,11 +426,9 @@ function useOwner() {
             content: answer.reply,
             provider: answer.provider,
             operation: answer.operation ?? undefined,
-            operationId: answer.operation ? crypto.randomUUID() : undefined,
+            operationId,
             panels: answer.panels,
-            proposal: answer.proposal
-              ? { ...answer.proposal, id: crypto.randomUUID() }
-              : undefined,
+            proposal,
           },
         ].slice(-40),
       );
@@ -155,6 +437,7 @@ function useOwner() {
     return result;
   }
   async function confirm(proposal: Proposal) {
+    if (proposals[proposal.id]?.applied) return;
     await run(async (signal) => {
       const result = await nexRequest<{ id: string; applied: boolean }>(
         "actions",
@@ -173,6 +456,10 @@ function useOwner() {
             : m,
         ),
       );
+      setProposals((old) => ({
+        ...old,
+        [proposal.id]: { ...proposal, applied: true, missionId: result.id },
+      }));
       await refresh();
     }, "Executando ação confirmada");
   }
@@ -214,6 +501,18 @@ function useOwner() {
         signal,
       );
       setStatus((old) => (old ? { ...old, google: null } : old));
+      setGoogleContext(null);
+      updateWindows(
+        windowsRef.current.filter(
+          (w) =>
+            w.body.kind !== "google" &&
+            !(w.body.kind === "panel" && w.body.panel.google) &&
+            !(
+              w.body.kind === "data" &&
+              !!(w.body.data as { service?: string })?.service
+            ),
+        ),
+      );
       if (!result.revoked)
         setError(
           "Conexão local removida. Confira e revogue também em myaccount.google.com/permissions.",
@@ -222,6 +521,45 @@ function useOwner() {
   }
   return {
     messages,
+    useAI,
+    setUseAI,
+    windows,
+    proposals,
+    operationStates,
+    settingsRequested,
+    setSettingsRequested,
+    setOperationState: (id: string, value: (typeof operationStates)[string]) =>
+      setOperationStates((old) => ({ ...old, [id]: value })),
+    openWindow,
+    closeWindow,
+    focusWindow,
+    minimizeWindow,
+    openReply,
+    openArea,
+    prepareProposal: (kind: "mission" | "inbox", title: string) => {
+      if (!title.trim() || title.length > 200) {
+        setError("Use um título de até 200 caracteres para capturar no NexOS.");
+        return;
+      }
+      const p: Proposal = {
+        id: crypto.randomUUID(),
+        kind,
+        title: title.trim(),
+      };
+      setProposals((old) => ({ ...old, [p.id]: p }));
+      openWindow(`proposal:${p.id}`, "Aprovação · criação", {
+        kind: "proposal",
+        proposalId: p.id,
+      });
+    },
+    prepareOperation: (operation: NexOperation) => {
+      const id = crypto.randomUUID();
+      openWindow(
+        `operation:${id}`,
+        "Aprovação · " + operationKinds[operation.kind],
+        { kind: "operation", operation, operationId: id },
+      );
+    },
     module,
     setModule,
     share,

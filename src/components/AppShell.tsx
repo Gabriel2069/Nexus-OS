@@ -1,3 +1,8 @@
+const NexDesktop = lazy(() =>
+  import("./NexDesktop").then((m) => ({ default: m.NexDesktop })),
+);
+import { useNex } from "../context/NexContext";
+import { NexModuleBridge } from "./NexModuleBridge";
 import { useOverlay } from "../lib/use-overlay";
 const NexOverlay = lazy(() =>
   import("./NexConsole").then((m) => ({ default: m.NexOverlay })),
@@ -21,6 +26,7 @@ type IOSNavigator = Navigator & { standalone?: boolean };
 
 export function AppShell({ pathname, children }: AppShellProps) {
   const nexOverlay = useOverlay("nex");
+  const nex = useNex();
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem("nexus-sidebar") !== "open";
@@ -81,6 +87,7 @@ export function AppShell({ pathname, children }: AppShellProps) {
           className="page-content"
           key={pathname}
         >
+          <NexModuleBridge pathname={pathname} />
           {children}
           <RelatedAreas pathname={pathname} />
         </main>
@@ -96,6 +103,11 @@ export function AppShell({ pathname, children }: AppShellProps) {
       {pathname !== "/nex" && nexOverlay.open && (
         <Suspense fallback={<p role="status">Abrindo N.E.X…</p>}>
           <NexOverlay onClose={nexOverlay.close} />
+        </Suspense>
+      )}
+      {!!nex.windows.length && (
+        <Suspense fallback={<p role="status">Abrindo instrumentos…</p>}>
+          <NexDesktop />
         </Suspense>
       )}
       <CommandPalette />
