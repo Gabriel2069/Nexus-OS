@@ -269,8 +269,7 @@ const server = spawn(
           (theme === "light" && width === 390)
         )
           await page.screenshot({
-            path:
-              root + `/docs/design/previews/nex-compact-${theme}-${width}.jpg`,
+            path: root + `/../a06-console-${theme}-${width}.jpg`,
             fullPage: true,
             type: "jpeg",
             quality: 80,
@@ -301,6 +300,276 @@ const server = spawn(
       true,
     );
     await page.setViewportSize({ width: 1440, height: 1000 });
+    const closeWindows = async () => {
+      while (await page.locator(".nex-floating-window:visible").count()) {
+        await page
+          .locator(".nex-floating-window:visible")
+          .last()
+          .getByRole("button", { name: /^Fechar / })
+          .click();
+      }
+    };
+    async function verifyBridges() {
+      const chatsBeforeBridges = (
+        await page.evaluate(() => window.__nexCalls)
+      ).filter((c) => c.path === "chat").length;
+      await page
+        .locator(".sidebar")
+        .getByRole("button", { name: "Calendário", exact: true })
+        .click();
+      await page
+        .getByRole("navigation", { name: "Instrumentos conectados" })
+        .getByRole("button", { name: "Preparar ação", exact: true })
+        .click();
+      const calendarDraft = page.getByRole("dialog", {
+        name: "Criar · Calendário",
+        exact: true,
+      });
+      await calendarDraft
+        .getByRole("textbox", { name: "Título", exact: true })
+        .fill("Compromisso preparado localmente");
+      await calendarDraft
+        .getByLabel("Início · São Paulo")
+        .fill("2026-10-20T10:00");
+      await calendarDraft
+        .getByLabel("Fim · São Paulo")
+        .fill("2026-10-20T11:00");
+      await calendarDraft.getByRole("button", { name: /Minimizar/ }).click();
+      await page
+        .locator(".sidebar")
+        .getByRole("button", { name: "Projetos", exact: true })
+        .click();
+      await page
+        .getByRole("button", {
+          name: "Restaurar Criar · Calendário",
+          exact: true,
+        })
+        .click();
+      assert.equal(
+        await calendarDraft
+          .getByRole("textbox", { name: "Título", exact: true })
+          .inputValue(),
+        "Compromisso preparado localmente",
+      );
+      await calendarDraft
+        .getByRole("button", { name: "Preparar aprovação", exact: true })
+        .click();
+      const executedBeforeCalendar = (
+        await page.evaluate(() => window.__nexCalls)
+      ).filter((c) => c.path === "operations/execute").length;
+      await calendarDraft
+        .getByRole("button", { name: "Revisar proposta", exact: true })
+        .click();
+      await calendarDraft
+        .getByRole("button", { name: "Confirmar operação", exact: true })
+        .waitFor();
+      const calendarPreview = (await page.evaluate(() => window.__nexCalls))
+        .filter((c) => c.path === "operations/preview")
+        .at(-1);
+      assert.equal(calendarPreview.input.operation.kind, "calendar.create");
+      assert.equal(
+        calendarPreview.input.operation.payload.starts_at,
+        "2026-10-20T10:00:00-03:00",
+      );
+      assert.equal(
+        (await page.evaluate(() => window.__nexCalls)).filter(
+          (c) => c.path === "operations/execute",
+        ).length,
+        executedBeforeCalendar,
+      );
+      await page
+        .getByRole("button", { name: "Preferências de aparência", exact: true })
+        .click();
+      await page
+        .getByRole("dialog", { name: "Seu ambiente", exact: true })
+        .waitFor();
+      assert.equal(await page.locator("#root").evaluate((e) => e.inert), true);
+      await page.keyboard.press("Escape");
+      assert.equal(await page.locator("#root").evaluate((e) => e.inert), false);
+      await closeWindows();
+      await page
+        .locator(".sidebar")
+        .getByRole("button", { name: "Caixa de entrada", exact: true })
+        .click();
+      await page
+        .getByRole("navigation", { name: "Instrumentos conectados" })
+        .getByRole("button", { name: "Google · Tarefas", exact: true })
+        .click();
+      await page
+        .getByRole("region", { name: "Google / Caixa de entrada", exact: true })
+        .getByRole("button", { name: "Capturar no NexOS · cópia", exact: true })
+        .click();
+      const tasksApproval = page.getByRole("dialog", {
+        name: "Aprovação · criação",
+        exact: true,
+      });
+      await tasksApproval
+        .getByRole("heading", { name: "Reunião", exact: true })
+        .waitFor();
+      const actionsBeforeCopy = (
+        await page.evaluate(() => window.__nexCalls)
+      ).filter((c) => c.path === "actions").length;
+      await tasksApproval
+        .getByRole("button", { name: "Confirmar criação", exact: true })
+        .click();
+      await page.waitForTimeout(250);
+      await tasksApproval
+        .getByRole("button", { name: "Abrir registro", exact: true })
+        .waitFor({ timeout: 3000 });
+      assert.equal(
+        (await page.evaluate(() => window.__nexCalls)).filter(
+          (c) => c.path === "actions",
+        ).length,
+        actionsBeforeCopy + 1,
+      );
+      assert.equal(
+        (await page.evaluate(() => window.__nexCalls)).filter(
+          (c) => c.path === "chat",
+        ).length,
+        chatsBeforeBridges,
+        "bridges and approval must not consume inference",
+      );
+      await closeWindows();
+    }
+    if (process.env.NEX_QA_BRIDGES_ONLY) {
+      await page.evaluate(() => (window.__nexGoogle = true));
+      await page
+        .getByRole("button", { name: "Verificar conexões", exact: true })
+        .click();
+      await page.getByText("Autorizado", { exact: true }).waitFor();
+      await verifyBridges();
+      console.log("N.E.X module bridges passed");
+      return;
+    }
+    const localMessage = page.getByRole("textbox", { name: "Sua mensagem" });
+    const chatsBeforeLocal = (
+      await page.evaluate(() => window.__nexCalls)
+    ).filter((c) => c.path === "chat").length;
+    await localMessage.fill("O que tenho hoje?");
+    await page.getByRole("button", { name: "Enviar", exact: true }).click();
+    const agendaWindow = page.getByRole("dialog", { name: /Agenda ·/ });
+    await agendaWindow.waitFor();
+    assert.equal(
+      await page.locator("#root").evaluate((e) => e.inert),
+      false,
+      "data windows are modeless",
+    );
+    const grip = agendaWindow.getByRole("button", { name: /Mover janela/ });
+    const original = await agendaWindow.boundingBox();
+    await grip.press("ArrowRight");
+    await page.waitForFunction(
+      (x) =>
+        document.querySelector(".nex-floating-window").getBoundingClientRect()
+          .x > x,
+      original.x,
+    );
+    await agendaWindow.getByRole("button", { name: /Minimizar/ }).click();
+    await agendaWindow.waitFor({ state: "hidden" });
+    await page.getByRole("button", { name: /Restaurar Agenda/ }).click();
+    await agendaWindow.waitFor();
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "chat",
+      ).length,
+      chatsBeforeLocal,
+    );
+    await localMessage.fill("Criar projeto: Órbita local");
+    await page.getByRole("button", { name: "Enviar", exact: true }).click();
+    const localApproval = page.getByRole("dialog", {
+      name: "Aprovação · Criar projeto",
+      exact: true,
+    });
+    await localApproval
+      .getByRole("button", { name: "Revisar proposta", exact: true })
+      .waitFor();
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "operations/execute",
+      ).length,
+      0,
+    );
+    await page.screenshot({
+      path: root + "/docs/design/previews/a06-windows-dark-1440.jpg",
+      type: "jpeg",
+      quality: 85,
+    });
+    await localApproval
+      .getByRole("button", { name: "Revisar proposta", exact: true })
+      .click();
+    await localApproval
+      .getByRole("button", { name: "Confirmar operação", exact: true })
+      .waitFor();
+    await localApproval.getByRole("button", { name: /Minimizar/ }).click();
+    await page
+      .locator(".sidebar")
+      .getByRole("button", { name: "Hoje", exact: true })
+      .click();
+    await page.waitForURL("**/hoje");
+    await page
+      .getByRole("button", {
+        name: "Restaurar Aprovação · Criar projeto",
+        exact: true,
+      })
+      .click();
+    await localApproval
+      .getByRole("button", { name: "Confirmar operação", exact: true })
+      .waitFor();
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "operations/preview",
+      ).length,
+      1,
+      "preview preserved through route/minimize",
+    );
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "chat",
+      ).length,
+      chatsBeforeLocal,
+      "local proposals do not call the model",
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.evaluate(
+      () => (document.documentElement.dataset.theme = "light"),
+    );
+    const small = await localApproval.boundingBox();
+    await page.waitForFunction(() => {
+      const r = Array.from(document.querySelectorAll(".nex-floating-window"))
+        .at(-1)
+        .getBoundingClientRect();
+      return r.x >= 0 && r.x + r.width <= 391 && r.y + r.height <= 845;
+    });
+    await page.waitForTimeout(250);
+    await page.screenshot({
+      path: root + "/docs/design/previews/a06-window-light-390.jpg",
+      type: "jpeg",
+      quality: 85,
+    });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.evaluate(
+      () => (document.documentElement.dataset.theme = "dark"),
+    );
+    await closeWindows();
+    await page
+      .locator(".sidebar")
+      .getByRole("button", { name: "N.E.X", exact: true })
+      .click();
+    await page.waitForURL("**/nex");
+    await localMessage.fill("Uma pergunta livre desconhecida");
+    await page.getByRole("button", { name: "Enviar", exact: true }).click();
+    await page
+      .getByRole("dialog", { name: "Comandos sem IA", exact: true })
+      .waitFor();
+    assert.equal(
+      (await page.evaluate(() => window.__nexCalls)).filter(
+        (c) => c.path === "chat",
+      ).length,
+      chatsBeforeLocal,
+    );
+    await closeWindows();
+    await page
+      .getByRole("checkbox", { name: "Usar IA em perguntas livres" })
+      .check();
     await page.evaluate(() => {
       Object.defineProperty(navigator.mediaDevices, "getUserMedia", {
         configurable: true,
@@ -462,9 +731,7 @@ const server = spawn(
     const message = page.getByRole("textbox", { name: "Sua mensagem" });
     await message.fill("Crie uma missão para revisar matemática");
     await page.getByRole("button", { name: "Enviar", exact: true }).click();
-    await page
-      .getByText("Confira antes de confirmar.", { exact: false })
-      .waitFor();
+    await page.getByRole("dialog", { name: "Aprovação · criação" }).waitFor();
     assert.equal(
       (await page.evaluate(() => window.__nexCalls)).filter(
         (c) => c.path === "actions",
@@ -473,6 +740,7 @@ const server = spawn(
     );
     await page.getByRole("button", { name: "Confirmar criação" }).click();
     await page.getByRole("button", { name: "Abrir registro" }).waitFor();
+    await closeWindows();
     assert.equal(
       (await page.evaluate(() => window.__nexCalls)).filter(
         (c) => c.path === "actions",
@@ -497,17 +765,25 @@ const server = spawn(
       .fill("Prefiro começar pelo essencial");
     await page.getByRole("button", { name: "Salvar memória" }).click();
     await page
+      .locator(".nex-memory-list")
       .getByText("Prefiro começar pelo essencial", { exact: true })
       .waitFor();
     await page.getByRole("button", { name: "Excluir", exact: true }).click();
     await page.getByRole("button", { name: "Confirmar exclusão" }).click();
     await page
+      .locator(".nex-memory-list")
       .getByText("Prefiro começar pelo essencial", { exact: true })
       .waitFor({ state: "hidden" });
     await page.getByRole("button", { name: "Fechar ajustes N.E.X" }).click();
     await page.evaluate(() => (window.__nexAdvanced = true));
     await message.fill("Crie um projeto orbital");
     await page.getByRole("button", { name: "Enviar", exact: true }).click();
+    await page
+      .getByRole("button", {
+        name: "Restaurar Aprovação · Criar projeto",
+        exact: true,
+      })
+      .click();
     await page
       .getByRole("button", { name: "Revisar proposta", exact: true })
       .last()
@@ -531,12 +807,8 @@ const server = spawn(
       ).length,
       1,
     );
-    await page
-      .getByRole("button", { name: "Expandir consulta", exact: true })
-      .click();
     await page.getByRole("dialog", { name: "Hoje", exact: true }).waitFor();
-    await page.keyboard.press("Escape");
-    await page.getByRole("dialog").waitFor({ state: "hidden" });
+    await closeWindows();
     // Google panels never authorize or read implicitly when the account is disconnected.
     await page.evaluate(() => {
       window.__nexGooglePanel = true;
@@ -571,10 +843,7 @@ const server = spawn(
       .getByRole("region", { name: "Google / Biblioteca" })
       .getByText("Documento autorizado", { exact: true })
       .waitFor();
-    await page
-      .getByRole("region", { name: "Google / Biblioteca" })
-      .getByRole("button", { name: "Expandir consulta" })
-      .click();
+
     await page
       .getByRole("dialog", { name: "Google · Biblioteca" })
       .getByRole("button", { name: "Ler no N.E.X" })
@@ -591,7 +860,7 @@ const server = spawn(
           c.input.id === "file-authorized",
       ),
     );
-    await page.keyboard.press("Escape");
+    await closeWindows();
     await page.evaluate(() => {
       window.__nexGooglePanel = false;
       window.__nexAdvanced = true;
@@ -604,7 +873,7 @@ const server = spawn(
       .click();
     await page
       .getByRole("checkbox", {
-        name: "Compartilhar esta consulta Google na próxima mensagem",
+        name: "Compartilhar esta consulta Google na próxima mensagem com IA",
       })
       .check();
     await page.getByRole("button", { name: "Fechar ajustes N.E.X" }).click();
@@ -616,7 +885,7 @@ const server = spawn(
     await page.waitForFunction(
       () =>
         window.__nexCalls.filter((c) => c.path === "chat").at(-1)?.input
-          .googleContext?.service === "docs",
+          .googleContext?.service === "calendar",
     );
     await page
       .getByRole("button", { name: "Conexões e ajustes", exact: true })
@@ -627,7 +896,7 @@ const server = spawn(
     assert.equal(
       await page
         .getByRole("checkbox", {
-          name: "Compartilhar esta consulta Google na próxima mensagem",
+          name: "Compartilhar esta consulta Google na próxima mensagem com IA",
         })
         .isChecked(),
       false,
@@ -664,7 +933,7 @@ const server = spawn(
       exact: true,
     });
     await panel.waitFor();
-    assert.match(await panel.textContent(), /Posso criar/);
+    assert.match(await panel.textContent(), /N.E.X/);
     for (let i = 0; i < 12; i++) {
       await page.keyboard.press("Tab");
       assert.ok(
@@ -678,11 +947,14 @@ const server = spawn(
       .getByText("Contexto e permissões · Geral", { exact: true })
       .click();
     await panel.getByRole("button", { name: "Inspecionar contexto" }).click();
-    await panel.getByText("Revisar Física", { exact: true }).waitFor();
-    assert.equal(await page.getByRole("dialog").count(), 1);
-    await page.keyboard.press("Escape");
     await panel.waitFor({ state: "hidden" });
+    await page
+      .getByRole("dialog", { name: "Contexto · Geral" })
+      .getByText("Revisar Física", { exact: true })
+      .waitFor();
+    await closeWindows();
     assert.equal(await page.locator("#root").evaluate((e) => e.inert), false);
+    await verifyBridges();
     for (const path of [
       "/",
       "/hoje",
@@ -730,7 +1002,7 @@ const server = spawn(
       );
       await page.waitForTimeout(150);
       await page.screenshot({
-        path: root + `/docs/design/previews/a05-${name}-${width}.jpg`,
+        path: root + `/../a06-${name}-${width}.jpg`,
         fullPage: true,
         type: "jpeg",
         quality: 80,
@@ -738,7 +1010,7 @@ const server = spawn(
     }
     assert.deepEqual(errors, []);
     console.log(
-      "N.E.X UI: 8 layouts + 80 routes, compact shell, real generated-audio capture/VAD/WAV with mocked Whisper/chat/device voice, pause/quota/stop, Google panels/file reader mocks, proposals, drafts, memory and keyboard passed.",
+      "N.E.X UI: 8 layouts + 80 routes, modeless desktop/local commands, persistent previews/forms, Google Tasks copy with confirmation and zero inference, compact shell, real generated-audio capture/VAD/WAV with mocked Whisper/chat/device voice, pause/quota/stop, Google panels/file reader mocks, proposals, drafts, memory and keyboard passed.",
     );
   } finally {
     await browser?.close();

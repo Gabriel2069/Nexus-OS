@@ -378,7 +378,9 @@ export function useNexVoice(options: Options) {
       if (document.hidden) stop();
     };
     const overlay = () => stop();
-    const events = Object.values(UI_EVENTS);
+    const events = Object.entries(UI_EVENTS)
+      .filter(([key]) => key !== "nexWindow")
+      .map(([, value]) => value);
     events.forEach((event) => window.addEventListener(event, overlay));
     document.addEventListener("visibilitychange", pause);
     return () => {

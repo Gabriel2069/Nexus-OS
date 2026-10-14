@@ -7145,34 +7145,250 @@ html[data-atmosphere="paused"] .nex-orbital-sphere__light {
   max-width: 32ch;
   font-size: 10px;
 }
-.nex-canvas-panel {
-  position: absolute;
-  inset: 12px 0;
-  z-index: 3;
+/* Modeless instruments share one global owner; modals remain above them. */
+.nex-desktop {
+  position: relative;
+  z-index: 60;
+}
+.nex-floating-window {
+  position: fixed;
+  left: var(--window-x);
+  top: var(--window-y);
+  width: min(440px, calc(100vw - 24px));
+  height: min(510px, calc(100dvh - 150px));
+  min-width: min(300px, calc(100vw - 24px));
+  min-height: 220px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 140px);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  resize: both;
   border: 1px solid var(--nx-visor-rim);
+  border-top-color: color-mix(in srgb, var(--text) 45%, transparent);
   border-radius: 16px;
-  padding: 14px;
   background: var(--nx-glass-bg-strong);
-  backdrop-filter: blur(22px);
-  text-align: left;
-  box-shadow: 0 16px 38px var(--nx-glass-shadow);
-  animation: nex-window-enter 220ms var(--nx-ease-standard);
+  backdrop-filter: blur(24px) saturate(120%);
+  box-shadow:
+    0 24px 80px var(--nx-glass-shadow),
+    inset 0 1px 0 color-mix(in srgb, var(--text) 16%, transparent);
+  color: var(--text);
 }
-.nex-canvas-panel > header {
+.nex-floating-window[hidden] {
+  display: none;
+}
+.nex-floating-window.is-maximized {
+  left: 12px;
+  top: 68px;
+  width: calc(100vw - 24px);
+  height: calc(100dvh - 138px);
+  resize: none;
+}
+.nex-window-titlebar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding-bottom: 10px;
+  gap: 3px;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--hairline);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--text) 6%, transparent),
+    transparent 70%
+  );
 }
-.nex-canvas-panel__content {
+.nex-window-titlebar .icon-button {
+  width: 36px;
+  height: 40px;
+  min-width: 36px;
+  padding: 6px;
+}
+.nex-window-grip {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  cursor: grab;
+  touch-action: none;
+}
+.nex-window-grip:active {
+  cursor: grabbing;
+}
+.nex-window-grip span {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.nex-window-grip small {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.nex-window-grip strong {
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.nex-window-content {
+  flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: auto;
+  padding: 16px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  animation: nex-window-enter 200ms var(--nx-ease-standard);
+}
+.nex-window-content p {
+  font-size: 12px;
+  line-height: 1.65;
+}
+.nex-window-content h2 {
+  font-size: 20px;
+}
+.nex-window-status {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  border-top: 1px solid var(--hairline);
+  padding: 7px 12px;
+  color: var(--muted);
+  font-size: 8px;
+}
+.nex-window-dock {
+  position: fixed;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  left: 76px;
+  right: 76px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: calc(100vw - 152px);
+  padding: 5px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: var(--nx-glass-bg-strong);
+  backdrop-filter: blur(20px);
+  overflow-x: auto;
+  z-index: 40;
+}
+.nex-window-error {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 78px;
+  max-width: min(90vw, 600px);
+  z-index: 50;
+  padding: 12px;
+  background: var(--nx-glass-bg-strong);
+  border: 1px solid var(--rose);
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+}
+.nex-window-dock > svg {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.nex-window-dock button {
+  min-height: 36px;
+  max-width: 160px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+}
+.nex-window-dock button[aria-pressed="true"] {
+  border-color: var(--hairline);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 18%, transparent);
+}
+.nex-command-help,
+.nex-action-form {
   display: grid;
   gap: 12px;
-  scrollbar-width: thin;
+}
+.nex-command-help .secondary-button {
+  justify-content: flex-start;
+  text-align: left;
+}
+.nex-module-bridge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 0 0 12px;
+  font-size: 10px;
+}
+.nex-module-bridge .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  min-height: 36px;
+}
+.nex-module-bridge > span {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 9px;
+}
+.nex-mode {
+  padding-top: 8px;
+}
+.nex-mode-caption {
+  margin: 0;
+  font-size: 10px;
+  color: var(--muted);
+}
+@media (max-width: 719px) {
+  .nex-floating-window,
+  .nex-floating-window.is-maximized {
+    left: 8px;
+    right: 8px;
+    top: calc(66px + env(safe-area-inset-top));
+    width: calc(100vw - 16px);
+    max-width: none;
+    height: calc(
+      100dvh - 155px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    );
+    max-height: none;
+    resize: none;
+  }
+  .nex-window-dock {
+    left: 8px;
+    right: 64px;
+    max-width: calc(100vw - 72px);
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  .nex-window-dock button {
+    min-height: 44px;
+  }
+  .nex-module-bridge {
+    gap: 8px;
+  }
+  .nex-module-bridge > span {
+    display: none;
+  }
+  .nex-window-titlebar .icon-button {
+    width: 40px;
+    min-width: 40px;
+    height: 44px;
+  }
 }
 .nex-settings-panel {
   width: min(940px, 100%);
@@ -7271,10 +7487,6 @@ html[data-atmosphere="paused"] .nex-orbital-sphere__light {
   .nex-console {
     gap: 10px;
   }
-  .nex-canvas-panel {
-    inset: 0;
-    min-height: 260px;
-  }
   .nex-settings-panel {
     padding: 16px;
   }
@@ -7287,9 +7499,6 @@ html[data-atmosphere="paused"] .nex-orbital-sphere__light {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nex-canvas-panel {
-    animation: none;
-  }
 }
 
 .nex-empty h2 {

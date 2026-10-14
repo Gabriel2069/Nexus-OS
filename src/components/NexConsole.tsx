@@ -1,10 +1,6 @@
 import { useNexus } from "../context/NexusContext";
 import { NexOrbitalCore } from "./NexOrbitalCore";
-import {
-  NexOperationCard,
-  NexResponsePanel,
-  safeGoogleLink,
-} from "./NexInstruments";
+import { NexOperationCard } from "./NexInstruments";
 import { nexAreas } from "../lib/nex-tools";
 import { useEffect, useRef, useState } from "react";
 import { useNexVoice } from "../lib/use-nex-voice";
@@ -14,7 +10,6 @@ import {
   Radio,
   RefreshCw,
   Layers3,
-  Check,
   Mic,
   Send,
   Square,
@@ -25,6 +20,7 @@ import { useNex } from "../context/NexContext";
 import { nexModules, nexRequest } from "../lib/nex-api";
 import { navigate } from "../lib/router";
 import { entityPath } from "../lib/navigation-state";
+import { localExamples } from "../lib/nex-local";
 import { useOverlay } from "../lib/use-overlay";
 import { ModalSurface } from "./ModalSurface";
 import { SurfaceCard } from "./SurfaceCard";
@@ -46,10 +42,6 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
   const [memory, setMemory] = useState("");
   const [disconnecting, setDisconnecting] = useState(false);
   const [deleting, setDeleting] = useState("");
-  const [inspected, setInspected] = useState<{
-    title: string;
-    data: unknown;
-  } | null>(null);
   const [resource, setResource] = useState("");
   const [range, setRange] = useState("");
   const [service, setService] = useState("calendar");
@@ -64,7 +56,6 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
       nex.setGoogleContext({ service, id: resource, range });
   }, [service, resource, range]);
   const end = useRef<HTMLDivElement>(null);
-  const inspect = useOverlay("nexInspect");
   const settingsOverlay = useOverlay("nexSettings");
   const [inlineSettings, setInlineSettings] = useState(false);
   const settings = compact
@@ -74,7 +65,12 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
         close: () => setInlineSettings(false),
       }
     : settingsOverlay;
-  const [selected, setSelected] = useState<number | null>(null);
+  useEffect(() => {
+    if (nex.settingsRequested) {
+      settings.show();
+      nex.setSettingsRequested(false);
+    }
+  }, [nex.settingsRequested]);
   const voice = useNexVoice({
     coreRef,
     send: nex.send,
@@ -87,13 +83,7 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
   const record = voice.record;
   const speak = voice.speak;
   useEffect(() => {
-    void nex.load();
-  }, []);
-  useEffect(() => {
     end.current?.scrollIntoView({ block: "nearest", behavior: "instant" });
-    const index = nex.messages.length - 1;
-    const response = nex.messages[index];
-    setSelected(response?.panels?.length ? index : null);
   }, [nex.messages.length]);
   async function submit() {
     const result = await nex.send(input);
@@ -107,11 +97,11 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
       nexRequest("context", { module: nex.module }, "POST", signal),
     );
     if (result) {
-      setInspected({ title: `Contexto · ${labels[nex.module]}`, data: result });
-      if (!compact) {
-        settings.close();
-        inspect.show();
-      }
+      nex.openWindow(
+        `context:${nex.module}`,
+        `Contexto · ${labels[nex.module]}`,
+        { kind: "data", data: result },
+      );
     }
   }
   async function read(service: string, id = resource) {
@@ -119,11 +109,11 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
       nexRequest("google/read", { service, id, range }, "POST", signal),
     );
     if (result) {
-      setInspected({ title: `Google · ${service}`, data: result });
-      if (!compact) {
-        settings.close();
-        inspect.show();
-      }
+      nex.openWindow(
+        `google:${service}:${id}:${range}`,
+        `Google · ${service}`,
+        { kind: "data", data: result },
+      );
     }
   }
   const state =
@@ -327,37 +317,14 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
               ? "Escuta ativa · pausa ao sair desta tela"
               : "Transcrição Groq · resposta por voz do dispositivo."}
           </p>
-          {selected !== null && nex.messages[selected]?.panels?.length ? (
-            <div className="nex-canvas-panel" aria-label="Resultados de N.E.X">
-              <header>
-                <span className="eyebrow">Resultados da conversa</span>
-                <button
-                  className="icon-button"
-                  aria-label="Fechar resultados"
-                  onClick={() => setSelected(null)}
-                >
-                  <X size={16} />
-                </button>
-              </header>
-              <div className="nex-canvas-panel__content">
-                {nex.messages[selected].panels!.map((panel) => (
-                  <NexResponsePanel
-                    key={panel.area + (panel.google ?? "")}
-                    panel={panel}
-                    onConnect={settings.show}
-                    compact={compact}
-                    onInspect={(title, data) => {
-                      setInspected({ title, data });
-                      if (!compact) {
-                        settings.close();
-                        inspect.show();
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
+          <button
+            className="text-button"
+            onClick={() =>
+              nex.openWindow("help", "Comandos sem IA", { kind: "help" })
+            }
+          >
+            <Layers3 size={15} /> Comandos e janelas
+          </button>
         </section>
 
         <SurfaceCard
@@ -386,15 +353,11 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
                 <Radio size={22} />
                 <h2>Estou aqui.</h2>
                 <p>
-                  Fale comigo ou escreva. As consultas aparecem no centro; ações
-                  pedem confirmação.
+                  Fale comigo ou escreva. Os comandos locais abrem janelas;
+                  ações pedem confirmação. IA é opcional.
                 </p>
                 <div className="nex-starters">
-                  {[
-                    "Ajude a planejar meu dia",
-                    "Quero capturar uma ideia",
-                    "Qual é meu próximo passo?",
-                  ].map((t) => (
+                  {localExamples.slice(0, 3).map((t) => (
                     <button key={t} onClick={() => setInput(t)}>
                       {t}
                     </button>
@@ -419,67 +382,81 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
                   </button>
                 )}
                 {m.operation && m.operationId && (
-                  <NexOperationCard
-                    operation={m.operation}
-                    id={m.operationId}
-                  />
+                  <button
+                    className="secondary-button"
+                    onClick={() =>
+                      nex.openReply(
+                        {
+                          reply: m.content,
+                          provider: m.provider ?? "local",
+                          model: "",
+                          contextShared: false,
+                          proposal: null,
+                          operation: m.operation,
+                        },
+                        undefined,
+                        m.operationId,
+                      )
+                    }
+                  >
+                    Abrir aprovação
+                  </button>
                 )}
                 {!!m.panels?.length && (
                   <button
                     className="secondary-button"
-                    onClick={() => setSelected(i)}
+                    onClick={() =>
+                      nex.openReply({
+                        reply: m.content,
+                        provider: m.provider ?? "local",
+                        model: "",
+                        contextShared: false,
+                        proposal: null,
+                        panels: m.panels,
+                      })
+                    }
                   >
                     <Layers3 size={16} />
                     Ver resultados · {m.panels.length}
                   </button>
                 )}
                 {m.proposal && (
-                  <div className="nex-proposal">
-                    <span className="eyebrow">
-                      {m.proposal.kind === "mission"
-                        ? "Criar missão"
-                        : "Capturar na entrada"}
-                    </span>
-                    <strong>{m.proposal.title}</strong>
-                    <p>
-                      {m.proposal.applied
-                        ? "Salvo no NexOS."
-                        : "Cria um registro. Você poderá editá-lo ou cancelá-lo no módulo."}
-                    </p>
-                    {m.proposal.applied ? (
-                      <button
-                        className="primary-button"
-                        onClick={() => {
-                          navigate(
-                            entityPath("mission", m.proposal!.missionId!),
-                          );
-                          emitUI("inspect");
-                        }}
-                      >
-                        Abrir registro
-                        <ArrowUpRight size={16} />
-                      </button>
-                    ) : (
-                      <button
-                        className="primary-button"
-                        disabled={nex.busy}
-                        onClick={() => nex.confirm(m.proposal!)}
-                      >
-                        <Check size={16} />
-                        Confirmar criação
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    className="secondary-button"
+                    onClick={() =>
+                      nex.openWindow(
+                        `proposal:${m.proposal!.id}`,
+                        "Aprovação · criação",
+                        { kind: "proposal", proposalId: m.proposal!.id },
+                      )
+                    }
+                  >
+                    Abrir aprovação da criação
+                  </button>
                 )}
               </article>
             ))}
             <div ref={end} />
           </div>
-          {nex.error && (
+          {nex.error && !nex.windows.length && (
             <p className="nex-error" role="alert">
               {nex.error}
             </p>
           )}
+          <label className="nex-consent nex-mode">
+            <input
+              type="checkbox"
+              checked={nex.useAI}
+              disabled={nex.busy || voice.active}
+              onChange={(e) => nex.setUseAI(e.target.checked)}
+            />
+            Usar IA em perguntas livres
+          </label>
+          <p className="nex-mode-caption">
+            {nex.useAI
+              ? "Comandos reconhecidos continuam locais; perguntas livres usam sua cota."
+              : "Modo local · sem inferência. Consultas Google usam apenas a API autorizada."}
+          </p>
           <form
             className="nex-compose"
             onSubmit={(e) => {
@@ -573,7 +550,7 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
               <X size={18} />
             </button>
           </header>
-          {nex.error && (
+          {nex.error && !nex.windows.length && (
             <p className="nex-error" role="alert">
               {nex.error}
             </p>
@@ -608,11 +585,12 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
             <details className="nex-privacy">
               <summary>Privacidade e voz</summary>
               <p className="muted">
-                Sua mensagem e até quatro falas recentes são enviadas ao
-                provedor. Contexto limitado aos registros consultados. Planos
-                gratuitos podem usar mensagens para melhorar modelos. Áudio vai
-                à Groq ao concluir o ditado ou detectar uma pausa no modo
-                Conversar. A resposta falada usa somente voz local.
+                No modo IA, sua mensagem e até quatro falas não locais são
+                enviadas ao provedor. Contexto limitado aos registros
+                consultados. Planos gratuitos podem usar mensagens para melhorar
+                modelos. Áudio vai à Groq ao concluir o ditado ou detectar uma
+                pausa no modo Conversar. A resposta falada usa somente voz
+                local.
               </p>
             </details>
             <button
@@ -767,7 +745,7 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
                       )
                     }
                   />
-                  Compartilhar esta consulta Google na próxima mensagem
+                  Compartilhar esta consulta Google na próxima mensagem com IA
                 </label>
                 <div className="nex-compose__actions">
                   {["calendar_write", "tasks_write"].map((s) => (
@@ -891,11 +869,10 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
                     "POST",
                     signal,
                   );
-                  setInspected({ title: "Previsão · " + city, data });
-                  if (!compact) {
-                    settings.close();
-                    inspect.show();
-                  }
+                  nex.openWindow(`weather:${city}`, "Previsão · " + city, {
+                    kind: "data",
+                    data,
+                  });
                 });
               }}
             >
@@ -949,59 +926,6 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
           </details>
         </NexSettingsSurface>
       )}
-      {compact && inspected && (
-        <section className="nex-inspector">
-          <header>
-            <h2>{inspected.title}</h2>
-            <button
-              className="secondary-button"
-              onClick={() => setInspected(null)}
-            >
-              Fechar consulta
-            </button>
-          </header>
-          <NexReadout
-            data={inspected.data}
-            onFile={(kind, id) => {
-              setService(kind);
-              setResource(id);
-              void read(kind, id);
-            }}
-          />
-        </section>
-      )}
-      {!compact && inspect.open && inspected && (
-        <ModalSurface
-          className="overlay"
-          label={inspected.title}
-          onClose={inspect.close}
-        >
-          <section className="nex-inspector">
-            <header>
-              <h2>{inspected.title}</h2>
-              <button
-                className="secondary-button"
-                aria-label="Fechar consulta"
-                onClick={inspect.close}
-              >
-                <X />
-              </button>
-            </header>
-            <p>
-              Consulta limitada. Estes dados só vão à IA se você ativar o
-              compartilhamento.
-            </p>
-            <NexReadout
-              data={inspected.data}
-              onFile={(kind, id) => {
-                setService(kind);
-                setResource(id);
-                void read(kind, id);
-              }}
-            />
-          </section>
-        </ModalSurface>
-      )}
     </div>
   );
 }
@@ -1047,189 +971,4 @@ export function NexOverlay({ onClose }: { onClose: () => void }) {
       </section>
     </ModalSurface>
   );
-}
-
-function NexReadout({
-  data,
-  onFile,
-}: {
-  data: unknown;
-  onFile?: (service: string, id: string) => void;
-}) {
-  const payload = data as {
-    records?: unknown[];
-    module?: string;
-    sectors?: { module: string; error?: string; records?: unknown[] }[];
-    place?: string;
-    attribution?: string;
-    data?: {
-      items?: unknown[];
-      files?: unknown[];
-      title?: string;
-      values?: unknown[][];
-      slides?: unknown[];
-      body?: unknown;
-      current?: { temperature_2m: number; apparent_temperature: number };
-      daily?: {
-        time: string[];
-        temperature_2m_min: number[];
-        temperature_2m_max: number[];
-      };
-    };
-  };
-  const rows = payload.records ?? payload.data?.items ?? payload.data?.files;
-  return (
-    <div className="nex-readout">
-      {payload.sectors?.map((s) => (
-        <section key={s.module}>
-          <h3>{labels[s.module] ?? s.module}</h3>
-          {s.error ? <p role="alert">{s.error}</p> : <NexReadout data={s} />}
-        </section>
-      ))}
-      {payload.place && (
-        <>
-          <h3>{payload.place}</h3>
-          <p>
-            {payload.data?.current?.temperature_2m} °C · sensação{" "}
-            {payload.data?.current?.apparent_temperature} °C
-          </p>
-          {payload.data?.daily?.time.map((day, i) => (
-            <article key={day}>
-              <strong>{day}</strong>
-              <p>
-                {payload.data!.daily!.temperature_2m_min[i]}–
-                {payload.data!.daily!.temperature_2m_max[i]} °C
-              </p>
-            </article>
-          ))}
-          <a
-            href="https://open-meteo.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {payload.attribution}
-          </a>
-        </>
-      )}
-      {payload.data?.values && (
-        <div className="nex-table-scroll">
-          <table>
-            <caption>Consulta parcial · até 40 linhas / 10 colunas</caption>
-            <tbody>
-              {payload.data.values.slice(0, 40).map((row, i) => (
-                <tr key={i}>
-                  {row.slice(0, 10).map((v, j) => (
-                    <td key={j}>{String(v ?? "")}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {(payload.data?.body || payload.data?.slides) && (
-        <p className="nex-document-text">
-          {extractText(payload.data?.body ?? payload.data?.slides).slice(
-            0,
-            6000,
-          )}
-        </p>
-      )}
-      {rows?.length === 0 && <p>Nenhum registro retornado nesta consulta.</p>}
-      {rows?.map((item, i) => {
-        const row = item as Record<string, unknown>;
-        const title = String(
-          row.title ??
-            row.name ??
-            row.summary ??
-            row.subject ??
-            row.label ??
-            row.checkin_date ??
-            "Registro",
-        );
-        const id = typeof row.id === "string" ? row.id : null;
-        return (
-          <article key={i}>
-            <strong>{title}</strong>
-            {safeGoogleLink(row.webViewLink ?? row.htmlLink) && (
-              <a
-                href={safeGoogleLink(row.webViewLink ?? row.htmlLink)!}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Abrir no Google
-              </a>
-            )}
-            {id &&
-              onFile &&
-              typeof row.mimeType === "string" &&
-              (
-                {
-                  "application/vnd.google-apps.document": "docs",
-                  "application/vnd.google-apps.spreadsheet": "sheets",
-                  "application/vnd.google-apps.presentation": "slides",
-                } as Record<string, string>
-              )[row.mimeType] && (
-                <button
-                  className="secondary-button"
-                  onClick={() =>
-                    onFile(
-                      (
-                        {
-                          "application/vnd.google-apps.document": "docs",
-                          "application/vnd.google-apps.spreadsheet": "sheets",
-                          "application/vnd.google-apps.presentation": "slides",
-                        } as Record<string, string>
-                      )[row.mimeType as string],
-                      id,
-                    )
-                  }
-                >
-                  Ler no N.E.X
-                </button>
-              )}
-            {Boolean(row.status) && <p>{String(row.status)}</p>}
-            {Boolean(row.due_at) && <p>Prazo: {String(row.due_at)}</p>}
-            {id &&
-              "records" in payload &&
-              ["missoes", "agora", "inbox", "projetos"].includes(
-                String((data as { module?: string }).module),
-              ) && (
-                <button
-                  className="secondary-button"
-                  onClick={() => {
-                    navigate(
-                      entityPath(
-                        (data as { module?: string }).module === "projetos"
-                          ? "project"
-                          : "mission",
-                        id,
-                      ),
-                    );
-                    emitUI("inspect");
-                  }}
-                >
-                  Abrir item
-                  <ArrowUpRight size={15} />
-                </button>
-              )}
-          </article>
-        );
-      })}
-      {payload.data?.title && <h3>{payload.data.title}</h3>}
-      <details>
-        <summary>Detalhes da consulta</summary>
-        <pre>{JSON.stringify(data, null, 2).slice(0, 20000)}</pre>
-      </details>
-    </div>
-  );
-}
-
-function extractText(v: unknown): string {
-  if (!v || typeof v !== "object") return "";
-  if (Array.isArray(v)) return v.map(extractText).join("");
-  const r = v as Record<string, unknown>;
-  if (r.textRun && typeof r.textRun === "object")
-    return String((r.textRun as { content?: unknown }).content ?? "");
-  return Object.values(r).map(extractText).join("");
 }
