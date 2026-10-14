@@ -103,9 +103,18 @@ export async function db(
   }
   if (r.status === 204) return null;
   const payload = await r.text();
-  // PostgREST inserts default to 201 Created with return=minimal (no body).
-  // A completed write must not fail JSON parsing or be retried unnecessarily.
-  if (r.status === 201 && !payload.trim()) return null;
+  // Minimal table writes may return 200 (existing-row upsert) or 201 (insert).
+  // RPCs and explicit representations still require a valid JSON response.
+  const method = (init.method ?? "GET").toUpperCase();
+  const preference = new Headers(init.headers).get("Prefer") ?? "";
+  if (
+    !payload.trim() &&
+    (r.status === 200 || r.status === 201) &&
+    ["POST", "PATCH", "DELETE"].includes(method) &&
+    !path.startsWith("rpc/") &&
+    !/(?:^|,)\s*return=representation\s*(?:,|$)/i.test(preference)
+  )
+    return null;
   try {
     return JSON.parse(payload);
   } catch {

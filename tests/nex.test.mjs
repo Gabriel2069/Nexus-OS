@@ -4,6 +4,7 @@ import { route, parseAnswer } from "../worker/nex/routes.ts";
 import worker from "../worker/index.ts";
 import { base64, seal, unseal, db } from "../worker/nex/core.ts";
 import { complete, enabled, models } from "../worker/nex/providers.ts";
+import { readGoogleData, scopes } from "../worker/nex/google.ts";
 const who = {
   id: "11111111-1111-4111-8111-111111111111",
   token: "session-test",
@@ -374,14 +375,106 @@ for (const callbackPath of [
     );
   });
 test("PostgREST minimal inserts succeed once; empty/malformed reads remain explicit errors", async () => {
-  await mock((_url, init) => new Response(null, { status: init.method === "POST" ? 201 : 200 }), async (calls) => {
-    assert.equal(await db(env, who, "nex_oauth_states", { method: "POST", body: "{}" }), null);
-    assert.equal(calls.length, 1);
-    await assert.rejects(db(env, who, "nex_memories"), { status: 503 });
-  });
-  await mock(() => new Response("not-json"), async () => {
-    await assert.rejects(db(env, who, "nex_memories"), { status: 503 });
-  });
+  await mock(
+    (_url, init) =>
+      new Response(null, { status: init.method === "POST" ? 201 : 200 }),
+    async (calls) => {
+      assert.equal(
+        await db(env, who, "nex_oauth_states", { method: "POST", body: "{}" }),
+        null,
+      );
+      assert.equal(calls.length, 1);
+      await assert.rejects(db(env, who, "nex_memories"), { status: 503 });
+    },
+  );
+  await mock(
+    () => new Response("not-json"),
+    async () => {
+      await assert.rejects(db(env, who, "nex_memories"), { status: 503 });
+    },
+  );
+});
+test("minimal existing-row upserts succeed; empty RPC and required representations fail", async () => {
+  await mock(
+    () => new Response(null, { status: 200 }),
+    async (calls) => {
+      assert.equal(
+        await db(env, who, "nex_google_connections?on_conflict=user_id", {
+          method: "POST",
+          headers: { Prefer: "resolution=merge-duplicates" },
+          body: "{}",
+        }),
+        null,
+      );
+      assert.equal(calls.length, 1);
+      await assert.rejects(
+        db(env, who, "rpc/nex_reserve", { method: "POST", body: "{}" }),
+        { status: 503 },
+      );
+      await assert.rejects(
+        db(env, who, "nex_operations", {
+          method: "POST",
+          headers: {
+            Prefer: "resolution=merge-duplicates, return=representation",
+          },
+          body: "{}",
+        }),
+        { status: 503 },
+      );
+    },
+  );
+});
+test("expired Google token refresh is saved once and the original query completes", async () => {
+  const ciphertext = await seal(
+    env,
+    {
+      access_token: "expired-test",
+      refresh_token: "refresh-test",
+      expires_at: Date.now() - 1000,
+      scope: scopes.calendar,
+    },
+    who.id,
+  );
+  await mock(
+    (url, init) => {
+      if (url.includes("/rpc/nex_reserve")) return ok(true);
+      if (url.includes("nex_google_connections") && init.method === "POST")
+        return new Response(null, { status: 200 });
+      if (url.includes("nex_google_connections")) return ok([{ ciphertext }]);
+      if (url === "https://oauth2.googleapis.com/token")
+        return ok({ access_token: "renewed-test", expires_in: 3600 });
+      if (url.includes("/calendar/v3/")) {
+        assert.equal(init.headers.Authorization, "Bearer renewed-test");
+        return ok({ items: [] });
+      }
+      throw new Error("Unexpected test request");
+    },
+    async (calls) => {
+      const result = await readGoogleData(env, who, { service: "calendar" });
+      assert.deepEqual(result, {
+        service: "calendar",
+        data: { items: [] },
+        limited: true,
+      });
+      assert.equal(
+        calls.filter((c) => c.url === "https://oauth2.googleapis.com/token")
+          .length,
+        1,
+      );
+      const saves = calls.filter(
+        (c) =>
+          c.url.includes("nex_google_connections") && c.init.method === "POST",
+      );
+      assert.equal(saves.length, 1);
+      const saved = await unseal(
+        env,
+        JSON.parse(saves[0].init.body).ciphertext,
+        who.id,
+      );
+      assert.equal(saved.refresh_token, "refresh-test");
+      assert.equal(saved.access_token, "renewed-test");
+    },
+  );
 });
 test("Google wrong state, denied service and callback mismatch never exchange token", async () => {
   await mock(
