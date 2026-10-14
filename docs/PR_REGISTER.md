@@ -50,3 +50,5 @@ A04 ativada pela PR #30 (main 604c6fe, CI #38): chat real recebeu OK pela Groq. 
 A05 — feat/nex-compact-command, base main 2913202: responde ao novo pedido de densidade/sobriedade, voz contínua e conexões do N.E.X. Proprietários e evidência em [A05_REVIEW.md](design/A05_REVIEW.md); nenhum merge de propostas antigas, alteração de SQL/login ou provedor pago.
 
 A06 — feat/nex-local-desktop, base main 4b489f2 (PRs #32/#33 integradas). Desktop modeless, comandos determinísticos e instrumentos conectados; não altera login, SQL, scopes, cotas ou motor de Foco. Relatório em [A06_REVIEW.md](design/A06_REVIEW.md); PR/CI e publicação no issue #18.
+
+A07 — feat/a07-workspace-motion, base main 856f3d3 (PR #34 integrada). Organização do desktop, atalhos/resize por teclado, busca determinística e motion de presença/geometria. Fronteira e evidência em [A07_REVIEW.md](design/A07_REVIEW.md); sem alterações de login, Worker, SQL, scopes ou cotas. Status/CI/publicação no issue #18.

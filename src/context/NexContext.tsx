@@ -15,6 +15,8 @@ import {
   dayReadout,
   nextReadout,
   localTime,
+  searchReadout,
+  overdueReadout,
 } from "../lib/nex-local";
 import {
   addNexWindow,
@@ -125,6 +127,11 @@ function useOwner() {
       windowsRef.current.map((w) =>
         w.id === id ? { ...w, minimized: true } : w,
       ),
+    );
+  }
+  function showWindows(visible: boolean) {
+    updateWindows(
+      windowsRef.current.map((w) => ({ ...w, minimized: !visible })),
     );
   }
   function openReply(
@@ -280,6 +287,14 @@ function useOwner() {
         return local(`Abrindo ${nexAreas[intent.area].label}.`);
       }
       if (intent.kind === "stop") return local("Conversa pausada.");
+      if (intent.kind === "windows") {
+        showWindows(intent.visible);
+        return local(
+          intent.visible
+            ? "Restaurei as janelas desta sessão."
+            : "Recolhi as janelas. Formulários e aprovações continuam preservados nesta sessão.",
+        );
+      }
       if (intent.kind === "greeting")
         return local(
           `Estou aqui${workspace.workspace.profile?.display_name ? ", " + workspace.workspace.profile.display_name : ""}. Posso consultar sua agenda, abrir dados e preparar ações sem usar IA. Diga “comandos” para ver exemplos.`,
@@ -360,6 +375,17 @@ function useOwner() {
         return local(
           `Abri ${nexAreas[intent.area].label}. A consulta é parcial, sem IA.`,
         );
+      }
+      if (intent.kind === "search" || intent.kind === "overdue") {
+        const result =
+          intent.kind === "search"
+            ? searchReadout(workspace.workspace, intent.query, intent.area)
+            : overdueReadout(workspace.workspace);
+        openWindow("local-search", result.title, {
+          kind: "data",
+          data: result.data,
+        });
+        return local(result.reply);
       }
       if (intent.kind === "agenda") {
         const result = dayReadout(workspace.workspace, intent.offset);
@@ -534,6 +560,7 @@ function useOwner() {
     closeWindow,
     focusWindow,
     minimizeWindow,
+    showWindows,
     openReply,
     openArea,
     prepareProposal: (kind: "mission" | "inbox", title: string) => {

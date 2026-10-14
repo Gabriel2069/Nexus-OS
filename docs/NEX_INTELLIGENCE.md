@@ -227,3 +227,7 @@ NexContext escolhe comandos determinísticos antes da rota chat. Modo local é o
 NexDesktop global mantém até seis janelas na memória, isoladas por identidade e preservadas ao navegar/minimizar. Aprovações usam os mesmos endpoints actions e operations/preview/execute com JWT, RLS, CAS, UUID e confirmação existentes. Ler Google usa as rotas e cotas existentes, sem chamadas a modelos; transcrição por voz continua usando Groq. Sem nova migration, serviço, plano ou escopo. Google Disconnect limpa janelas de consulta Google e contexto selecionado.
 
 Instrumentos das páginas: consultar área em janela, consultar Google relacionado e preparar formulário nos domínios suportados. Calendar permite prévia de criação local/Google e import snapshot até 20; Tasks permite captura como cópia confirmada na Inbox; arquivos autorizados abrem leitores Docs/Sheets/Slides. Isso não constitui sincronização bidirecional nem acesso a arquivos fora de drive.file. Veja [A06_REVIEW.md](design/A06_REVIEW.md).
+
+## A07 — espaço de trabalho e consultas locais
+
+A07 amplia o desktop existente com encaixe/organização, seletor filtrável, ordem estável, resize por teclado/pointer e movimentos canceláveis. `Buscar: termo`, `Buscar projetos: termo`, `Missões atrasadas`, `Recolher janelas` e `Restaurar janelas` continuam no parser determinístico; a busca usa somente o workspace carregado e mostra até 40 resultados. Ctrl/⌘+Enter envia a conversa. [Fronteira, verificações e limites](design/A07_REVIEW.md). Nenhuma nova rota, scope, migration ou integração paga.

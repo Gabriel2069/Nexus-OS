@@ -476,6 +476,22 @@ export function NexConsole({ compact = false }: { compact?: boolean }) {
               value={input}
               disabled={nex.busy || listening}
               onChange={(e) => setInput(e.target.value)}
+              aria-keyshortcuts="Control+Enter Meta+Enter"
+              title="Ctrl/⌘ + Enter para enviar; Enter cria uma nova linha"
+              onKeyDown={(e) => {
+                if (
+                  (e.ctrlKey || e.metaKey) &&
+                  e.key === "Enter" &&
+                  !e.nativeEvent.isComposing &&
+                  !nex.busy &&
+                  !voice.active &&
+                  !listening &&
+                  input.trim()
+                ) {
+                  e.preventDefault();
+                  void submit();
+                }
+              }}
               placeholder="Fale com N.E.X…"
               rows={2}
             />

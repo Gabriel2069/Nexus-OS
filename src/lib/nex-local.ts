@@ -17,6 +17,13 @@ export type LocalIntent =
   | { kind: "proposal"; target: "mission" | "inbox"; title: string }
   | { kind: "operation"; operation: NexOperation }
   | { kind: "complete"; title: string }
+  | {
+      kind: "search";
+      query: string;
+      area?: "missoes" | "projetos" | "rotinas" | "estudos";
+    }
+  | { kind: "overdue" }
+  | { kind: "windows"; visible: boolean }
   | { kind: "help" | "greeting" | "time" | "next" | "stop" };
 const norm = (v: string) =>
   v
@@ -37,6 +44,11 @@ export const localExamples = [
   "Capturar: Uma ideia",
   "Criar projeto: Novo projeto",
   "Criar tarefa Google: Revisar redação",
+  "Buscar: física",
+  "Buscar projetos: NexOS",
+  "Missões atrasadas",
+  "Recolher janelas",
+  "Restaurar janelas",
 ];
 
 /** Exact bounded grammar. Quoted payloads are data, never a second command. */
@@ -45,6 +57,29 @@ export function parseLocalIntent(raw: string): LocalIntent | null {
   const value = norm(raw),
     nav = localNexCommand(raw);
   if (nav) return nav;
+  if (/^(recolher|minimizar) janelas$/.test(value))
+    return { kind: "windows", visible: false };
+  if (/^(restaurar|mostrar) janelas$/.test(value))
+    return { kind: "windows", visible: true };
+  if (/^(missoes atrasadas|o que esta atrasado|prazos vencidos)$/.test(value))
+    return { kind: "overdue" };
+  const search = raw
+    .trim()
+    .match(/^buscar(?: (miss[oõ]es|projetos|rotinas|estudos))?\s*:\s*(.+)$/i);
+  if (search) {
+    const query = search[2].trim();
+    if (query.length < 2 || query.length > 100) return null;
+    const areas = {
+      missoes: "missoes",
+      projetos: "projetos",
+      rotinas: "rotinas",
+      estudos: "estudos",
+    } as const;
+    const area = search[1]
+      ? areas[norm(search[1]) as keyof typeof areas]
+      : undefined;
+    return { kind: "search", query, ...(area ? { area } : {}) };
+  }
   if (
     /^(oi|ola|bom dia|boa tarde|boa noite|obrigado|obrigada|tudo bem)$/.test(
       value,
@@ -207,4 +242,79 @@ export function localTime(now = new Date()) {
     dateStyle: "full",
     timeStyle: "short",
   }).format(now);
+}
+
+/** Search only the loaded, owner-scoped workspace. Terms never become instructions. */
+export function searchReadout(
+  w: NexusWorkspace,
+  query: string,
+  area?: "missoes" | "projetos" | "rotinas" | "estudos",
+) {
+  const sources = {
+    missoes: w.missions,
+    projetos: w.projects,
+    rotinas: w.routines,
+    estudos: w.academicSchedule,
+  };
+  const terms = norm(query).split(/\s+/).filter(Boolean);
+  let total = 0,
+    remaining = 40;
+  const sectors = Object.entries(sources)
+    .filter(([key]) => !area || key === area)
+    .map(([module, records]) => {
+      const matches = records.filter((record) => {
+        const row = record as unknown as Record<string, unknown>;
+        const text = norm(
+          [
+            "title",
+            "name",
+            "subject",
+            "note",
+            "notes",
+            "description",
+            "next_action",
+          ]
+            .map((key) => (typeof row[key] === "string" ? row[key] : ""))
+            .join(" "),
+        );
+        return terms.length > 0 && terms.every((term) => text.includes(term));
+      });
+      total += matches.length;
+      const selected = matches.slice(0, remaining);
+      remaining -= selected.length;
+      return { module, records: selected };
+    })
+    .filter((sector) => sector.records.length);
+  return {
+    title: `Busca · ${query}`,
+    reply: `Encontrei ${total} resultado(s) nos dados carregados. Mostro até 40, sem usar IA.`,
+    data: {
+      local: true,
+      limited: true,
+      summary: `${total} resultado(s) · dados carregados · até 40 exibidos`,
+      sectors,
+    },
+  };
+}
+export function overdueReadout(w: NexusWorkspace, now = new Date()) {
+  const today = dateKey(now);
+  const missions = w.missions
+    .filter(
+      (m) =>
+        m.due_at &&
+        !["Feita", "Cancelada", "Inbox"].includes(m.status) &&
+        Number.isFinite(Date.parse(m.due_at)) &&
+        dateKey(new Date(m.due_at)) < today,
+    )
+    .sort((a, b) => a.due_at!.localeCompare(b.due_at!));
+  return {
+    title: "Missões atrasadas",
+    reply: `Há ${missions.length} missão(ões) com prazo anterior a hoje, em São Paulo, nos dados carregados.`,
+    data: {
+      module: "missoes",
+      records: missions.slice(0, 40),
+      local: true,
+      limited: true,
+    },
+  };
 }
