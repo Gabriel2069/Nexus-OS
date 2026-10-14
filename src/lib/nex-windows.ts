@@ -5,6 +5,7 @@ export type NexWindowBody =
   | { kind: "operation"; operation: NexOperation; operationId: string }
   | { kind: "proposal"; proposalId: string }
   | { kind: "help" }
+  | { kind: "plan"; minutes: number; projectId?: string }
   | { kind: "google"; service: string; resource: string }
   | { kind: "compose"; area: string };
 export type NexWindow = {
@@ -80,11 +81,13 @@ export function addNexWindow(
       {
         ...previous,
         title:
-          previous.body.kind === "data" && next.body.kind === "data"
+          (previous.body.kind === "data" && next.body.kind === "data") ||
+          (previous.body.kind === "plan" && next.body.kind === "plan")
             ? next.title
             : previous.title,
         body:
-          previous.body.kind === "data" && next.body.kind === "data"
+          (previous.body.kind === "data" && next.body.kind === "data") ||
+          (previous.body.kind === "plan" && next.body.kind === "plan")
             ? next.body
             : previous.body,
         minimized: false,

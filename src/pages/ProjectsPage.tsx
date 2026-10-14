@@ -1,6 +1,9 @@
 import { useEntityDraft, useNavigation } from "../context/NavigationContext";
 import { PageLoading } from "../components/PageLoading";
 import { WorkspaceFeedback } from "../components/WorkspaceFeedback";
+import { useNex } from "../context/NexContext";
+import { projectSummary, executable } from "../lib/execution-plan";
+import { normalizeSearch } from "../lib/navigation-state";
 import { dateKey } from "../lib/dates";
 import { CosmicTexture, StellarSpark } from "../components/CosmicEnvironment";
 import {
@@ -19,7 +22,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { SurfaceCard } from "../components/SurfaceCard";
 import { useNexus } from "../context/NexusContext";
 import { emitUI, UI_EVENTS } from "../lib/ui-events";
-import { navigate } from "../lib/router";
+import { useLocation, navigate } from "../lib/router";
 import { entityPath } from "../lib/navigation-state";
 import type { NexusProject } from "../types/nexus";
 
@@ -34,6 +37,19 @@ const isoDate = (value: string | null) =>
 
 export function ProjectsPage() {
   const { drafts } = useNavigation();
+  const nex = useNex(),
+    location = useLocation();
+  const [query, setQuery] = useState("");
+  const [portfolioStatus, setPortfolioStatus] = useState("open");
+  const [missingDirection, setMissingDirection] = useState(
+    () => new URLSearchParams(location.search).get("direction") === "missing",
+  );
+  const [showHistory, setShowHistory] = useState(false);
+  useEffect(() => {
+    const p = new URLSearchParams(location.search);
+    setMissingDirection(p.get("direction") === "missing");
+    if (p.get("project")) setSelectedId(p.get("project"));
+  }, [location.search]);
   const {
     workspace,
     addProject,
@@ -76,17 +92,36 @@ export function ProjectsPage() {
         ),
     [workspace.projects],
   );
+  const portfolio = workspace.projects
+    .filter(
+      (p) =>
+        normalizeSearch(query)
+          .split(/\s+/)
+          .filter(Boolean)
+          .every((term) =>
+            normalizeSearch(
+              `${p.name} ${p.description ?? ""} ${p.next_action ?? ""}`,
+            ).includes(term),
+          ) &&
+        (portfolioStatus === "all" ||
+          (portfolioStatus === "open" &&
+            !["Concluído", "Arquivado"].includes(p.status)) ||
+          p.status === portfolioStatus) &&
+        (!missingDirection || (p.status === "Ativo" && !p.next_action?.trim())),
+    )
+    .sort(
+      (a, b) =>
+        priorityWeight[b.priority] - priorityWeight[a.priority] ||
+        a.name.localeCompare(b.name, "pt-BR"),
+    );
   const avg = active.length
     ? Math.round(active.reduce((sum, p) => sum + p.progress, 0) / active.length)
     : 0;
   const withoutAction = active.filter((p) => !p.next_action).length;
   const selected = workspace.projects.find((p) => p.id === selectedId) ?? null;
-  const linkedMissions = selected
-    ? workspace.missions.filter((m) => m.project_id === selected.id)
-    : [];
-  const openLinked = linkedMissions.filter(
-    (m) => !["Feita", "Cancelada"].includes(m.status),
-  );
+  const summary = selected ? projectSummary(selected, workspace) : null;
+  const linkedMissions = summary?.missions ?? [];
+  const openLinked = summary?.open ?? [];
 
   useEffect(() => {
     if (!selected) return;
@@ -276,12 +311,62 @@ export function ProjectsPage() {
         </div>
       </SurfaceCard>
 
+      <section className="execution-filters" aria-label="Recorte dos projetos">
+        <label>
+          Buscar projeto
+          <input
+            type="search"
+            maxLength={200}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Nome, descrição ou próxima ação"
+          />
+        </label>
+        <label>
+          Estado
+          <select
+            aria-label="Estado dos projetos"
+            value={portfolioStatus}
+            onChange={(e) => setPortfolioStatus(e.target.value)}
+          >
+            <option value="open">Em aberto</option>
+            <option value="all">Todos os estados</option>
+            {["Ideia", "Ativo", "Em espera", "Concluído", "Arquivado"].map(
+              (s) => (
+                <option key={s}>{s}</option>
+              ),
+            )}
+          </select>
+        </label>
+        <label className="execution-filter-toggle">
+          <input
+            type="checkbox"
+            checked={missingDirection}
+            onChange={(e) => setMissingDirection(e.target.checked)}
+          />
+          Somente ativos sem próxima ação
+        </label>
+        <button
+          className="text-button"
+          onClick={() => {
+            setQuery("");
+            setPortfolioStatus("open");
+            setMissingDirection(false);
+          }}
+        >
+          Limpar filtros
+        </button>
+        <span role="status">
+          {portfolio.length} de {workspace.projects.length} projetos carregados
+        </span>
+      </section>
+
       <section
         className={`project-workspace ${selected ? "has-inspector" : ""}`}
       >
         <div className="project-portfolio-grid project-portfolio-grid--interactive">
-          {active.length ? (
-            active.map((project) => {
+          {portfolio.length ? (
+            portfolio.map((project) => {
               const linked = workspace.missions.filter(
                 (m) =>
                   m.project_id === project.id &&
@@ -355,10 +440,10 @@ export function ProjectsPage() {
           ) : (
             <SurfaceCard className="project-empty">
               <BriefcaseBusiness size={28} />
-              <h3>Nenhum projeto ativo.</h3>
+              <h3>Nenhum projeto neste recorte.</h3>
               <p>
-                Crie um projeto quando uma intenção não couber em uma única
-                missão.
+                Limpe os filtros ou crie um projeto quando uma intenção precisar
+                de várias ações.
               </p>
             </SurfaceCard>
           )}
@@ -405,6 +490,58 @@ export function ProjectsPage() {
                   <span style={{ width: `${selected.progress}%` }} />
                 </div>
               </div>
+              {summary && (
+                <div className="project-execution-summary">
+                  <span>
+                    <strong>{summary.done}</strong> concluídas
+                  </span>
+                  <span>
+                    <strong>{summary.blocked}</strong> bloqueadas
+                  </span>
+                  <span>
+                    <strong>{summary.focusMinutes}</strong> min de foco
+                    registrado
+                  </span>
+                </div>
+              )}
+              <div className="project-execution-actions">
+                <button
+                  className="secondary-button"
+                  onClick={() =>
+                    nex.openWindow(
+                      `plan:${selected.id}`,
+                      `Plano · ${selected.name}`,
+                      { kind: "plan", minutes: 45, projectId: selected.id },
+                    )
+                  }
+                >
+                  Planejar este projeto
+                </button>
+                <button
+                  className="text-button"
+                  onClick={() =>
+                    navigate(
+                      `/missoes?${new URLSearchParams({ project: selected.id })}`,
+                    )
+                  }
+                >
+                  Ver missões filtradas
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+              {summary?.next && (
+                <p className="panel-copy">
+                  Próximo passo pelas regras do NexOS:{" "}
+                  <button
+                    className="text-button"
+                    onClick={() =>
+                      navigate(entityPath("mission", summary.next!.id))
+                    }
+                  >
+                    {summary.next.title}
+                  </button>
+                </p>
+              )}
               <button className="primary-button" onClick={addMission}>
                 <Plus size={15} />
                 Nova missão neste projeto
@@ -424,8 +561,16 @@ export function ProjectsPage() {
               eyebrow="Execução"
               title={`${openLinked.length} missões abertas`}
             >
+              <label className="execution-filter-toggle">
+                <input
+                  type="checkbox"
+                  checked={showHistory}
+                  onChange={(e) => setShowHistory(e.target.checked)}
+                />
+                Incluir concluídas e canceladas
+              </label>
               <div className="project-linked-missions">
-                {openLinked.map((m) => (
+                {(showHistory ? linkedMissions : openLinked).map((m) => (
                   <article key={m.id}>
                     <span className={`rank-chip rank-${m.rank.toLowerCase()}`}>
                       {m.rank}
@@ -442,17 +587,35 @@ export function ProjectsPage() {
                         {m.status} · {m.duration_minutes ?? 45} min
                       </small>
                     </div>
-                    <button
-                      className="icon-button"
-                      disabled={Boolean(busy) || m.status === "Inbox"}
-                      onClick={() => void finishLinked(m.id)}
-                      aria-label={`Concluir ${m.title}`}
-                    >
-                      <CheckCircle2 size={15} />
-                    </button>
+                    <div className="project-linked-actions">
+                      {executable(m) && (
+                        <button
+                          className="icon-button"
+                          aria-label={`Preparar foco para ${m.title}`}
+                          onClick={() =>
+                            navigate(
+                              `/foco?${new URLSearchParams({ mission: m.id, minutes: String(m.duration_minutes ?? 45) })}`,
+                            )
+                          }
+                        >
+                          <Gauge size={15} />
+                        </button>
+                      )}
+                      <button
+                        className="icon-button"
+                        disabled={
+                          Boolean(busy) ||
+                          ["Inbox", "Feita", "Cancelada"].includes(m.status)
+                        }
+                        onClick={() => void finishLinked(m.id)}
+                        aria-label={`Concluir ${m.title}`}
+                      >
+                        <CheckCircle2 size={15} />
+                      </button>
+                    </div>
                   </article>
                 ))}
-                {!openLinked.length && (
+                {!(showHistory ? linkedMissions : openLinked).length && (
                   <div className="empty-compact">
                     Nenhuma missão aberta. Se o projeto ainda está ativo, defina
                     uma próxima ação e crie a missão daqui.

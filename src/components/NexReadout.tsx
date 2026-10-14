@@ -199,19 +199,21 @@ export function NexReadout({
               ["missoes", "inbox"].includes(payload.module ?? "") &&
               !["Feita", "Cancelada"].includes(String(row.status)) && (
                 <div className="nex-compose__actions">
+                  {["A fazer", "Em andamento"].includes(String(row.status)) && (
+                    <button
+                      className="secondary-button"
+                      onClick={() => {
+                        navigate(
+                          `/foco?${new URLSearchParams({ mission: id, minutes: "25" })}`,
+                        );
+                      }}
+                    >
+                      Preparar foco
+                    </button>
+                  )}
                   <button
                     className="secondary-button"
-                    onClick={() => {
-                      navigate(
-                        `/foco?${new URLSearchParams({ mission: id, minutes: "25" })}`,
-                      );
-                    }}
-                  >
-                    Preparar foco
-                  </button>
-                  <button
-                    className="secondary-button"
-                    disabled={nex.busy}
+                    disabled={nex.busy || row.status === "Inbox"}
                     onClick={() =>
                       nex.prepareOperation({
                         kind: "mission.complete",
@@ -223,15 +225,65 @@ export function NexReadout({
                   </button>
                 </div>
               )}
+            {id &&
+              ["missoes", "inbox"].includes(payload.module ?? "") &&
+              ["A fazer", "Em andamento", "Bloqueada"].includes(
+                String(row.status),
+              ) && (
+                <details className="nex-mission-actions">
+                  <summary>Organizar missão</summary>
+                  <div className="nex-compose__actions">
+                    {(["A fazer", "Em andamento", "Bloqueada"] as const)
+                      .filter(
+                        (s) =>
+                          s !== row.status &&
+                          (row.status !== "Bloqueada" || s === "A fazer"),
+                      )
+                      .map((status) => (
+                        <button
+                          key={status}
+                          className="secondary-button"
+                          disabled={nex.busy}
+                          onClick={() =>
+                            nex.prepareOperation({
+                              kind: "mission.edit",
+                              payload: { id, title, status },
+                            })
+                          }
+                        >
+                          {status === "Em andamento"
+                            ? "Revisar início"
+                            : status === "Bloqueada"
+                              ? "Revisar bloqueio"
+                              : "Revisar retomada"}
+                        </button>
+                      ))}
+                  </div>
+                </details>
+              )}
             {id && payload.module === "projetos" && (
-              <button
-                className="secondary-button"
-                onClick={() =>
-                  emitUI("quickAdd", { type: "mission", projectId: id })
-                }
-              >
-                Adicionar missão ao projeto
-              </button>
+              <div className="nex-compose__actions">
+                <button
+                  className="secondary-button"
+                  onClick={() =>
+                    nex.openWindow(`plan:${id}`, `Plano · ${title}`, {
+                      kind: "plan",
+                      minutes: 45,
+                      projectId: id,
+                    })
+                  }
+                >
+                  Planejar ações
+                </button>
+                <button
+                  className="secondary-button"
+                  onClick={() =>
+                    emitUI("quickAdd", { type: "mission", projectId: id })
+                  }
+                >
+                  Adicionar missão ao projeto
+                </button>
+              </div>
             )}
             {id &&
               "records" in payload &&

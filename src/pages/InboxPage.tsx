@@ -12,6 +12,7 @@ import type { NexusMission } from "../types/nexus";
 export function InboxPage() {
   const { workspace, processMission, loading, error, refresh } = useNexus();
   const [busy, setBusy] = useState(false);
+  const [continueProcessing, setContinueProcessing] = useState(false);
   const pending = useRef(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -27,6 +28,9 @@ export function InboxPage() {
 
   function inspect(item: NexusMission) {
     if (pending.current) return;
+    chooseEntry(item);
+  }
+  function chooseEntry(item: NexusMission) {
     setSelectedId(item.id);
     setSaveError(null);
     setPriority(item.priority);
@@ -57,10 +61,20 @@ export function InboxPage() {
               project_id: projectId || null,
             },
       );
-      setSelectedId(null);
-      requestAnimationFrame(() =>
-        document.querySelector<HTMLElement>(".inbox-list-heading")?.focus(),
-      );
+      const next = continueProcessing
+        ? inbox.find((m) => m.id !== selected.id)
+        : null;
+      if (next) {
+        chooseEntry(next);
+        requestAnimationFrame(() =>
+          document.querySelector<HTMLElement>(".inbox-inspector")?.focus(),
+        );
+      } else {
+        setSelectedId(null);
+        requestAnimationFrame(() =>
+          document.querySelector<HTMLElement>(".inbox-list-heading")?.focus(),
+        );
+      }
     } catch (err) {
       setSaveError(
         err instanceof Error
@@ -274,6 +288,14 @@ export function InboxPage() {
                       Sem prazo
                     </button>
                   </div>
+                  <label className="execution-filter-toggle">
+                    <input
+                      type="checkbox"
+                      checked={continueProcessing}
+                      onChange={(e) => setContinueProcessing(e.target.checked)}
+                    />
+                    Selecionar a próxima entrada após salvar
+                  </label>
                   <button className="primary-button" type="submit">
                     {busy ? "Processando…" : "Virar missão"}
                     <ArrowRight size={14} />

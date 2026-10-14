@@ -82,3 +82,7 @@ O modo local é o padrão. Consultar dados, obter o próximo passo pelas regras 
 ## A07 — continuidade e espaço de trabalho
 
 A moldura dos instrumentos usa hierarquia de profundidade e luz branca contida para distinguir o foco. Dock estável, seletor filtrável e organização da área visível fazem parte do mesmo desktop. Encaixes preservam o tamanho livre; celular mantém controles próprios da tela disponível. Geometria tem um único proprietário em NexWindowFrame; movimento tem propósito, é interrompível e assenta imediatamente com a preferência de redução. Não simular componentes nativos ou substituir a identidade pelo visual de outra marca. [Revisão e limites](docs/design/A07_REVIEW.md).
+
+## A08 — da consulta à execução
+
+Planejamento, Hoje e o desktop N.E.X usam a mesma bancada: tempo disponível, limite da agenda carregada, ações sugeridas e preparação de Foco. Hierarquia compacta, superfície e textura compartilhadas; filtros e detalhes aparecem no contexto da tarefa. Estados vazios explicam o próximo ajuste. Nenhum novo halo, keyframe ou cronômetro paralelo. [Evidências e limites](docs/design/A08_REVIEW.md).

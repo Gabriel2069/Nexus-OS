@@ -15,6 +15,8 @@ import {
   dayReadout,
   nextReadout,
   localTime,
+  localViewReadout,
+  projectReadout,
   searchReadout,
   overdueReadout,
 } from "../lib/nex-local";
@@ -337,7 +339,33 @@ function useOwner() {
         setError(workspace.error ?? "Aguarde os dados do NexOS.");
         return;
       }
-      if (intent.kind === "complete") {
+      if (intent.kind === "plan") {
+        openWindow("execution-plan", "Planejar próximo bloco", {
+          kind: "plan",
+          minutes: intent.minutes,
+        });
+        return local(
+          `Abri o planejamento de até ${intent.minutes} minutos com as regras do NexOS. Ele respeita os horários carregados e não reserva nem altera registros.`,
+        );
+      }
+      if (intent.kind === "view") {
+        openWindow("local-view", input.trim(), {
+          kind: "data",
+          data: localViewReadout(intent.view, workspace.workspace),
+        });
+        return local(
+          "Abri o recorte dos dados carregados. Consulta local, sem IA.",
+        );
+      }
+      if (intent.kind === "project") {
+        const result = projectReadout(intent.title, workspace.workspace);
+        openWindow("project-dossier", `Projeto · ${intent.title}`, {
+          kind: "data",
+          data: result.data,
+        });
+        return local(result.reply);
+      }
+      if (intent.kind === "complete" || intent.kind === "missionStatus") {
         const matches = workspace.workspace.missions.filter(
           (m) =>
             m.title.localeCompare(intent.title, "pt-BR", {
@@ -358,6 +386,29 @@ function useOwner() {
           });
           return local(
             "Não há uma única missão com esse título. Abra o item certo na janela; nenhuma conclusão foi executada.",
+          );
+        }
+        if (intent.kind === "missionStatus") {
+          if (matches[0].status === "Inbox")
+            return local(
+              "Esta missão ainda está na Caixa de entrada. Processe-a para definir seu contexto antes de iniciar ou bloquear.",
+            );
+          if (matches[0].status === intent.status)
+            return local(
+              "A missão já está nesse estado. Nenhuma operação foi preparada.",
+            );
+          return local(
+            "Preparei a mudança de estado. Revise os dados atuais e confirme; ainda não alterei a missão.",
+            {
+              operation: {
+                kind: "mission.edit",
+                payload: {
+                  id: matches[0].id,
+                  title: matches[0].title,
+                  status: intent.status,
+                },
+              },
+            },
           );
         }
         return local(

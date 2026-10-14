@@ -1,3 +1,4 @@
+import { ExecutionWorkbench } from "../components/ExecutionWorkbench";
 import { StellarSpark } from "../components/CosmicEnvironment";
 import {
   BatteryMedium,
@@ -270,6 +271,8 @@ export function TodayPage() {
           </SurfaceCard>
         </section>
       )}
+
+      {!workspaceError && <ExecutionWorkbench compact />}
 
       {!workspaceError && (
         <section className="today-flow-grid">

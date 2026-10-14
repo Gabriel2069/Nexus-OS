@@ -42,3 +42,5 @@ A [revisão N01](design/N01_REVIEW.md) registra início, central de navegação,
 [A06_REVIEW.md](design/A06_REVIEW.md): desktop de janelas, comandos locais, aprovações e pontes dos módulos/Google.
 
 [A07_REVIEW.md](design/A07_REVIEW.md): organização de janelas, busca local, atalhos e continuidade de movimento.
+
+[A08_REVIEW.md](design/A08_REVIEW.md): planejamento por tempo, missões filtradas, continuidade de projetos/entrada e expansão dos comandos locais.

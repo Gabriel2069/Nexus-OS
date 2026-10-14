@@ -42,16 +42,14 @@ export async function ensureProfile(user: User): Promise<PlayerProfile> {
       user.user_metadata.full_name) ||
     user.email?.split("@")[0] ||
     "Jogador";
-  const { data, error } = await client
-    .from("profiles")
-    .upsert(
-      {
-        id: user.id,
-        display_name: displayName,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "id", ignoreDuplicates: true },
-    );
+  const { data, error } = await client.from("profiles").upsert(
+    {
+      id: user.id,
+      display_name: displayName,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "id", ignoreDuplicates: true },
+  );
   if (error) throw error;
   const { data: profile, error: readError } = await client
     .from("profiles")
@@ -321,9 +319,18 @@ export async function updateMission(
       | "due_at"
       | "project_id"
       | "attribute_id"
+      | "duration_minutes"
     >
   >,
 ) {
+  if (
+    patch.duration_minutes !== undefined &&
+    patch.duration_minutes !== null &&
+    (!Number.isInteger(patch.duration_minutes) ||
+      patch.duration_minutes < 1 ||
+      patch.duration_minutes > 240)
+  )
+    throw new Error("Use uma duração inteira entre 1 e 240 minutos.");
   const client = requireClient();
   const { data, error } = await client
     .from("missions")

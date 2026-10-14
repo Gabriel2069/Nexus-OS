@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Focus, Pause } from "lucide-react";
 import { useNexus } from "../context/NexusContext";
-import { elapsedFocus } from "../lib/focus-clock";
+import { elapsedFocus, validFocusMinutes } from "../lib/focus-clock";
 import { navigate } from "../lib/router";
 import { isDemoMode } from "../lib/supabase";
 type Summary = { seconds: number; running: boolean };
@@ -21,7 +21,7 @@ export function FocusBeacon({ pathname }: { pathname: string }) {
         if (
           data?.version !== 1 ||
           data.active !== true ||
-          ![25, 45, 60, 90].includes(data.minutes) ||
+          !validFocusMinutes(data.minutes) ||
           !clock ||
           !Number.isFinite(clock.elapsedMs) ||
           clock.elapsedMs < 0 ||

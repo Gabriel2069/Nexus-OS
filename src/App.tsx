@@ -1,17 +1,13 @@
 import { lazy, Suspense } from "react";
-import {
-  Activity,
-  Archive,
-  BookOpen,
-  Brain,
-  CalendarDays,
-  Mountain,
-} from "lucide-react";
+import { Activity, Archive, BookOpen, Brain, Mountain } from "lucide-react";
 import { NexProvider } from "./context/NexContext";
 import { NavigationProvider } from "./context/NavigationContext";
 import { PageLoading } from "./components/PageLoading";
 import { AppShell } from "./components/AppShell";
 import { NexusProvider, useNexus } from "./context/NexusContext";
+const PlanningPage = lazy(() =>
+  import("./pages/PlanningPage").then((m) => ({ default: m.PlanningPage })),
+);
 const NexPage = lazy(() =>
   import("./pages/NexPage").then((m) => ({ default: m.NexPage })),
 );
@@ -230,43 +226,7 @@ function RouteContent({ pathname }: { pathname: string }) {
         />
       );
     case "/planejamento":
-      return (
-        <SectionPage
-          eyebrow="Planejamento"
-          title="Planos"
-          description="Organize etapas, prazos e decisões quando um projeto precisa de mais estrutura."
-          tone="indigo"
-          icon={CalendarDays}
-          highlights={[
-            {
-              label: "Começo",
-              value: "Objetivo",
-              detail: "o que precisa mudar",
-            },
-            { label: "Próximo", value: "Ação", detail: "o que fazer agora" },
-            { label: "Tempo", value: "Marcos", detail: "datas importantes" },
-            {
-              label: "Revisão",
-              value: "Quando mudar",
-              detail: "ajuste o plano",
-            },
-          ]}
-          panels={[
-            {
-              title: "Etapas",
-              body: "Divida trabalhos grandes apenas quando isso ajudar a enxergar o próximo passo.",
-            },
-            {
-              title: "Execução",
-              body: "O planejamento termina onde começa uma ação concreta.",
-            },
-            {
-              title: "Revisão",
-              body: "Atualize o plano quando a realidade mudar, não para manter uma versão antiga bonita.",
-            },
-          ]}
-        />
-      );
+      return <PlanningPage />;
     case "/historico":
       return (
         <SectionPage

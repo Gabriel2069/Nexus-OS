@@ -104,6 +104,7 @@ type NexusContextValue = {
         | "due_at"
         | "project_id"
         | "attribute_id"
+        | "duration_minutes"
       >
     >,
   ) => Promise<void>;
