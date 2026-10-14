@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ListTodo,
   Files,
+  Crosshair,
 } from "lucide-react";
 import { useNex } from "../context/NexContext";
 import { nexAreas, type NexArea } from "../lib/nex-tools";
@@ -50,6 +51,30 @@ export function NexModuleBridge({ pathname }: { pathname: string }) {
         <PanelsTopLeft size={14} />
         Janela · {nexAreas[area].label}
       </button>
+      {[
+        "agora",
+        "hoje",
+        "calendario",
+        "missoes",
+        "projetos",
+        "estudos",
+        "rotinas",
+        "foco",
+        "planejamento",
+      ].includes(area) && (
+        <button
+          className="text-button"
+          onClick={() =>
+            nex.openWindow("execution-plan", "Planejar próximo bloco", {
+              kind: "plan",
+              minutes: 45,
+            })
+          }
+        >
+          <Crosshair size={14} />
+          Planejar bloco
+        </button>
+      )}
       {google && (
         <button
           className="text-button"

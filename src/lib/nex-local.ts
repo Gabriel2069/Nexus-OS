@@ -1,3 +1,4 @@
+import { projectSummary } from "./execution-plan";
 import {
   localNexCommand,
   nexAreas,
@@ -9,9 +10,23 @@ import { occurrencesForDay, formatOccurrenceTime } from "./routine-context";
 import { nextBestMission } from "./decision-engine";
 import type { NexusWorkspace } from "../types/nexus.ts";
 
+export type LocalView =
+  | "blocked"
+  | "undirected"
+  | "routinesToday"
+  | "studiesToday"
+  | "focusToday";
 export type LocalIntent =
   | { kind: "navigate"; area: NexArea }
   | { kind: "read"; area: NexArea }
+  | { kind: "plan"; minutes: number }
+  | { kind: "project"; title: string }
+  | { kind: "view"; view: LocalView }
+  | {
+      kind: "missionStatus";
+      title: string;
+      status: "A fazer" | "Em andamento" | "Bloqueada";
+    }
   | { kind: "agenda"; offset: number }
   | { kind: "google"; service: "calendar" | "tasks" | "drive" }
   | { kind: "proposal"; target: "mission" | "inbox"; title: string }
@@ -49,6 +64,14 @@ export const localExamples = [
   "Missões atrasadas",
   "Recolher janelas",
   "Restaurar janelas",
+  "Tenho 25 minutos",
+  "Plano do dia",
+  "Resumo do projeto: NexOS",
+  "Missões bloqueadas",
+  "Rotinas de hoje",
+  "Estudos de hoje",
+  "Resumo do foco",
+  "Iniciar missão: Revisar física",
 ];
 
 /** Exact bounded grammar. Quoted payloads are data, never a second command. */
@@ -57,6 +80,48 @@ export function parseLocalIntent(raw: string): LocalIntent | null {
   const value = norm(raw),
     nav = localNexCommand(raw);
   if (nav) return nav;
+  if (/^(plano do dia|planejar execucao|planejar meu dia)$/.test(value))
+    return { kind: "plan", minutes: 45 };
+  const budget = value.match(
+    /^(?:tenho|planejar:)\s*(\d{1,3}) (?:min|minutos)$/,
+  );
+  if (budget) {
+    const minutes = Number(budget[1]);
+    return minutes >= 15 && minutes <= 240 ? { kind: "plan", minutes } : null;
+  }
+  const views: Record<string, LocalView> = {
+    "missoes bloqueadas": "blocked",
+    "projetos sem proxima acao": "undirected",
+    "rotinas de hoje": "routinesToday",
+    "estudos de hoje": "studiesToday",
+    "resumo do foco": "focusToday",
+  };
+  if (Object.hasOwn(views, value)) return { kind: "view", view: views[value] };
+  const dossier = raw
+    .trim()
+    .match(
+      /^(?:resumo do projeto|resumir projeto|detalhes do projeto)\s*:\s*(.+)$/i,
+    );
+  if (dossier)
+    return dossier[1].trim().length <= 200
+      ? { kind: "project", title: dossier[1].trim() }
+      : null;
+  const state = raw
+    .trim()
+    .match(/^(iniciar|bloquear|retomar) miss[aã]o\s*:\s*(.+)$/i);
+  if (state)
+    return state[2].trim().length <= 200
+      ? {
+          kind: "missionStatus",
+          title: state[2].trim(),
+          status:
+            state[1].toLowerCase() === "iniciar"
+              ? "Em andamento"
+              : state[1].toLowerCase() === "bloquear"
+                ? "Bloqueada"
+                : "A fazer",
+        }
+      : null;
   if (/^(recolher|minimizar) janelas$/.test(value))
     return { kind: "windows", visible: false };
   if (/^(restaurar|mostrar) janelas$/.test(value))
@@ -315,6 +380,107 @@ export function overdueReadout(w: NexusWorkspace, now = new Date()) {
       records: missions.slice(0, 40),
       local: true,
       limited: true,
+    },
+  };
+}
+
+export function localViewReadout(
+  view: LocalView,
+  w: NexusWorkspace,
+  now = new Date(),
+) {
+  const key = dateKey(now),
+    weekday = civilDate(key).getUTCDay();
+  const views = {
+    blocked: {
+      module: "missoes",
+      records: w.missions.filter((m) => m.status === "Bloqueada"),
+    },
+    undirected: {
+      module: "projetos",
+      records: w.projects.filter(
+        (p) => p.status === "Ativo" && !p.next_action?.trim(),
+      ),
+    },
+    routinesToday: {
+      module: "rotinas",
+      records: w.routines
+        .filter(
+          (r) =>
+            r.is_active &&
+            (!r.days_of_week.length || r.days_of_week.includes(weekday)),
+        )
+        .map((r) => ({
+          ...r,
+          note: `${(r.routine_items ?? []).filter((i) => w.routineCompletions.some((c) => c.routine_item_id === i.id && c.completion_date === key)).length} de ${(r.routine_items ?? []).length} etapas concluídas hoje`,
+        })),
+    },
+    studiesToday: {
+      module: "estudos",
+      records: w.academicSchedule
+        .filter((s) => s.weekday === weekday)
+        .sort((a, b) => a.start_time.localeCompare(b.start_time))
+        .map((s) => ({
+          ...s,
+          note: `${s.start_time.slice(0, 5)}–${s.end_time?.slice(0, 5) ?? "fim não definido"}`,
+        })),
+    },
+    focusToday: {
+      module: "foco",
+      records: w.focusSessions
+        .filter(
+          (s) =>
+            Number.isFinite(Date.parse(s.started_at)) &&
+            dateKey(new Date(s.started_at)) === key,
+        )
+        .map((s) => ({
+          ...s,
+          title: s.label ?? "Sessão de foco",
+          note: `${s.actual_minutes ?? 0} min registrados · ${s.status}`,
+        })),
+    },
+  };
+  const data = views[view];
+  return {
+    ...data,
+    records: data.records.slice(0, 40),
+    local: true,
+    limited: true,
+    summary: `${data.records.length} registro(s) nos dados carregados · até 40 exibidos`,
+  };
+}
+export function projectReadout(
+  title: string,
+  w: NexusWorkspace,
+  now = new Date(),
+) {
+  const projects = w.projects.filter(
+    (p) => p.name.localeCompare(title, "pt-BR", { sensitivity: "base" }) === 0,
+  );
+  if (projects.length !== 1)
+    return {
+      reply:
+        "Não encontrei um único projeto com esse nome. Escolha o registro correto; nenhuma ação foi feita.",
+      data: {
+        module: "projetos",
+        records: projects.length
+          ? projects.slice(0, 40)
+          : w.projects.slice(0, 40),
+        local: true,
+        limited: true,
+      },
+    };
+  const p = projects[0],
+    summary = projectSummary(p, w, now);
+  return {
+    reply: `${p.name}: ${summary.open.length} missão(ões) abertas, ${summary.blocked} bloqueada(s), ${summary.done} concluída(s) e ${summary.focusMinutes} min de foco registrado nos dados carregados.`,
+    data: {
+      local: true,
+      limited: true,
+      sectors: [
+        { module: "projetos", records: [p] },
+        { module: "missoes", records: summary.open.slice(0, 40) },
+      ],
     },
   };
 }

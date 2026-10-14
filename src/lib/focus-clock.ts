@@ -16,3 +16,12 @@ export function elapsedFocus(clock: FocusClock, now: number) {
 export function pauseFocus(clock: FocusClock, now: number): FocusClock {
   return { ...clock, elapsedMs: elapsedFocus(clock, now), resumedAt: null };
 }
+
+export function validFocusMinutes(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 240
+  );
+}

@@ -1,7 +1,12 @@
 import { PageLoading } from "../components/PageLoading";
 import { WorkspaceFeedback } from "../components/WorkspaceFeedback";
 import { StellarSpark } from "../components/CosmicEnvironment";
-import { elapsedFocus, pauseFocus, type FocusClock } from "../lib/focus-clock";
+import {
+  elapsedFocus,
+  pauseFocus,
+  validFocusMinutes,
+  type FocusClock,
+} from "../lib/focus-clock";
 import { dateKey } from "../lib/dates";
 import {
   CircleStop,
@@ -22,16 +27,7 @@ import type { FocusSession } from "../types/nexus";
 function initialParams() {
   const params = new URLSearchParams(window.location.search);
   const parsed = Number(params.get("minutes") ?? 45);
-  const allowed = [25, 45, 60, 90];
-  const minutes = allowed.includes(parsed)
-    ? parsed
-    : parsed >= 75
-      ? 90
-      : parsed >= 53
-        ? 60
-        : parsed >= 35
-          ? 45
-          : 25;
+  const minutes = validFocusMinutes(parsed) ? parsed : 45;
   return { minutes, missionId: params.get("mission") ?? "" };
 }
 
@@ -53,7 +49,7 @@ export function FocusPage() {
       const data = JSON.parse(sessionStorage.getItem(storageKey) ?? "null");
       if (
         data?.version === 1 &&
-        [25, 45, 60, 90].includes(data.minutes) &&
+        validFocusMinutes(data.minutes) &&
         typeof data.clock?.elapsedMs === "number" &&
         data.clock.plannedMs === data.minutes * 60_000 &&
         (data.clock.resumedAt === null ||
@@ -254,17 +250,19 @@ export function FocusPage() {
       <section className="focus-layout">
         <SurfaceCard tone="indigo" className="focus-console">
           <div className="focus-modes">
-            {[25, 45, 60, 90].map((value) => (
-              <button
-                key={value}
-                disabled={active || busy || Boolean(workspaceError)}
-                aria-pressed={minutes === value}
-                className={minutes === value ? "active" : ""}
-                onClick={() => setMinutes(value)}
-              >
-                {value} min
-              </button>
-            ))}
+            {[...new Set([25, 45, 60, 90, minutes])]
+              .sort((a, b) => a - b)
+              .map((value) => (
+                <button
+                  key={value}
+                  disabled={active || busy || Boolean(workspaceError)}
+                  aria-pressed={minutes === value}
+                  className={minutes === value ? "active" : ""}
+                  onClick={() => setMinutes(value)}
+                >
+                  {value} min
+                </button>
+              ))}
           </div>
           <div className="focus-clock">
             <div

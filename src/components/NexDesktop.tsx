@@ -22,6 +22,7 @@ import { navigate } from "../lib/router";
 import { entityPath } from "../lib/navigation-state";
 import { emitUI } from "../lib/ui-events";
 import { NexWindowFrame, type WindowArrangement } from "./NexWindowFrame";
+import { ExecutionWorkbench } from "./ExecutionWorkbench";
 import { NexReadout } from "./NexReadout";
 import { NexOperationCard, NexResponsePanel } from "./NexInstruments";
 
@@ -268,6 +269,14 @@ export function NexDesktop() {
 function WindowBody({ item }: { item: NexWindow }) {
   const nex = useNex(),
     body = item.body;
+  if (body.kind === "plan")
+    return (
+      <ExecutionWorkbench
+        key={`${body.minutes}:${body.projectId ?? ""}`}
+        initialMinutes={body.minutes}
+        initialProject={body.projectId}
+      />
+    );
   if (body.kind === "data")
     return (
       <>

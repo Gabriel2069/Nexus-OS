@@ -32,7 +32,7 @@ const server = spawn(
     browser = await chromium.launch({
       executablePath: process.env.NEX_CHROMIUM_PATH,
       headless: true,
-      args: ["--no-sandbox"],
+      args: ["--no-sandbox", "--no-zygote"],
     });
     page = await browser.newPage({
       viewport: { width: 1440, height: 1000 },
@@ -784,7 +784,7 @@ const server = spawn(
       .getByRole("button", { name: "Organizar janelas", exact: true })
       .click();
     await page.screenshot({
-      path: root + "/docs/design/previews/a07-workspace-dark-1440.jpg",
+      path: root + "/../a08-regression-workspace-dark-1440.jpg",
       type: "jpeg",
       quality: 85,
     });
@@ -809,7 +809,7 @@ const server = spawn(
         .evaluate((n) => n.getBoundingClientRect().right <= window.innerWidth),
     );
     await page.screenshot({
-      path: root + "/docs/design/previews/a07-switcher-light-390.jpg",
+      path: root + "/../a08-regression-switcher-light-390.jpg",
       type: "jpeg",
       quality: 85,
     });
@@ -917,9 +917,29 @@ const server = spawn(
     await page
       .getByRole("button", { name: "Conversar por voz", exact: true })
       .click();
-    await page.waitForFunction(() => window.__spoken.length >= 2, {
-      timeout: 15000,
-    });
+    await page
+      .waitForFunction(() => window.__spoken.length >= 2, null, {
+        timeout: 30000,
+      })
+      .catch(async (error) => {
+        console.error(
+          "Voice QA state:",
+          await page.evaluate(() => ({
+            spoken: window.__spoken.length,
+            calls: window.__nexCalls
+              .filter((c) => c.path === "transcribe" || c.path === "chat")
+              .map((c) => c.path),
+            text: document.querySelector(".nex-voice-status")?.textContent,
+            alerts: [...document.querySelectorAll('[role="alert"]')].map(
+              (e) => e.textContent,
+            ),
+            tracks: window.__voiceStreams.map((s) =>
+              s.getTracks().map((t) => t.readyState),
+            ),
+          })),
+        );
+        throw error;
+      });
     await page
       .getByRole("button", { name: "Pausar conversa", exact: true })
       .click();

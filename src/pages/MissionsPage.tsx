@@ -21,25 +21,14 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SurfaceCard } from "../components/SurfaceCard";
 import { useNexus } from "../context/NexusContext";
-import { navigate } from "../lib/router";
+import { filterMissions } from "../lib/execution-plan";
+import { rankMissions } from "../lib/decision-engine";
+import { useLocation, navigate } from "../lib/router";
 import { emitUI, UI_EVENTS } from "../lib/ui-events";
 import { entityPath } from "../lib/navigation-state";
 import type { NexusMission } from "../types/nexus";
 
 type MissionView = "board" | "list" | "focus";
-const priorityWeight: Record<NexusMission["priority"], number> = {
-  Baixa: 1,
-  Média: 2,
-  Alta: 3,
-  Crítica: 4,
-};
-const rankWeight: Record<NexusMission["rank"], number> = {
-  D: 1,
-  C: 2,
-  B: 3,
-  A: 4,
-  S: 5,
-};
 const isoDate = (value: string | null) =>
   value ? dateKey(new Date(value)) : "";
 
@@ -73,7 +62,22 @@ export function MissionsPage() {
     error,
     refresh,
   } = useNexus();
+  const location = useLocation();
   const [query, setQuery] = useState("");
+  const [projectFilter, setProjectFilter] = useState(
+    () => new URLSearchParams(location.search).get("project") ?? "",
+  );
+  const [statusFilter, setStatusFilter] = useState(
+    () => new URLSearchParams(location.search).get("status") ?? "",
+  );
+  const [deadlineFilter, setDeadlineFilter] = useState("");
+  const [durationFilter, setDurationFilter] = useState("");
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setProjectFilter(params.get("project") ?? "");
+    setStatusFilter(params.get("status") ?? "");
+    if (params.get("mission")) setSelectedId(params.get("mission"));
+  }, [location.search]);
   const [rank, setRank] = useState("Todos");
   const [view, setView] = useState<MissionView>(() =>
     window.matchMedia("(max-width:760px)").matches ? "list" : "board",
@@ -101,15 +105,22 @@ export function MissionsPage() {
 
   const filtered = useMemo(
     () =>
-      workspace.missions.filter(
-        (mission) =>
-          (!query ||
-            `${mission.title} ${mission.notes ?? ""}`
-              .toLowerCase()
-              .includes(query.toLowerCase())) &&
-          (rank === "Todos" || mission.rank === rank),
-      ),
-    [workspace.missions, query, rank],
+      filterMissions(workspace.missions, {
+        query,
+        project: projectFilter,
+        status: statusFilter,
+        deadline: deadlineFilter,
+        minutes: durationFilter ? Number(durationFilter) : undefined,
+      }).filter((mission) => rank === "Todos" || mission.rank === rank),
+    [
+      workspace.missions,
+      query,
+      rank,
+      projectFilter,
+      statusFilter,
+      deadlineFilter,
+      durationFilter,
+    ],
   );
   const inbox = filtered.filter((m) => m.status === "Inbox");
   const active = filtered.filter(
@@ -119,33 +130,13 @@ export function MissionsPage() {
   const totalXp = active.reduce((sum, m) => sum + m.xp_base + m.xp_bonus, 0);
   const focusQueue = useMemo(
     () =>
-      [...active].sort((a, b) => {
-        const aUrgency = a.due_at
-          ? Math.max(
-              0,
-              14 -
-                Math.ceil(
-                  (new Date(a.due_at).getTime() - Date.now()) / 86_400_000,
-                ),
-            )
-          : 0;
-        const bUrgency = b.due_at
-          ? Math.max(
-              0,
-              14 -
-                Math.ceil(
-                  (new Date(b.due_at).getTime() - Date.now()) / 86_400_000,
-                ),
-            )
-          : 0;
-        return (
-          priorityWeight[b.priority] * 12 +
-          rankWeight[b.rank] * 4 +
-          bUrgency -
-          (priorityWeight[a.priority] * 12 + rankWeight[a.rank] * 4 + aUrgency)
-        );
-      }),
-    [active],
+      rankMissions(
+        active,
+        workspace.checkin?.checkin_date === dateKey()
+          ? workspace.checkin
+          : null,
+      ).map((e) => e.mission),
+    [active, workspace.checkin],
   );
   const focusTarget = focusQueue[0];
   const selected = workspace.missions.find((m) => m.id === selectedId) ?? null;
@@ -185,7 +176,12 @@ export function MissionsPage() {
     patch: Partial<
       Pick<
         NexusMission,
-        "status" | "priority" | "rank" | "due_at" | "project_id"
+        | "status"
+        | "priority"
+        | "rank"
+        | "due_at"
+        | "project_id"
+        | "duration_minutes"
       >
     >,
   ) {
@@ -278,7 +274,12 @@ export function MissionsPage() {
               : "A fila está limpa"}
           </small>
         </button>
-        <button onClick={() => setView("list")}>
+        <button
+          onClick={() => {
+            setDeadlineFilter("overdue");
+            setView("list");
+          }}
+        >
           <span>Atrasadas</span>
           <strong>{overdueCount}</strong>
           <small>
@@ -298,6 +299,7 @@ export function MissionsPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            maxLength={200}
             aria-label="Buscar missão"
             placeholder="Buscar missão…"
           />
@@ -345,6 +347,101 @@ export function MissionsPage() {
           <Zap size={14} />
           <span>{totalXp} XP em aberto</span>
         </div>
+      </section>
+
+      <section className="execution-filters" aria-label="Recorte das missões">
+        <label>
+          Projeto
+          <select
+            value={projectFilter}
+            onChange={(e) => setProjectFilter(e.target.value)}
+            aria-label="Projeto das missões"
+          >
+            <option value="">Todos os projetos</option>
+            <option value="none">Sem projeto</option>
+            {workspace.projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+            {projectFilter &&
+              projectFilter !== "none" &&
+              !workspace.projects.some((p) => p.id === projectFilter) && (
+                <option value={projectFilter}>Projeto não carregado</option>
+              )}
+          </select>
+        </label>
+        <label>
+          Estado
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setView("list");
+            }}
+            aria-label="Estado das missões"
+          >
+            <option value="">Todos os estados</option>
+            {[
+              "Inbox",
+              "A fazer",
+              "Em andamento",
+              "Bloqueada",
+              "Feita",
+              "Cancelada",
+            ].map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Prazo
+          <select
+            value={deadlineFilter}
+            onChange={(e) => {
+              setDeadlineFilter(e.target.value);
+              setView("list");
+            }}
+            aria-label="Prazo das missões"
+          >
+            <option value="">Qualquer prazo</option>
+            <option value="today">Hoje</option>
+            <option value="overdue">Atrasadas em execução</option>
+            <option value="none">Sem prazo</option>
+          </select>
+        </label>
+        <label>
+          Duração
+          <select
+            value={durationFilter}
+            onChange={(e) => setDurationFilter(e.target.value)}
+            aria-label="Duração das missões"
+          >
+            <option value="">Qualquer duração</option>
+            {[25, 45, 90].map((m) => (
+              <option key={m} value={m}>
+                Até {m} min
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          className="text-button"
+          onClick={() => {
+            setQuery("");
+            setRank("Todos");
+            setProjectFilter("");
+            setStatusFilter("");
+            setDeadlineFilter("");
+            setDurationFilter("");
+          }}
+        >
+          Limpar filtros
+        </button>
+        <span role="status">
+          {filtered.length} de {workspace.missions.length} carregadas · duração
+          ausente: estimativa de 45 min
+        </span>
       </section>
 
       <section
@@ -713,7 +810,12 @@ function MissionDecision({
     patch: Partial<
       Pick<
         NexusMission,
-        "status" | "priority" | "rank" | "due_at" | "project_id"
+        | "status"
+        | "priority"
+        | "rank"
+        | "due_at"
+        | "project_id"
+        | "duration_minutes"
       >
     >,
   ) => Promise<boolean>;
@@ -726,6 +828,9 @@ function MissionDecision({
       rank: mission.rank,
       project: mission.project_id ?? "",
       date: isoDate(mission.due_at),
+      duration: mission.duration_minutes
+        ? String(mission.duration_minutes)
+        : "",
     },
   );
   const [saved, setSaved] = useState(false);
@@ -748,6 +853,9 @@ function MissionDecision({
           priority: draft.priority,
           rank: draft.rank,
           project_id: draft.project || null,
+          duration_minutes: draft.duration?.trim()
+            ? Number(draft.duration)
+            : null,
           due_at: draft.date ? `${draft.date}T23:59:00-03:00` : null,
         });
         if (success) clearDraft();
@@ -818,6 +926,18 @@ function MissionDecision({
                 </option>
               ))}
             </select>
+          </label>
+          <label>
+            <span>Duração estimada · minutos</span>
+            <input
+              type="number"
+              min="1"
+              max="240"
+              step="1"
+              value={draft.duration ?? ""}
+              onChange={(e) => field("duration", e.target.value)}
+              placeholder="Sem duração: estimativa de 45"
+            />
           </label>
           <label className="inspector-form-grid__wide">
             <span>Prazo</span>

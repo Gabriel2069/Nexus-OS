@@ -7680,3 +7680,252 @@ html[data-atmosphere="paused"] .nex-orbital-sphere__light {
   margin: 8px 0;
   padding: 10px;
 }
+
+/* A08: one shared workbench for day, planning and modeless N.E.X instruments. */
+.execution-workbench {
+  display: grid;
+  gap: 18px;
+}
+.execution-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.execution-heading .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.execution-heading h2 {
+  color: var(--text);
+  margin: 8px 0 5px;
+  font: 500 24px/1.2 var(--nx-heading);
+}
+.execution-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  max-width: 58ch;
+  line-height: 1.6;
+}
+.execution-controls,
+.execution-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+.execution-controls label,
+.execution-filters > label:not(.execution-filter-toggle) {
+  display: grid;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.execution-controls select,
+.execution-filters select,
+.execution-filters input[type="search"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 11px;
+  color: var(--text);
+  background: var(--nx-glass-bg-strong);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  font: inherit;
+}
+.execution-controls .secondary-button {
+  min-height: 44px;
+}
+.execution-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  align-items: baseline;
+  padding: 13px 0;
+  border-block: 1px solid var(--hairline);
+}
+.execution-summary strong {
+  font: 500 19px var(--nx-heading);
+  color: var(--text);
+}
+.execution-summary span,
+.execution-summary small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.execution-constraint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  color: var(--muted);
+}
+.execution-constraint svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--nx-photon);
+}
+.execution-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+}
+.execution-steps > li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.execution-step-index {
+  font: 400 12px var(--nx-heading);
+  color: var(--muted);
+  min-width: 24px;
+  align-self: flex-start;
+  padding-top: 3px;
+}
+.execution-step-copy {
+  flex: 1;
+  min-width: 0;
+}
+.execution-step-copy small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.execution-step-copy .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  font-size: 14px;
+  padding-block: 7px;
+  min-height: 38px;
+  overflow-wrap: anywhere;
+}
+.execution-step-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.execution-steps .secondary-button {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+.execution-attention {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.execution-attention button {
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--text) 3%, transparent);
+  color: var(--text);
+  padding: 12px;
+  text-align: left;
+  display: grid;
+  gap: 6px;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+.execution-attention button:hover {
+  border-color: var(--nx-photon);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+.execution-attention strong {
+  font: 500 22px var(--nx-heading);
+}
+.execution-attention span {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.execution-footnote {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+.execution-footnote svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.execution-empty {
+  padding: 14px 0;
+}
+.execution-empty strong {
+  font: 500 16px var(--nx-heading);
+}
+.execution-empty p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.execution-filters {
+  padding: 14px 0;
+  border-block: 1px solid var(--hairline);
+}
+.execution-filters > span {
+  flex-basis: 100%;
+  font-size: 10px;
+  color: var(--muted);
+}
+.execution-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.execution-filter-toggle input {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+}
+.nex-window-content .execution-workbench {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.nex-window-content .execution-workbench > .visor-texture {
+  display: none;
+}
+.nex-window-content .execution-steps > li {
+  flex-wrap: wrap;
+}
+.nex-window-content .execution-steps > li > .secondary-button {
+  margin-left: 38px;
+}
+@media (max-width: 600px) {
+  .execution-steps > li {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .execution-steps > li > .secondary-button {
+    margin-left: 34px;
+  }
+  .execution-step-copy {
+    flex-basis: calc(100% - 38px);
+  }
+  .execution-heading h2 {
+    font-size: 21px;
+  }
+  .execution-attention button {
+    padding: 10px;
+  }
+}

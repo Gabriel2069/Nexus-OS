@@ -231,3 +231,11 @@ Instrumentos das páginas: consultar área em janela, consultar Google relaciona
 ## A07 — espaço de trabalho e consultas locais
 
 A07 amplia o desktop existente com encaixe/organização, seletor filtrável, ordem estável, resize por teclado/pointer e movimentos canceláveis. `Buscar: termo`, `Buscar projetos: termo`, `Missões atrasadas`, `Recolher janelas` e `Restaurar janelas` continuam no parser determinístico; a busca usa somente o workspace carregado e mostra até 40 resultados. Ctrl/⌘+Enter envia a conversa. [Fronteira, verificações e limites](design/A07_REVIEW.md). Nenhuma nova rota, scope, migration ou integração paga.
+
+## A08 — execução sem inferência
+
+`Plano do dia`, `Tenho 25 minutos` e `Planejar: 90 minutos` abrem a mesma bancada usada em Hoje e Planejamento. O intervalo aceito é 15–240 minutos. Sugere até cinco missões inteiras pelos critérios locais existentes, dentro do tempo consultado, antes do próximo horário não opcional carregado de Calendário/Estudos e antes da meia-noite de São Paulo. Projetos em espera, concluídos ou arquivados não entram na execução. Duração ausente é estimada em 45 min, visivelmente; não há reserva, fila persistida ou busca Google automática. Preparar foco apenas abre a página com missão/duração exatas; começar exige o controle existente.
+
+Consultas adicionais: `Resumo do projeto: título`, `Missões bloqueadas`, `Projetos sem próxima ação`, `Rotinas de hoje`, `Estudos de hoje`, `Resumo do foco`. Dossiês e resumos usam os dados carregados; foco conta minutos efetivos de sessões concluídas, sem alterar progresso manual. `Iniciar missão: título`, `Bloquear missão: título` e `Retomar missão: título` resolvem título único e propõem a operação existente mission.edit, com prévia, confirmação e verificação autenticada no Worker. Inbox exige processamento prévio. Não há execução por simples texto, inferência, nova rota ou scope Google.
+
+Regras de seleção compartilhadas em execution-plan; UI única ExecutionWorkbench. Chamadas locais de texto não usam cota de modelos. Voz transcrita na Groq continua sujeita à cota de áudio. Variáveis, cotas, SQL e consentimento Google permanecem os existentes. Ver [A08_REVIEW.md](design/A08_REVIEW.md) para testes e limites.
