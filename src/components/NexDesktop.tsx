@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useNex } from "../context/NexContext";
 import { useNexus } from "../context/NexusContext";
-import { localExamples } from "../lib/nex-local";
+import { NexCommandHelp } from "./NexCommandHelp";
 import { nexRequest } from "../lib/nex-api";
 import {
   nexAreas,
@@ -286,30 +286,7 @@ function WindowBody({ item }: { item: NexWindow }) {
         <NexReadout data={body.data} />
       </>
     );
-  if (body.kind === "help")
-    return (
-      <div className="nex-command-help">
-        <h2>O essencial, sem IA.</h2>
-        <p>
-          Escolha um comando. Criar e concluir abre uma aprovação; consultar não
-          altera os registros.
-        </p>
-        {localExamples.map((t) => (
-          <button
-            className="secondary-button"
-            key={t}
-            disabled={nex.busy}
-            onClick={() => void nex.send(t)}
-          >
-            {t}
-          </button>
-        ))}
-        <p>
-          Para perguntas livres, ative Usar IA na conversa. Voz ainda usa a cota
-          de transcrição da Groq. Não há escuta em segundo plano.
-        </p>
-      </div>
-    );
+  if (body.kind === "help") return <NexCommandHelp />;
   if (body.kind === "panel")
     return (
       <NexResponsePanel

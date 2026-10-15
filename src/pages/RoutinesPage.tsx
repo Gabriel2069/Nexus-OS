@@ -11,12 +11,15 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "../lib/router";
+import { UI_EVENTS } from "../lib/ui-events";
 import { SurfaceCard } from "../components/SurfaceCard";
 import { useNexus } from "../context/NexusContext";
 
 export function RoutinesPage() {
   const { workspace, setRoutineItem, loading, error, refresh } = useNexus();
+  const location = useLocation();
   const completed = new Set(
     workspace.routineCompletions
       .filter((item) => item.completion_date === dateKey())
@@ -48,11 +51,28 @@ export function RoutinesPage() {
         routine.period === relevantPeriod || routine.period === "anytime",
     ) ?? null;
   const [selectedId, setSelectedId] = useState<string | null>(
-    relevant?.id ?? routines[0]?.id ?? null,
+    () =>
+      new URLSearchParams(location.search).get("routine") ??
+      relevant?.id ??
+      routines[0]?.id ??
+      null,
   );
   const pending = useRef(false);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get("routine");
+    if (id && !pending.current) setSelectedId(id);
+  }, [location.search]);
+  useEffect(() => {
+    const open = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (detail?.kind === "routine" && typeof detail.id === "string")
+        inspect(detail.id);
+    };
+    window.addEventListener(UI_EVENTS.inspect, open);
+    return () => window.removeEventListener(UI_EVENTS.inspect, open);
+  }, []);
   const selected =
     routines.find((routine) => routine.id === selectedId) ?? null;
   const selectedItems = useMemo(
@@ -67,6 +87,7 @@ export function RoutinesPage() {
   const selectedDone = selectedItems.filter((item) =>
     completed.has(item.id),
   ).length;
+  const nextItem = selectedItems.find((item) => !completed.has(item.id));
 
   const canComplete = Boolean(
     selected && todayRoutines.some((r) => r.id === selected.id),
@@ -129,6 +150,12 @@ export function RoutinesPage() {
       </section>
 
       {error && <WorkspaceFeedback error={error} retry={refresh} />}
+      {!loading && selectedId && !selected && (
+        <p role="status">
+          A rotina solicitada não está entre as rotinas ativas carregadas.
+          Escolha outra abaixo.
+        </p>
+      )}
       {actionError && (
         <p className="orbital-action-error" role="alert">
           {actionError}
@@ -295,6 +322,16 @@ export function RoutinesPage() {
                   <Check size={15} />
                   Concluir o que falta
                 </button>
+              )}
+              {canComplete && nextItem && (
+                <div className="routine-next-step">
+                  <span className="eyebrow">Próxima etapa</span>
+                  <strong>{nextItem.title}</strong>
+                  <p>
+                    Confira e marque na lista quando terminar
+                    {nextItem.is_optional ? " · opcional" : ""}.
+                  </p>
+                </div>
               )}
             </SurfaceCard>
 

@@ -410,10 +410,26 @@ export function localViewReadout(
             r.is_active &&
             (!r.days_of_week.length || r.days_of_week.includes(weekday)),
         )
-        .map((r) => ({
-          ...r,
-          note: `${(r.routine_items ?? []).filter((i) => w.routineCompletions.some((c) => c.routine_item_id === i.id && c.completion_date === key)).length} de ${(r.routine_items ?? []).length} etapas concluídas hoje`,
-        })),
+        .map((r) => {
+          const items = [...(r.routine_items ?? [])].sort(
+            (a, b) => a.sort_order - b.sort_order,
+          );
+          const completed = new Set(
+            w.routineCompletions
+              .filter((c) => c.completion_date === key)
+              .map((c) => c.routine_item_id),
+          );
+          const next = items.find((i) => !completed.has(i.id));
+          return {
+            ...r,
+            next_action:
+              next?.title ??
+              (items.length
+                ? "Etapas de hoje concluídas"
+                : "Sem etapas carregadas"),
+            note: `${items.filter((i) => completed.has(i.id)).length} de ${items.length} etapas concluídas hoje`,
+          };
+        }),
     },
     studiesToday: {
       module: "estudos",

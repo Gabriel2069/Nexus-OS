@@ -239,3 +239,9 @@ A07 amplia o desktop existente com encaixe/organização, seletor filtrável, or
 Consultas adicionais: `Resumo do projeto: título`, `Missões bloqueadas`, `Projetos sem próxima ação`, `Rotinas de hoje`, `Estudos de hoje`, `Resumo do foco`. Dossiês e resumos usam os dados carregados; foco conta minutos efetivos de sessões concluídas, sem alterar progresso manual. `Iniciar missão: título`, `Bloquear missão: título` e `Retomar missão: título` resolvem título único e propõem a operação existente mission.edit, com prévia, confirmação e verificação autenticada no Worker. Inbox exige processamento prévio. Não há execução por simples texto, inferência, nova rota ou scope Google.
 
 Regras de seleção compartilhadas em execution-plan; UI única ExecutionWorkbench. Chamadas locais de texto não usam cota de modelos. Voz transcrita na Groq continua sujeita à cota de áudio. Variáveis, cotas, SQL e consentimento Google permanecem os existentes. Ver [A08_REVIEW.md](design/A08_REVIEW.md) para testes e limites.
+
+## A09 — descobrir e continuar
+
+Comandos e janelas abre uma biblioteca pesquisável por termos sem acentos, com grupos de consulta/planejamento, preparação e Google. Selecionar uma consulta direta usa o parser existente; selecionar um exemplo com título/busca abre um campo vazio para o conteúdo do usuário. Nunca envia o título ilustrativo automaticamente. Campos são limitados e o parser deve reconhecer a mensagem antes de enviá-la; propostas continuam com prévia e confirmação. A biblioteca não ativa Usar IA nem amplia permissões.
+
+Rotinas de hoje mostra a próxima etapa pendente na ordem da rotina e abre a rotina exata por link interno, inclusive ao reabrir um inspector fechado. Nenhuma etapa é marcada pela consulta; processamento continua no módulo existente. Preparar foco nas consultas de missão usa duração válida do registro ou estimativa de 45 min, consistente com Planejamento. [Testes e limites](design/A09_REVIEW.md).

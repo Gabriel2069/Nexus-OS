@@ -21,7 +21,15 @@ export function cleanPaths(
       ].slice(0, limit)
     : [];
 }
-export function entityPath(kind: "mission" | "project", id: string) {
+export function entityPath(
+  kind: "mission" | "project" | "routine",
+  id: string,
+) {
   const params = new URLSearchParams({ [kind]: id });
-  return `${kind === "mission" ? "/missoes" : "/projetos"}?${params}`;
+  const route = {
+    mission: "/missoes",
+    project: "/projetos",
+    routine: "/rotinas",
+  }[kind];
+  return `${route}?${params}`;
 }

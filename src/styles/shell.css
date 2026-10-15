@@ -363,6 +363,9 @@ html.nexus-standalone .topbar {
     background: var(--panel);
     color: var(--text);
     box-shadow: 0 0 16px var(--nx-photon-glow);
+    transition:
+      bottom var(--motion-surface) var(--ease-out),
+      border-color var(--motion-ui) ease;
   }
   .mobile-dock-toggle.is-collapsed {
     bottom: calc(12px + env(safe-area-inset-bottom));
@@ -381,8 +384,9 @@ html.nexus-standalone .topbar {
   }
   .floating-add {
     position: fixed;
-    right: max(20px, env(safe-area-inset-right));
-    bottom: calc(100px + env(safe-area-inset-bottom));
+    left: max(20px, env(safe-area-inset-left));
+    right: auto;
+    bottom: calc(92px + env(safe-area-inset-bottom));
     z-index: 30;
     display: grid;
     place-items: center;
@@ -395,6 +399,9 @@ html.nexus-standalone .topbar {
     box-shadow:
       inset 0 1px var(--nx-glass-highlight),
       0 12px 30px var(--nx-glass-shadow);
+  }
+  .mobile-dock-frame.is-collapsed .floating-add {
+    bottom: calc(12px + env(safe-area-inset-bottom));
   }
   .mobile-dock {
     position: fixed;
