@@ -8,7 +8,6 @@ const NexOverlay = lazy(() =>
   import("./NexConsole").then((m) => ({ default: m.NexOverlay })),
 );
 import { RelatedAreas } from "./RelatedAreas";
-import { Plus } from "lucide-react";
 import type { PropsWithChildren } from "react";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { CommandPalette } from "./CommandPalette";
@@ -92,13 +91,6 @@ export function AppShell({ pathname, children }: AppShellProps) {
           <RelatedAreas pathname={pathname} />
         </main>
       </div>
-      <button
-        className="floating-add"
-        onClick={() => emitUI("quickAdd")}
-        aria-label="Captura rápida"
-      >
-        <Plus size={22} aria-hidden="true" />
-      </button>
       <MobileDock pathname={pathname} />
       {pathname !== "/nex" && nexOverlay.open && (
         <Suspense fallback={<p role="status">Abrindo N.E.X…</p>}>

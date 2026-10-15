@@ -54,3 +54,5 @@ A06 — feat/nex-local-desktop, base main 4b489f2 (PRs #32/#33 integradas). Desk
 A07 — feat/a07-workspace-motion, base main 856f3d3 (PR #34 integrada). Organização do desktop, atalhos/resize por teclado, busca determinística e motion de presença/geometria. Fronteira e evidência em [A07_REVIEW.md](design/A07_REVIEW.md); sem alterações de login, Worker, SQL, scopes ou cotas. Status/CI/publicação no issue #18.
 
 A08 — feat/a08-connected-execution, base main 6bc094eb1ebdf7b8b7820c5b6a438191bb05e2af (PR #35 integrada). Conecta Planejamento/Hoje/N.E.X com Missões, Projetos, Entrada e Foco; expande consultas e propostas locais, sem novo backend ou permissões. [Revisão](design/A08_REVIEW.md); PR, CI e publicação correntes no issue #18. Não reintroduz branches antigas nem encerra B01/B02/I01.
+
+A09 — feat/a09-final-craft, base main 492411125d6a981d256c7130deffcf9b0b84feca (PR #36 integrada). Última rodada: menu móvel, resposta óptica, biblioteca de comandos e rotina exata; sem novo backend, SQL ou scope. [Revisão](design/A09_REVIEW.md); execução/CI/publicação no issue #18.

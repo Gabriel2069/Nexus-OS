@@ -5,6 +5,7 @@ import { entityPath } from "../lib/navigation-state";
 import { emitUI } from "../lib/ui-events";
 import { safeGoogleLink } from "../lib/nex-links";
 import { useNex } from "../context/NexContext";
+import { validFocusMinutes } from "../lib/focus-clock";
 const labels = Object.fromEntries(
   Object.entries(nexAreas).map(([k, v]) => [k, v.label]),
 );
@@ -204,7 +205,7 @@ export function NexReadout({
                       className="secondary-button"
                       onClick={() => {
                         navigate(
-                          `/foco?${new URLSearchParams({ mission: id, minutes: "25" })}`,
+                          `/foco?${new URLSearchParams({ mission: id, minutes: String(validFocusMinutes(row.duration_minutes) ? row.duration_minutes : 45) })}`,
                         );
                       }}
                     >
@@ -287,7 +288,7 @@ export function NexReadout({
             )}
             {id &&
               "records" in payload &&
-              ["missoes", "agora", "inbox", "projetos"].includes(
+              ["missoes", "agora", "inbox", "projetos", "rotinas"].includes(
                 String((data as { module?: string }).module),
               ) && (
                 <button
@@ -297,14 +298,21 @@ export function NexReadout({
                       entityPath(
                         (data as { module?: string }).module === "projetos"
                           ? "project"
-                          : "mission",
+                          : payload.module === "rotinas"
+                            ? "routine"
+                            : "mission",
                         id,
                       ),
                     );
-                    emitUI("inspect");
+                    emitUI(
+                      "inspect",
+                      payload.module === "rotinas"
+                        ? { kind: "routine", id }
+                        : undefined,
+                    );
                   }}
                 >
-                  Abrir item
+                  {payload.module === "rotinas" ? "Abrir rotina" : "Abrir item"}
                   <ArrowUpRight size={15} />
                 </button>
               )}
